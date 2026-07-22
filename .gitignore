@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.zip
+*.log
+
+# dados locais do usuario (nunca versionar)
+accounts.enc
+accounts.enc.*
+dom-dump.txt

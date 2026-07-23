@@ -196,6 +196,33 @@
   #stats .st-resize::before { content: ''; position: absolute; top: 50%; right: 3px; transform: translateY(-50%); width: 3px; height: 34px; border-radius: 2px; background: #30363d; }
   #stats .st-resize:hover { background: rgba(227,53,13,.18); }
   #stats .st-resize:hover::before { background: #e3350d; }
+
+  /* Modo Cartas: dashboard ultra leve; o grid dos webviews fica vivo mas invisível */
+  #cards { display: none; flex: 1; min-height: 0; overflow-y: auto; flex-direction: column; gap: 10px; padding: 10px 14px; scrollbar-width: thin; scrollbar-color: #30363d #0d1117; }
+  body.cards-on #cards { display: flex; }
+  body.cards-on #grid { position: absolute; left: 0; top: 0; width: 4px; height: 4px; opacity: 0; overflow: hidden; pointer-events: none; padding: 0; gap: 0; margin: 0 !important; }
+  body.stats-open #cards { margin-left: var(--statsw, 350px); transition: margin-left .18s ease; }
+  .cd-kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; flex-shrink: 0; }
+  .cd-kpi { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 10px 12px; }
+  .cd-kpi .v { font-size: 19px; font-weight: 700; color: #e6edf3; }
+  .cd-kpi .l { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+  .cd-sec { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 10px 12px; flex-shrink: 0; }
+  .cd-h { font-size: 10px; font-weight: 600; color: #7d8590; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+  .cd-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .cd-table th { text-align: left; color: #7d8590; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; padding: 5px 8px; border-bottom: 1px solid #21262d; user-select: none; white-space: nowrap; }
+  .cd-table th:hover { color: #e6edf3; }
+  .cd-table td { padding: 7px 8px; border-bottom: 1px solid #12171e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+  .cd-table tbody tr { cursor: pointer; }
+  .cd-table tbody tr:hover { background: #12171e; }
+  .cd-table tfoot td { font-weight: 700; border-bottom: 0; }
+  .cd-2col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; align-items: start; }
+  .cd-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 0; border-bottom: 1px solid #12171e; }
+  .cd-row:last-child { border-bottom: 0; }
+  .cd-row .rn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cd-row .rt { color: #6e7681; font-size: 11px; flex: none; }
+  .cd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 2px; flex: none; }
+  .cd-spark { width: 100%; height: 44px; display: block; }
+  .cd-empty { color: #6e7681; font-size: 12px; padding: 8px 0; }
   #stats .team { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 15px 6px; }
   #stats .tm { font-size: 11px; color: #8b949e; background: #12171e; border: 1px solid #1c2229; border-radius: 6px; padding: 3px 7px; white-space: nowrap; }
   #stats .tm b { color: #c9d1d9; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -278,6 +305,7 @@
     <button id="reloadAll">⟳ Atualizar tudo</button>
     <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">🎛 Menu do jogo</button>
     <button id="statsBtn" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">📊 Painel</button>
+    <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">🃏 Cartas</button>
     <div id="menuWrap">
       <button id="menuBtn">☰ Opções</button>
       <div id="menu">
@@ -297,6 +325,7 @@
     <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)">🔗</button>
   </div>
   <div id="grid"></div>
+  <div id="cards"></div>
 
   <div id="overlay">
     <div id="modal">
@@ -355,6 +384,7 @@
       hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', accClear:'Limpar esta conta',
       alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Bolas / potions gastas', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time',
+      cards:'🃏 Cartas', cardsTitle:'Dashboard ultra leve: esconde o jogo e mostra só os números (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
       msgShiny:'encontrou um SHINY! ✨', msgFaint:'teve um pokémon derrubado', msgBallsLow:'está com poucas pokébolas', msgPotionsLow:'está com poucas potions', msgRevivesLow:'está com poucos revives',
       stAllTitle:'Resumo geral', stTotal:'Total', stAcc:'Conta', stCompare:'Comparação (hunt anterior)', stPrev:'anterior', stCur:'atual', stMoney:'dólares', stPerAcc:'Por conta',
       stShinyFound:'Shiny enc.', stShinyCap:'✨ Shiny capturados', stShinyF:'Shiny enc.', stShinyC:'Shiny capt.', stSupplies:'Suprimentos', stAssets:'Patrimônio',
@@ -378,6 +408,7 @@
       hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', accClear:'Clear this account',
       alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Balls / potions used', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team',
+      cards:'🃏 Cards', cardsTitle:'Ultra-light dashboard: hides the game and shows only the numbers (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
       msgShiny:'found a SHINY! ✨', msgFaint:'had a Pokémon knocked out', msgBallsLow:'is low on Poké Balls', msgPotionsLow:'is low on potions', msgRevivesLow:'is low on revives',
       stAllTitle:'Overview', stTotal:'Total', stAcc:'Account', stCompare:'Comparison (previous hunt)', stPrev:'previous', stCur:'current', stMoney:'dollars', stPerAcc:'Per account',
       stShinyFound:'Shiny found', stShinyCap:'✨ Shiny captured', stShinyF:'Shiny found', stShinyC:'Shiny capt.', stSupplies:'Supplies', stAssets:'Assets',
@@ -445,8 +476,9 @@
         if (!off[i]) { dot.className = 'dot ok'; status.textContent = t('stOnline'); fails = 0; alertedDown = false; } // carregou: zera o watchdog
         try {
           wv.setAudioMuted(muted); wv.setZoomFactor(zoom);
-          wv.executeJavaScript(`(()=>{if(window.__poke)return;const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();}else if(m.type==='field-kill'){S.kills++;S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});}else if(m.type==='catch-result'){S.balls++;if(m.success)S.captures++;}else if(m.type==='field'){(m.mobs||[]).forEach(mo=>{if(mo.shiny){const k=mo.slot+'_'+mo.speciesId;if(!S.shinySeen[k]){S.shinySeen[k]=1;S.shinyN++;}}});}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au)auth=au;}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'&&(!j||!j.character))return;P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
-          wv.executeJavaScript(ecoScript(eco ? 15 : 0)).catch(() => {});
+          wv.executeJavaScript(`(()=>{if(window.__poke)return;const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();}else if(m.type==='field-kill'){S.kills++;S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});}else if(m.type==='catch-result'){S.balls++;if(m.success)S.captures++;}else if(m.type==='field'){(m.mobs||[]).forEach(mo=>{if(mo.shiny){const k=mo.slot+'_'+mo.speciesId;if(!S.shinySeen[k]){S.shinySeen[k]=1;S.shinyN++;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:mo.name||mo.speciesName||('#'+mo.speciesId),t:Date.now()});if(SL.length>30)SL.shift();}}});}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++;const CL=P.catchLog=P.catchLog||[];CL.push({n:pk.name||'?',iv:pk.ivTotal||0,q:pk.quality||0,sh:!!pk.shiny,t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++;const CL=P.catchLog=P.catchLog||[];CL.push({n:pk.name||'?',iv:pk.ivTotal||0,q:pk.quality||0,sh:!!pk.shiny,t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au)auth=au;}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'&&(!j||!j.character))return;P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
+          wv.executeJavaScript(ecoScript(ecoFps())).catch(() => {});
+          if (cardsOn) wv.executeJavaScript(ultraScript(true)).catch(() => {}); // reaplica o ultra apos reload/relogin
           wv.executeJavaScript(POPUP_SCRIPT).catch(() => {});
           wv.executeJavaScript(chatScript(chatHidden)).catch(() => {});
           wv.executeJavaScript(dockScript(dockHidden)).catch(() => {});
@@ -645,12 +677,18 @@
     }
     window.__eco.fps = ${fps};
   })()`;
+  // Modo Cartas: no ultra leve o canvas do jogo some e o rAF cai pra 1fps (o farm e do servidor)
+  let cardsOn = localStorage.getItem('cardsOn') === '1';
+  const ultraScript = (on) => on
+    ? `(()=>{if(!document.getElementById('pg-ultra')){const s=document.createElement('style');s.id='pg-ultra';s.textContent='canvas{display:none !important}';document.head.appendChild(s);}})()`
+    : `(()=>{const s=document.getElementById('pg-ultra');if(s)s.remove();})()`;
+  const ecoFps = () => cardsOn ? 1 : (eco ? 15 : 0);
   function applyEco() {
     ecoBtn.textContent = eco ? t('eco') : t('ecoOff');
     ecoBtn.classList.toggle('on', eco);
     webviews.forEach((w, i) => {
       if (off[i]) return;
-      try { w.executeJavaScript(ecoScript(eco ? 15 : 0)).catch(() => {}); } catch {}
+      try { w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); } catch {}
     });
     localStorage.setItem('eco', eco ? '1' : '0');
   }
@@ -842,6 +880,7 @@
     dockBtn.title = t('dockTitle');
     huntBtn.textContent = t('hunt'); huntBtn.title = t('huntTitle');
     statsBtn.textContent = t('stats'); statsBtn.title = t('statsTitle');
+    cardsBtn.textContent = t('cards'); cardsBtn.title = t('cardsTitle');
     statsEl.querySelector('.st-head span').textContent = '📊 ' + t('statsResumo');
     document.querySelector('#modal h2').textContent = t('mH2');
     document.querySelector('#modal .hint').textContent = t('mHint');
@@ -951,7 +990,7 @@
     bag.forEach(g => { if (g.label === 'Pokébolas') sBalls = g.total; else if (g.label === 'Heal') sPot = g.total; else if (g.label === 'Revive') sRev = g.total; });
     const invMap = {}; inv.forEach(it => invMap[it.itemId] = it.quantity);
     const ballMap = {}; if (bm && bm.counts) for (const bk in bm.counts) ballMap[bk] = bm.counts[bk];
-    return { ok:true, cid: ch.id||'', name: ch.name||'', level: ch.level||0, gold: ch.gold||0, diamonds: ch.diamonds||0, vip: !!ch.isVip, clan: ch.clan||null, clanRank: ch.clanRank||0, shinyEnc: P.shinyEnc||0, usedList: P.usedList||[], balls: sBalls, potions: sPot, revives: sRev, invMap, ballMap,
+    return { ok:true, cid: ch.id||'', name: ch.name||'', level: ch.level||0, gold: ch.gold||0, diamonds: ch.diamonds||0, vip: !!ch.isVip, clan: ch.clan||null, clanRank: ch.clanRank||0, shinyEnc: P.shinyEnc||0, usedList: P.usedList||[], catchLog: P.catchLog||[], shinyLog: P.shinyLog||[], balls: sBalls, potions: sPot, revives: sRev, invMap, ballMap,
       prof: ch.profession||'', profRank: ch.professionRank||0, catches: ch.catches||0, hunt, gifts: mail.gifts||0,
       a, drops, bag, team, prev };
   })()`;
@@ -1379,6 +1418,111 @@
     if (cfgOpen) { renderSettings(); loadCatalog(); }
   };
 
+  // ===== Modo Cartas: dashboard ultra leve (jogo invisivel a ~1fps, farm continua no servidor) =====
+  const cardsEl = document.getElementById('cards');
+  const cardsBtn = document.getElementById('cardsBtn');
+  let dhist = [];                      // amostras {t,g,x} da ultima hora pros sparklines
+  let dsort = { k: 'gph', d: -1 };     // ordenacao da tabela
+  const fmtHM = (ts) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  function spark(vals, color) {
+    if (vals.length < 2) return '<div class="cd-empty">' + t('cdNone') + '</div>';
+    const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+    const pts = vals.map((v, i) => (i / (vals.length - 1) * 100).toFixed(2) + ',' + (40 - (v - min) / span * 32).toFixed(2)).join(' ');
+    return '<svg class="cd-spark" viewBox="0 0 100 44" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>';
+  }
+  async function refreshCards() {
+    if (!cardsOn) return;
+    const rows = []; let sumG = 0, sumX = 0, sumK = 0, sumC = 0, sumSF = 0, sumSC = 0, ativos = 0; const catches = [], shinies = [];
+    for (let i = 0; i < count; i++) {
+      const nm0 = tabNames[i] || stName(i), dot = ACOR[i] || '#8b949e';
+      if (off[i] || !webviews[i]) { rows.push({ i, dot, name: nm0, st: 'off' }); continue; }
+      let d = null; try { d = await webviews[i].executeJavaScript(READ_STATE); } catch {}
+      if (!d || !d.ok) { rows.push({ i, dot, name: nm0, st: 'wait' }); continue; }
+      if (d.name && tabNames[i] !== d.name) tabNames[i] = d.name;
+      const a = d.a || {};
+      ativos++;
+      sumG += a.gph || 0; sumX += a.xph || 0; sumK += a.kph || 0; sumC += a.captures || 0; sumSF += a.shinyFound || 0; sumSC += a.shinyCap || 0;
+      const cl = d.catchLog || [];
+      const best = cl.length ? cl.reduce((b, x) => (x.iv > b.iv ? x : b)) : null;
+      const last = cl.length ? cl[cl.length - 1] : null;
+      cl.forEach(x => catches.push(Object.assign({}, x, { dot, acc: d.name || nm0 })));
+      (d.shinyLog || []).forEach(x => shinies.push(Object.assign({}, x, { dot, acc: d.name || nm0 })));
+      rows.push({ i, dot, name: d.name || nm0, st: 'on', hunt: d.hunt || '', gph: a.gph || 0, xph: a.xph || 0, kph: a.kph || 0, caps: a.captures || 0, sh: a.shinyFound || 0, best, last });
+    }
+    dhist.push({ t: Date.now(), g: sumG, x: sumX });
+    dhist = dhist.filter(p => p.t > Date.now() - 3600e3);
+
+    const valOf = (r, k) => k === 'name' || k === 'hunt' ? String(r[k] || '').toLowerCase()
+      : k === 'best' ? (r.best ? r.best.iv : -1) : k === 'last' ? (r.last ? r.last.t : 0) : k === 'st' ? r.st : (r[k] || 0);
+    const on = rows.filter(r => r.st === 'on');
+    on.sort((p, q) => { const a2 = valOf(p, dsort.k), b2 = valOf(q, dsort.k); return (a2 > b2 ? 1 : a2 < b2 ? -1 : 0) * dsort.d; });
+    const ordered = on.concat(rows.filter(r => r.st !== 'on'));
+
+    const kpi = (v, l, c) => '<div class="cd-kpi"><div class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div><div class="l">' + l + '</div></div>';
+    let h = '<div class="cd-kpis">'
+      + kpi(ncs(sumG), t('cdGold'), sumG < 0 ? '#f0883e' : '#3fb950')
+      + kpi(nc(sumX), t('cdXp'), '#79c0ff')
+      + kpi(nf(sumK), t('cdKills'))
+      + kpi(nf(sumC), t('cdCaps'))
+      + kpi(nf(sumSF) + ' / ' + nf(sumSC), t('cdShiny'), sumSF > 0 ? '#f778ba' : null)
+      + kpi(ativos + ' / ' + count, t('cdActive'), '#3fb950') + '</div>';
+
+    const arrow = (k) => dsort.k === k ? (dsort.d < 0 ? ' ▾' : ' ▴') : '';
+    const TH = [['name', t('cdConta')], ['hunt', t('cdHunt')], ['gph', 'Gold/h'], ['xph', 'XP/h'], ['kph', 'Kills/h'], ['caps', t('stCaptures')], ['sh', '✨'], ['best', t('cdBest')], ['last', t('cdLast')], ['st', t('cdStatus')]];
+    h += '<div class="cd-sec"><div class="cd-h">' + t('cdByAcc') + '</div><table class="cd-table"><thead><tr>'
+      + TH.map(x => '<th data-k="' + x[0] + '">' + x[1] + arrow(x[0]) + '</th>').join('') + '</tr></thead><tbody>';
+    ordered.forEach(r => {
+      const stTxt = r.st === 'off' ? '<span style="color:#6e7681">' + t('cdOff') + '</span>'
+        : r.st === 'wait' ? '<span style="color:#6e7681">' + t('cdWaiting') + '</span>'
+        : '<span style="color:#3fb950">' + t('cdHunting') + (r.hunt ? ' ' + esc(r.hunt) : '') + '</span>';
+      h += '<tr data-i="' + r.i + '"><td><span class="cd-dot" style="background:' + r.dot + '"></span>' + esc(r.name) + '</td>'
+        + '<td>' + (r.hunt ? esc(r.hunt) : '—') + '</td>'
+        + '<td style="color:' + ((r.gph || 0) < 0 ? '#f0883e' : '#3fb950') + '">' + (r.st === 'on' ? ncs(r.gph) : '—') + '</td>'
+        + '<td style="color:#79c0ff">' + (r.st === 'on' ? nc(r.xph) : '—') + '</td>'
+        + '<td>' + (r.st === 'on' ? nf(r.kph) : '—') + '</td>'
+        + '<td>' + (r.st === 'on' ? nf(r.caps) : '—') + '</td>'
+        + '<td style="color:' + ((r.sh || 0) > 0 ? '#f778ba' : '#8b949e') + '">' + (r.st === 'on' ? nf(r.sh) : '—') + '</td>'
+        + '<td>' + (r.best ? esc(r.best.n) + ' <span style="color:#55e6d3">' + r.best.iv + '/192</span>' : '—') + '</td>'
+        + '<td>' + (r.last ? esc(r.last.n) + ' <span style="color:#6e7681">' + fmtHM(r.last.t) + '</span>' : '—') + '</td>'
+        + '<td>' + stTxt + '</td></tr>';
+    });
+    h += '</tbody><tfoot><tr><td>' + t('cdTotal') + ' (' + ativos + ')</td><td></td>'
+      + '<td style="color:' + (sumG < 0 ? '#f0883e' : '#3fb950') + '">' + ncs(sumG) + '</td>'
+      + '<td style="color:#79c0ff">' + nc(sumX) + '</td><td>' + nf(sumK) + '</td><td>' + nf(sumC) + '</td>'
+      + '<td>' + nf(sumSF) + '</td><td></td><td></td><td></td></tr></tfoot></table></div>';
+
+    h += '<div class="cd-sec"><div class="cd-h">' + t('cdTrend') + '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+      + '<div><div style="display:flex;justify-content:space-between;font-size:11px;color:#7d8590"><span>Gold/h</span><span style="color:#3fb950">' + ncs(sumG) + '</span></div>' + spark(dhist.map(p => p.g), '#3fb950') + '</div>'
+      + '<div><div style="display:flex;justify-content:space-between;font-size:11px;color:#7d8590"><span>XP/h</span><span style="color:#79c0ff">' + nc(sumX) + '</span></div>' + spark(dhist.map(p => p.x), '#79c0ff') + '</div>'
+      + '</div></div>';
+
+    catches.sort((a2, b2) => b2.t - a2.t);
+    shinies.sort((a2, b2) => b2.t - a2.t);
+    const lost = Math.max(0, sumSF - sumSC);
+    h += '<div class="cd-2col">'
+      + '<div class="cd-sec"><div class="cd-h">' + t('cdCatches') + '</div>'
+      + (catches.length ? catches.slice(0, 10).map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">' + (x.sh ? '✨ ' : '') + esc(x.n) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span style="color:#55e6d3">' + (x.iv || 0) + '/192</span>' + (x.q ? '<span style="color:#f2c665">×' + Number(x.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtHM(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'
+      + '<div class="cd-sec"><div class="cd-h">' + t('cdShinies') + '</div>'
+      + '<div style="display:flex;gap:10px;margin-bottom:8px;font-size:11px"><span style="color:#3fb950">' + nf(sumSC) + ' ' + t('cdCaught') + '</span><span style="color:#f2c665">' + nf(sumSF) + ' ' + t('cdSeen') + '</span><span style="color:#f85149">' + nf(lost) + ' ' + t('cdLost') + '</span></div>'
+      + (shinies.length ? shinies.slice(0, 10).map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">✨ ' + esc(x.n) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span class="rt">' + fmtHM(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'
+      + '</div>';
+
+    const st0 = cardsEl.scrollTop;
+    cardsEl.innerHTML = h;
+    cardsEl.scrollTop = st0; // nao perde a rolagem no refresh
+    cardsEl.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (dsort.k === k) dsort.d *= -1; else dsort = { k, d: -1 }; refreshCards(); });
+    cardsEl.querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => { const i = +tr.dataset.i; cardsOn = false; applyCards(); toggleExpand(i); });
+  }
+  function applyCards() {
+    document.body.classList.toggle('cards-on', cardsOn);
+    cardsBtn.classList.toggle('on', cardsOn);
+    localStorage.setItem('cardsOn', cardsOn ? '1' : '0');
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(ultraScript(cardsOn)).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); } catch {} });
+    if (cardsOn) { cardsEl.innerHTML = '<div class="cd-empty" style="padding:20px">' + t('cdWaiting') + '</div>'; refreshCards(); }
+  }
+  cardsBtn.onclick = () => { cardsOn = !cardsOn; applyCards(); };
+  setInterval(() => { if (cardsOn && !document.hidden) refreshCards(); }, 2500);
+
   // ===== Gerenciador de scripts / extras (userscripts injetados nos painéis) =====
   const PRESETS = [{ id: 'justpokedex', name: 'JustPokédex — Calculadora de IV', file: 'justpokedex.js', author: 'guilherme-se' }];
   let scriptsOn = {}; try { scriptsOn = JSON.parse(localStorage.getItem('scriptsOn') || '{}'); } catch {}
@@ -1426,6 +1570,7 @@
     build();
     applyLang(); // aplica idioma na interface e ja chama applyMute/Eco/Chat/Awake
     applyStats(); // restaura o painel de resumo se estava aberto
+    applyCards(); // restaura o modo cartas se estava ligado
   })();
 </script>
 </body>

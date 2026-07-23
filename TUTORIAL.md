@@ -21,10 +21,14 @@ Pronto, isso não precisa fazer de novo.
 ## Passo 3: abrir o app
 
 1. Entre na pasta que apareceu
-2. Dê **dois cliques** no arquivo **iniciar** (`iniciar.bat`)
-3. Na **primeira vez** ele demora um pouquinho (está baixando o que precisa) e abre sozinho. Nas próximas vezes abre rápido.
+2. Dê **dois cliques** no arquivo **Abrir PokeGrid** (`.vbs`). Ele abre o app **sem janela preta**.
+3. Na **primeira vez** ele demora um pouquinho (está baixando o que precisa) e abre sozinho. Nas próximas vezes abre rápido e sem terminal nenhum.
 
 > Se o Windows mostrar uma tela azul ("O Windows protegeu seu computador"), clique em **Mais informações** e depois **Executar assim mesmo**. Isso acontece porque o app não tem assinatura paga, mas o código é aberto e você pode conferir tudo aqui.
+
+**Quer um atalho na área de trabalho?** Clique com o **botão direito** no arquivo **Abrir PokeGrid** e escolha **Enviar para: Área de trabalho (criar atalho)**. Pronto, vira um clique só.
+
+> O `iniciar.bat` continua na pasta e funciona igual, mas ele deixa uma janela preta aberta: se você fechar essa janela, o app fecha junto. Pelo **Abrir PokeGrid** isso não acontece.
 
 **No Mac ou Linux:** abra o Terminal dentro da pasta e digite `bash iniciar.sh`.
 

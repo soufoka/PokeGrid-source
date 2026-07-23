@@ -42,7 +42,9 @@ git clone https://github.com/soufoka/PokeGrid-source.git
 ```
 
 **3. Abra o app**
-No Windows, dê dois cliques no arquivo **iniciar.bat** dentro da pasta. Na primeira vez ele instala o necessário e abre sozinho; nas próximas abre na hora.
+No Windows, dê dois cliques no arquivo **Abrir PokeGrid** (`.vbs`) dentro da pasta. Na primeira vez ele instala o necessário e abre sozinho; nas próximas abre na hora, sem janela preta. Quer um atalho? Botão direito nele, **Enviar para: Área de trabalho (criar atalho)**.
+
+Também dá pra usar o **iniciar.bat**, mas ele mantém uma janela preta aberta e, se ela for fechada, o app fecha junto.
 
 No macOS ou Linux, abra o terminal na pasta e rode:
 

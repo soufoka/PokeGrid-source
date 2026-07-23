@@ -614,21 +614,24 @@
 
         for (const linha of linhas.slice(1)) {
             if (
-                /^(Ativo|Nv\s|Qualidade|IV\s|HP\s|Atk\s|Def\s|SpA\s|SpD\s|Vel\s|.*Poder)/i.test(
+                /^(Ativo|Active|Nv\s|Lv\s|Qualidade|Quality|IV\s|HP\s|Atk\s|Def\s|SpA\s|SpD\s|Vel\s|Spe\s|.*(?:Poder|Power))/i.test(
                     linha
                 )
             ) {
                 break;
             }
 
-            tipos.push(linha);
+            // o jogo as vezes cola o status "Ativo"/"Active" (com icone) junto dos tipos;
+            // so aceita a linha se sobrar um tipo real, pra nao criar um chip "Ativo" duplicado
+            const limpa = linha.replace(/ativo|active/ig, "").trim();
+            if (limpa && obterChaveTipo(limpa)) tipos.push(limpa);
         }
 
         const ivMatch =
             texto.match(/IV\s*(\d+)\s*\/\s*(\d+)/i);
 
         const qualidadeTexto =
-            texto.match(/Qualidade\s+([^\n]+)/i)?.[1]?.trim() ||
+            texto.match(/(?:Qualidade|Quality)\s+([^\n]+)/i)?.[1]?.trim() ||
             null;
 
         const multiplicador =
@@ -643,11 +646,11 @@
             tipos,
 
             ativo: linhas.some(linha =>
-                linha.toLowerCase().includes("ativo")
+                /ativo|active/i.test(linha)
             ),
 
             nivel: numero(
-                texto.match(/Nv\s*(\d+)/i)?.[1]
+                texto.match(/(?:Nv|Lv)\s*(\d+)/i)?.[1]
             ),
 
             qualidade: qualidadeTexto,
@@ -677,11 +680,11 @@
             ),
 
             vel: numero(
-                texto.match(/Vel\s+([\d.,]+)/i)?.[1]
+                texto.match(/(?:Vel|Spe)\s+([\d.,]+)/i)?.[1]
             ),
 
             poder: numero(
-                texto.match(/Poder\s+([\d.,]+)/i)?.[1]
+                texto.match(/(?:Poder|Power)\s+([\d.,]+)/i)?.[1]
             )
         };
     }
@@ -960,6 +963,10 @@
         botao.title = minimizado
             ? "Restaurar"
             : "Minimizar";
+
+        // minimizado, o painel vira o "botao IV's": titulo curto e clique pra abrir
+        const titulo = document.getElementById("panel-title");
+        if (titulo) titulo.textContent = minimizado ? "IV's" : "JustPokédex";
     }
 
     function alternarMinimizado(painel) {
@@ -977,6 +984,7 @@
         if (!handle) return;
 
         let arrastando = false;
+        let moveu = false;
         let offsetX = 0;
         let offsetY = 0;
 
@@ -985,6 +993,7 @@
             if (evento.target.closest("button")) return;
 
             arrastando = true;
+            moveu = false;
 
             const rect =
                 painel.getBoundingClientRect();
@@ -1004,6 +1013,8 @@
 
         document.addEventListener("mousemove", evento => {
             if (!arrastando) return;
+
+            moveu = true;
 
             const maxLeft = Math.max(
                 0,
@@ -1051,6 +1062,15 @@
         window.addEventListener("resize", () => {
             limitarPainelNaTela(painel);
             salvarEstadoPainel(painel);
+        });
+
+        // clique simples (sem arraste) no cabecalho minimizado abre o painel
+        handle.addEventListener("click", evento => {
+            if (evento.target.closest("button")) return;
+            if (moveu) return;
+            if (painel.classList.contains("minimized")) {
+                alternarMinimizado(painel);
+            }
         });
     }
 
@@ -1123,7 +1143,7 @@
                     </div>
 
                     <div>
-                        <strong>JustPokédex</strong>
+                        <strong id="panel-title">JustPokédex</strong>
                     </div>
                 </div>
 
@@ -1280,6 +1300,7 @@
         document.body.appendChild(movesPanel);
 
         restaurarEstadoPainel(painel);
+        painel.classList.add("minimized"); // sempre comeca minimizado; expande no clique do "IV's"
         atualizarBotaoMinimizar(painel);
         ativarArraste(painel);
         ativarRedimensionamento(painel);
@@ -1588,11 +1609,15 @@
         }
 
         const chipsTipos = pokemon.tipos
-            .map(tipo => `
-                <span class="type-chip">
+            .map(tipo => {
+                const eng = obterChaveTipo(tipo);
+                const cor = (eng && TYPE_SYSTEM.COLORS[eng]) || "#7650a9";
+                return `
+                <span class="type-chip" style="background:${cor}">
                     ${escapeHtml(tipo)}
                 </span>
-            `)
+            `;
+            })
             .join("");
 
         const chipAtivo = pokemon.ativo
@@ -1623,16 +1648,16 @@
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    background: linear-gradient(135deg, #151d2a 0%, #0d141e 100%);
+                    background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
                     border: 1px solid rgba(255,255,255,0.06);
                     border-top: 3px solid ${cor};
                     border-radius: 8px;
-                    padding: 6px;
-                    gap: 3px;
+                    padding: 5px 4px;
+                    gap: 2px;
                     box-sizing: border-box;
                 ">
                     <span style="color: ${cor}; font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">${label}</span>
-                    <strong style="color: #fff; font-size: 13px; font-weight: bold; line-height: 1.2;">${val}</strong>
+                    <strong style="color: #fff; font-size: 12px; font-weight: bold; line-height: 1.15;">${val}</strong>
                     <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.06); border-radius: 9px; overflow: hidden; margin-top: 2px;">
                         <div style="height: 100%; background: ${cor}; width: ${percent}%;"></div>
                     </div>
@@ -1641,14 +1666,14 @@
         }
 
         const htmlQualidade = pokemon.qualidade ? `
-            <div style="background: linear-gradient(135deg, #18202d 0%, #0e1622 100%); border: 1px solid rgba(241,198,68,0.15); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid rgba(241,198,68,0.15); border-radius: 8px; padding: 6px 9px; display: flex; flex-direction: column; gap: 2px;">
                 <span style="color: #ca9e00; font-size: 7px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Qualidade</span>
                 <strong style="color: #f1c644; font-size: 11px;">${escapeHtml(pokemon.qualidade)}</strong>
             </div>
         ` : "";
 
         const htmlIV = pokemon.ivAtual !== null ? `
-            <div style="background: linear-gradient(135deg, #18202d 0%, #0e1622 100%); border: 1px solid rgba(85,230,211,0.15); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid rgba(85,230,211,0.15); border-radius: 8px; padding: 6px 9px; display: flex; flex-direction: column; gap: 2px;">
                 <span style="color: #00bcd4; font-size: 7px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">IV Total</span>
                 <strong style="color: #55e6d3; font-size: 11px;">${pokemon.ivAtual}/${pokemon.ivMaximo} (${ivPercentual}%)</strong>
             </div>
@@ -1656,8 +1681,8 @@
 
         conteudo.innerHTML = `
             <div class="pokemon-card">
-                <div class="pokemon-top" style="display: flex; gap: 12px; align-items: center; padding: 12px;">
-                    <div class="sprite-container" style="flex: 0 0 64px; height: 64px; display: grid; place-items: center; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.2) 100%); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden;">
+                <div class="pokemon-top" style="display: flex; gap: 10px; align-items: center; padding: 8px 10px;">
+                    <div class="sprite-container" style="flex: 0 0 50px; height: 50px; display: grid; place-items: center; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.2) 100%); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden;">
                         ${htmlSprite}
                     </div>
                     <div style="flex: 1; min-width: 0;">
@@ -1676,20 +1701,20 @@
                                 ${chipsTipos}
                                 ${chipAtivo}
                             </div>
-                            <button id="btn-historico" type="button" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #8795aa; cursor: pointer; font-size: 10px; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-weight: bold; outline: none; transition: all 0.15s ease;" onmouseenter="this.style.background='rgba(255,255,255,0.08)';this.style.color='#fff';" onmouseleave="this.style.background='rgba(255,255,255,0.04)';this.style.color='#8795aa';" title="Histórico de Análises">
-                                🕒 Histórico
+                            <button id="btn-historico" type="button" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #8795aa; cursor: pointer; font-size: 11px; flex: 0 0 auto; padding: 1px 5px; border-radius: 4px; line-height: 1.4; outline: none; transition: all 0.15s ease;" onmouseenter="this.style.background='rgba(255,255,255,0.08)';" onmouseleave="this.style.background='rgba(255,255,255,0.04)';" title="Histórico de Análises">
+                                🕒
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="info-area" style="padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="info-area" style="padding: 0 10px 10px; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                         ${htmlQualidade}
                         ${htmlIV}
                     </div>
 
-                    <div class="stats-display-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px;">
+                    <div class="stats-display-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 2px;">
                         ${renderCardStat("HP", pokemon.hp, "#4caf50")}
                         ${renderCardStat("Atk", pokemon.atk, "#ff9800")}
                         ${renderCardStat("Def", pokemon.def, "#ffeb3b")}
@@ -1698,7 +1723,7 @@
                         ${renderCardStat("Vel", pokemon.vel, "#e91e63")}
                     </div>
 
-                    <div class="power" style="margin-top: 6px;">
+                    <div class="power" style="margin-top: 4px;">
                         <span>⚡ Poder total</span>
 
                         <strong>
@@ -3157,8 +3182,8 @@
         }
 
         if (
-            !texto.includes("Poder") ||
-            !/Nv\s*\d+/i.test(texto)
+            !/Poder|Power/i.test(texto) ||
+            !/(?:Nv|Lv)\s*\d+/i.test(texto)
         ) {
             return;
         }
@@ -3259,31 +3284,25 @@
         return `
             #${CONFIG.panelId} {
                 position: fixed;
-                top: 80px;
+                top: 60px;
                 right: 20px;
                 width: 340px;
                 max-height: calc(100vh - 20px);
                 z-index: 2147483647;
                 overflow: hidden;
-                color: #f7f7f7;
+                color: #e6edf3;
                 background:
-                    radial-gradient(
-                        circle at top right,
-                        rgba(67, 141, 243, 0.08),
-                        transparent 42%
-                    ),
                     linear-gradient(
                         165deg,
-                        #151923 0%,
-                        #0c0f16 55%,
-                        #080a0f 100%
+                        #161b22 0%,
+                        #0d1117 60%,
+                        #0d1117 100%
                     );
-                border: 2px solid #f1c644;
-                border-radius: 16px;
+                border: 1px solid #30363d;
+                border-radius: 14px;
                 box-shadow:
-                    0 0 0 3px rgba(0,0,0,.75),
-                    0 14px 40px rgba(0,0,0,.7),
-                    0 0 24px rgba(241,198,68,.12);
+                    0 0 0 1px rgba(0,0,0,.6),
+                    0 14px 40px rgba(0,0,0,.7);
                 font-family:
                     Arial,
                     Helvetica,
@@ -3297,9 +3316,28 @@
                 box-sizing: border-box;
             }
 
+            /* minimizado = "botao da extensao": pilula fixa no canto inferior direito,
+               fora do caminho do login e do jogo; clique abre */
             #${CONFIG.panelId}.minimized {
-                width: 235px !important;
-                height: 48px !important;
+                width: 110px !important;
+                height: 40px !important;
+                left: auto !important;
+                top: auto !important;
+                right: 12px !important;
+                bottom: 12px !important;
+                border-radius: 999px;
+            }
+
+            #${CONFIG.panelId}.minimized .header {
+                cursor: pointer;
+                min-height: 40px;
+                padding: 5px 12px;
+                border-bottom: none;
+                border-radius: 999px;
+            }
+
+            #${CONFIG.panelId}.minimized .header-actions {
+                display: none;
             }
 
             #${CONFIG.panelId}.minimized
@@ -3322,7 +3360,7 @@
                 height: 14px;
                 cursor: se-resize;
                 z-index: 10000;
-                background: linear-gradient(135deg, transparent 45%, rgba(241,198,68,0.4) 45%, rgba(241,198,68,0.4) 55%, transparent 55%, transparent 65%, rgba(241,198,68,0.4) 65%);
+                background: linear-gradient(135deg, transparent 45%, rgba(227,53,13,0.5) 45%, rgba(227,53,13,0.5) 55%, transparent 55%, transparent 65%, rgba(227,53,13,0.5) 65%);
                 border-radius: 0 0 14px 0;
             }
 
@@ -3559,11 +3597,11 @@
             .tabs {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                padding: 7px;
-                gap: 5px;
-                background: #0d1420;
+                padding: 5px;
+                gap: 4px;
+                background: #0d1117;
                 border-bottom:
-                    1px solid rgba(255,255,255,.08);
+                    1px solid #21262d;
             }
 
             #${CONFIG.panelId}
@@ -3572,7 +3610,7 @@
                 align-items: center;
                 justify-content: center;
                 gap: 5px;
-                padding: 9px 4px;
+                padding: 6px 4px;
                 color: #7d899d;
                 background: transparent;
                 border: 1px solid transparent;
@@ -3624,7 +3662,7 @@
 
             #${CONFIG.panelId}
             #content {
-                padding: 13px;
+                padding: 9px;
             }
 
             #${CONFIG.panelId}
@@ -3872,17 +3910,17 @@
             .power {
                 display: flex;
                 justify-content: space-between;
-                margin-top: 8px;
-                padding: 9px 10px;
-                color: #ffe262;
+                margin-top: 5px;
+                padding: 6px 10px;
+                color: #ffb968;
                 background:
                     linear-gradient(
                         90deg,
-                        rgba(202,48,53,.22),
-                        rgba(241,198,68,.13)
+                        rgba(227,53,13,.20),
+                        rgba(227,53,13,.06)
                     );
                 border:
-                    1px solid rgba(241,198,68,.3);
+                    1px solid rgba(227,53,13,.3);
                 border-radius: 8px;
             }
 
@@ -3890,13 +3928,13 @@
             .actions {
                 display: flex;
                 gap: 7px;
-                padding: 10px 12px;
+                padding: 7px 10px;
             }
 
             #${CONFIG.panelId}
             .actions button {
                 flex: 1;
-                padding: 9px;
+                padding: 7px;
                 color: #fff;
                 background:
                     linear-gradient(
@@ -5210,7 +5248,7 @@
         const nome = nomeNivelTexto.replace(/Lv\.?\s*\d+/i, "").trim();
 
         // 2. Qualidade / Multiplicador (Ex: "Lendária ×1.70" ou "Lendária x1.70")
-        const qualidadeTexto = lateral.innerText.match(/Raridade\s+([^\n]+)/i)?.[1]?.trim() || "";
+        const qualidadeTexto = lateral.innerText.match(/(?:Raridade|Rarity)\s+([^\n]+)/i)?.[1]?.trim() || "";
         const multiplicador = numeroDecimal(qualidadeTexto?.match(/(?:×|x)\s*([\d.,]+)/i)?.[1]) || 1.0;
 
         // 3. IV Total observado (Ex: "148/182")
@@ -5219,13 +5257,13 @@
         const ivMaximo = ivMatch ? Number(ivMatch[2]) : 192;
 
         // 4. Poder
-        const poderMatch = lateral.innerText.match(/Poder\s*.*?(\d+)/i);
+        const poderMatch = lateral.innerText.match(/(?:Poder|Power)\s*.*?(\d+)/i);
         const poder = poderMatch ? Number(poderMatch[1]) : null;
 
         // 5. Tipos (Mapeia as badges de tipo dentro da lateral)
         const tipos = Array.from(lateral.querySelectorAll(".mkt2-card-badges span, .mkt2-statlist span"))
             .map(el => el.innerText.trim())
-            .filter(txt => txt && !/Poder|Ativo|Somente/i.test(txt));
+            .filter(txt => txt && !/Poder|Power|Ativo|Active|Somente|Only/i.test(txt));
 
         // 6. Atributos Atuais (Stats vindos da grid de células .mkt2-statcell)
         const statsCelas = Array.from(lateral.querySelectorAll(".mkt2-stats .mkt2-statcell"));
@@ -5324,14 +5362,23 @@
                             <option value="Mítica">Mítica</option>
                         </select>
                         <input type="number" id="clog-filter-iv" placeholder="IV Min (ex: 110)" style="width: 105px; background: #151d2a; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 10px; padding: 3px 6px; outline: none; height: 22px;" min="0" max="192">
+                        <select id="clog-sort" title="Ordenar" style="width: 118px; background: #151d2a; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 10px; padding: 3px 6px; outline: none; height: 22px;">
+                            <option value="">Ordem padrão</option>
+                            <option value="qual-desc">Qualidade ↓</option>
+                            <option value="qual-asc">Qualidade ↑</option>
+                            <option value="iv-desc">IV ↓</option>
+                            <option value="iv-asc">IV ↑</option>
+                        </select>
                     `;
                     head.insertAdjacentElement("afterend", filterBar);
 
                     const rSel = filterBar.querySelector("#clog-filter-rarity");
                     const iInp = filterBar.querySelector("#clog-filter-iv");
+                    const sSel = filterBar.querySelector("#clog-sort");
 
                     rSel.addEventListener("change", aplicarFiltroClog);
                     iInp.addEventListener("input", aplicarFiltroClog);
+                    sSel.addEventListener("change", aplicarFiltroClog);
                 }
             }
 
@@ -5355,16 +5402,37 @@
             subtree: true
         });
 
+        // ranking de raridade pra ordenar por qualidade (PT e EN)
+        const RANK_RARIDADE = {
+            comum: 1, common: 1, incomum: 2, uncommon: 2, rara: 3, raro: 3, rare: 3,
+            epica: 4, epico: 4, epic: 4, lendaria: 5, lendario: 5, legendary: 5,
+            mitica: 6, mitico: 6, mythic: 6, mythical: 6, anciao: 7, ancient: 7, divino: 8, divine: 8
+        };
+
         let filtrandoClog = false;
         function aplicarFiltroClog() {
             if (filtrandoClog) return;
             const rarityFilter = document.getElementById("clog-filter-rarity")?.value || "";
             const ivFilterVal = parseInt(document.getElementById("clog-filter-iv")?.value || "0", 10);
+            const sortMode = document.getElementById("clog-sort")?.value || "";
 
+            const lista = document.querySelector(".clog-window .clog-list");
             const rows = document.querySelectorAll(".clog-window .clog-list .clog-row");
             if (!rows.length) return;
 
             filtrandoClog = true;
+
+            // ordenacao via CSS order (nao move nos do DOM, entao nao briga com o React do jogo)
+            if (lista) {
+                if (sortMode) {
+                    lista.style.setProperty("display", "flex", "important");
+                    lista.style.setProperty("flex-direction", "column", "important");
+                } else {
+                    lista.style.removeProperty("display");
+                    lista.style.removeProperty("flex-direction");
+                }
+            }
+
             rows.forEach(row => {
                 const metaEl = row.querySelector(".clog-meta");
                 if (!metaEl) return;
@@ -5382,6 +5450,18 @@
                     row.style.setProperty("display", "", "important");
                 } else {
                     row.style.setProperty("display", "none", "important");
+                }
+
+                if (sortMode) {
+                    // qualidade = raridade (peso alto) + multiplicador ×N.NN como desempate
+                    const chave = rarityText.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+                    const rank = RANK_RARIDADE[chave] || 0;
+                    const multMatch = text.match(/(?:×|x)\s*([\d.,]+)/i);
+                    const mult = multMatch ? Math.round(parseFloat(multMatch[1].replace(",", ".")) * 100) : 0;
+                    const metric = sortMode.startsWith("iv") ? ivVal : rank * 1000 + mult;
+                    row.style.setProperty("order", String(sortMode.endsWith("desc") ? -metric : metric));
+                } else {
+                    row.style.removeProperty("order");
                 }
             });
             filtrandoClog = false;

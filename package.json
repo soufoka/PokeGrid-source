@@ -1,6 +1,6 @@
 {
   "name": "pokegrid",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Rode 4 contas de Poke Idle World ao mesmo tempo, em uma janela so / Run 4 Poke Idle World accounts at once, in a single window",
   "main": "main.js",
   "author": "soufoka",

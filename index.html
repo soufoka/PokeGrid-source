@@ -41,7 +41,10 @@
     flex: 1; display: grid; gap: 6px; padding: 6px;
     grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr;
     position: relative; min-height: 0;
+    transition: margin-left .18s ease;
   }
+  /* painel aberto empurra o grid em vez de cobrir a coluna da esquerda */
+  body.stats-open #grid { margin-left: var(--statsw, 350px); }
   #grid.count-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
   #grid.count-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
   #grid.count-3 .panel:last-child { grid-column: 1 / -1; }   /* 3o painel ocupa a linha de baixo inteira */
@@ -437,7 +440,7 @@
         if (!off[i]) { dot.className = 'dot ok'; status.textContent = t('stOnline'); fails = 0; alertedDown = false; } // carregou: zera o watchdog
         try {
           wv.setAudioMuted(muted); wv.setZoomFactor(zoom);
-          wv.executeJavaScript(`(()=>{if(window.__poke)return;const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();}else if(m.type==='field-kill'){S.kills++;S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});}else if(m.type==='catch-result'){S.balls++;if(m.success)S.captures++;}else if(m.type==='field'){(m.mobs||[]).forEach(mo=>{if(mo.shiny){const k=mo.slot+'_'+mo.speciesId;if(!S.shinySeen[k]){S.shinySeen[k]=1;S.shinyN++;}}});}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]&&pk.shiny)S.shinyCapN++;P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]&&pk.shiny)S.shinyCapN++;P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au)auth=au;}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'&&(!j||!j.character))return;P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
+          wv.executeJavaScript(`(()=>{if(window.__poke)return;const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();}else if(m.type==='field-kill'){S.kills++;S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});}else if(m.type==='catch-result'){S.balls++;if(m.success)S.captures++;}else if(m.type==='field'){(m.mobs||[]).forEach(mo=>{if(mo.shiny){const k=mo.slot+'_'+mo.speciesId;if(!S.shinySeen[k]){S.shinySeen[k]=1;S.shinyN++;}}});}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au)auth=au;}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'&&(!j||!j.character))return;P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
           wv.executeJavaScript(ecoScript(eco ? 15 : 0)).catch(() => {});
           wv.executeJavaScript(POPUP_SCRIPT).catch(() => {});
           wv.executeJavaScript(chatScript(chatHidden)).catch(() => {});
@@ -911,8 +914,8 @@
       let lootGold = 0; const dr = [];
       for (const id in S.drops) { const dd = S.drops[id]; const g = dd.qty * ((cat[id] && cat[id].npcPrice) || 0); lootGold += g; dr.push({ name: dd.name, qty: dd.qty, gold: g }); }
       dr.sort((x, y) => y.gold - x.gold);
-      const supplyGold = S.balls * ballPrice, balance = lootGold - supplyGold, ph = v => Math.round(v / secs * 3600);
-      return { kills: S.kills, seconds: secs, captures: S.captures, shinyFound: S.shinyN || 0, shinyCap: S.shinyCapN || 0, xpg: S.xp, lootGold, capturesGold: 0, supplyGold, balance, gph: ph(balance), xph: ph(S.xp), kph: ph(S.kills), drops: dr };
+      const capGold = S.sellG || 0, supplyGold = S.balls * ballPrice, balance = lootGold + capGold - supplyGold, ph = v => Math.round(v / secs * 3600);
+      return { kills: S.kills, seconds: secs, captures: S.captures, shinyFound: S.shinyN || 0, shinyCap: S.shinyCapN || 0, xpg: S.xp, lootGold, capturesGold: capGold, supplyGold, balance, gph: ph(balance), xph: ph(S.xp), kph: ph(S.kills), drops: dr };
     };
     const a = calc(P.sess, Date.now());
     const drops = a ? a.drops : [];
@@ -953,12 +956,15 @@
   statsEl.style.top = document.getElementById('topbar').offsetHeight + 'px';
   statsEl.style.bottom = '0';
   statsEl.style.width = (+localStorage.getItem('statsW') || 350) + 'px';
+  document.body.style.setProperty('--statsw', statsEl.style.width); // o grid acompanha a largura do painel
   const stTabs = statsEl.querySelector('.st-tabs');
   const stBody = statsEl.querySelector('.st-body');
   const statsBtn = document.getElementById('statsBtn');
   let statsIdx = 0;
   const tabNames = [];
-  let statsOpen = localStorage.getItem('statsOpen') === '1';
+  // na tela de login o painel espera: se estava aberto, so reabre depois que alguma conta logar
+  let statsAutoPend = localStorage.getItem('statsOpen') === '1';
+  let statsOpen = false;
   let cfgOpen = false;
   let dragging = false; // arrastando uma seção no painel (pausa o refresh)
 
@@ -1161,6 +1167,20 @@
     if (changed) buildStatsTabs();
   }
 
+  // vigia do login: quando a primeira conta entra no jogo, reabre o painel que estava esperando
+  setInterval(async () => {
+    if (!statsAutoPend) return;
+    for (let i = 0; i < count; i++) {
+      if (off[i] || !webviews[i]) continue;
+      try {
+        if (await webviews[i].executeJavaScript(NAME_JS)) {
+          statsAutoPend = false; statsOpen = true; applyStats();
+          return;
+        }
+      } catch {}
+    }
+  }, 3000);
+
   // Visão de totais + cartão por conta.
   const ACOR = ['#c07bf5', '#3987e5', '#1baf7a', '#eda100']; // cor de cada conta (1=violeta)
   function aggCard(dot, name, d) {
@@ -1218,21 +1238,23 @@
 
   function applyStats() {
     statsEl.classList.toggle('show', statsOpen);
+    document.body.classList.toggle('stats-open', statsOpen); // empurra o grid
     statsBtn.classList.toggle('on', statsOpen);
-    localStorage.setItem('statsOpen', statsOpen ? '1' : '0');
+    // statsAutoPend conta como "vai abrir": preserva a preferencia durante o login
+    localStorage.setItem('statsOpen', (statsOpen || statsAutoPend) ? '1' : '0');
     if (statsOpen) {
       cfgOpen = false; const c = statsEl.querySelector('.st-cfg'); if (c) c.style.display = 'none';
       stBody.style.display = ''; stTabs.style.display = ''; const g = statsEl.querySelector('.st-gear'); if (g) g.classList.remove('on');
       buildStatsTabs(); loadTabNames(); refreshStats();
     }
   }
-  statsBtn.onclick = () => { statsOpen = !statsOpen; applyStats(); };
-  statsEl.querySelector('.st-x').onclick = () => { statsOpen = false; applyStats(); };
+  statsBtn.onclick = () => { statsOpen = !statsOpen; statsAutoPend = false; applyStats(); };
+  statsEl.querySelector('.st-x').onclick = () => { statsOpen = false; statsAutoPend = false; applyStats(); };
   // largura ajustável: arrasta a borda direita (os elementos se reencaixam sozinhos)
   (() => {
     const handle = statsEl.querySelector('.st-resize');
     let ov = null;
-    const move = (e) => { statsEl.style.width = Math.max(288, Math.min(760, e.clientX)) + 'px'; };
+    const move = (e) => { statsEl.style.width = Math.max(288, Math.min(760, e.clientX)) + 'px'; document.body.style.setProperty('--statsw', statsEl.style.width); };
     const stop = () => { if (!ov) return; document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', stop); ov.remove(); ov = null; localStorage.setItem('statsW', parseInt(statsEl.style.width, 10)); };
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
@@ -1259,7 +1281,14 @@
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  function renderSettings() {
+  async function renderSettings() {
+    // o seletor de alvo shiny e a lista da bag dependem de lastData; se a engrenagem
+    // abriu antes de qualquer conta renderizar (ex.: direto na aba Σ), busca na hora
+    if (!lastData || !lastData.usedList || !lastData.usedList.length) {
+      let j = statsIdx >= 0 ? statsIdx : -1;
+      if (j < 0 || off[j] || !webviews[j]) { j = -1; for (let i = 0; i < count; i++) { if (!off[i] && webviews[i]) { j = i; break; } } }
+      if (j >= 0) { try { const d = await webviews[j].executeJavaScript(READ_STATE); if (d && d.ok) lastData = d; } catch {} }
+    }
     let h = '<div class="cfg-h">' + t('cfgSections') + '</div><div class="cfg-secs">';
     cfg.order.forEach(name => h += '<div class="cfg-row" draggable="true" data-sec="' + name + '"><span class="cfg-grip">⋮⋮</span><label class="cfg-chk"><input type="checkbox" data-sec="' + name + '"' + (cfg.hide[name] ? '' : ' checked') + '> ' + secLabel(name) + '</label></div>');
     h += '</div>';

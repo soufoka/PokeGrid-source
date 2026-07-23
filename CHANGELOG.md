@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.1
+
+- **Correção: a calculadora de IV (JustPokédex) voltou a funcionar com o jogo em inglês.** Uma atualização do jogo trocou os rótulos do tooltip; agora o leitor entende português e inglês (Nv/Lv, Qualidade/Quality, Poder/Power, Vel/Spe).
+  *Fix: the IV calculator (JustPokédex) works again with the game in English. A game update changed the tooltip labels; the reader now understands both Portuguese and English.*
+- **JustPokédex começa fechado**: vira um botão "IV's" discreto no canto inferior direito, longe do login. Clique pra abrir.
+  *JustPokédex starts closed: a discreet "IV's" button in the bottom-right corner, away from the login. Click to open.*
+- **Painel de resumo espera o login**: se estava aberto, reabre sozinho quando a primeira conta entra no jogo.
+  *Stats panel waits for login: if it was open, it reopens on its own once the first account logs in.*
+- **Painel empurra os quadrantes** em vez de cobrir a tela da esquerda, e a largura acompanha o ajuste.
+  *The panel now pushes the game panels aside instead of covering the left column, following its width.*
+- **Ouro da sessão conta a venda dos pokémon capturados** (linha "Capturas (venda)", entra no saldo e no gold/h).
+  *Session gold now counts the sale value of caught Pokémon (a "Captures (sell)" line, included in balance and gold/h).*
+- **Alvo shiny**: o seletor na engrenagem funciona mesmo abrindo direto na aba Σ.
+  *Shiny target: the picker in the gear works even when opened straight from the Σ tab.*
+- **Log de capturas**: dá pra ordenar por qualidade ou IV, crescente e decrescente.
+  *Capture log: sort by quality or IV, ascending or descending.*
+- **Visual do JustPokédex** no tema do app: um só chip "Ativo", cores de tipo corretas no card, botão de histórico compacto e tudo até o Poder total cabe sem rolar.
+  *JustPokédex visuals matching the app theme: a single "Active" chip, correct type colors on the card, compact history button, and everything up to Total Power fits without scrolling.*
+
 ## 1.3.0
 
 - **📊 Painel de estatísticas** (botão no topo): barra lateral com os números de cada conta ao vivo (gold/h, XP/h, kills/h, ouro da sessão, drops, bag), mais um compilado com o total de todas as contas. Não precisa abrir o Hunt Analyzer.

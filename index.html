@@ -113,7 +113,8 @@
   #stats .sb-top { height: 3px; background: linear-gradient(90deg, #e3350d, #ff7a4d); flex-shrink: 0; }
   #stats .st-head { display: flex; align-items: center; gap: 8px; padding: 8px 13px; background: #0b0f15;
     font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #7d8590; flex-shrink: 0; }
-  #stats .st-head .st-gear { margin-left: auto; padding: 2px 8px; font-size: 14px; }
+  #stats .st-head .st-reset { margin-left: auto; padding: 2px 8px; font-size: 13px; }
+  #stats .st-head .st-gear { margin-left: 5px; padding: 2px 8px; font-size: 14px; }
   #stats .st-head .st-gear.on { color: #e3350d; }
   #stats .st-head .st-x { margin-left: 5px; padding: 2px 9px; font-size: 13px; }
   #stats .st-tabs { display: flex; gap: 4px; padding: 8px 9px; background: #0b0f15; border-bottom: 1px solid #1c2229; flex-shrink: 0; }
@@ -227,6 +228,8 @@
   .cd-spark { width: 100%; height: 44px; display: block; }
   .cd-empty { color: #6e7681; font-size: 12px; padding: 8px 0; }
   .cd-h select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 10px; padding: 2px 6px; outline: none; }
+  .cd-h button { background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #adbac7; font-size: 10px; padding: 3px 9px; cursor: pointer; }
+  .cd-h button:hover { border-color: #e3350d; color: #fff; }
   .cd-fav { flex: none; font-size: 13px; }
   #stats .team { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 15px 6px; }
   #stats .tm { font-size: 11px; color: #8b949e; background: #12171e; border: 1px solid #1c2229; border-radius: 6px; padding: 3px 7px; white-space: nowrap; }
@@ -393,6 +396,7 @@
       cards:'🃏 Cartas', cardsTitle:'Dashboard ultra leve: esconde o jogo e mostra só os números (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
       cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
       sellguard:'🛡 Venda protegida', sellguardTitle:'Pede confirmação antes de vender shiny, Lendária+ ou item raro (verde = ligado)',
+      reset:'Zerar', resetTitle:'Zera as estatísticas da sessão (todas as contas), pra monitorar a partir de agora', resetConfirm:'Zerar as estatísticas da sessão de todas as contas? Os totais da conta (gold, nível, shinies de vida) não mudam.',
       msgShiny:'encontrou um SHINY! ✨', msgFaint:'teve um pokémon derrubado', msgBallsLow:'está com poucas pokébolas', msgPotionsLow:'está com poucas potions', msgRevivesLow:'está com poucos revives',
       stAllTitle:'Resumo geral', stTotal:'Total', stAcc:'Conta', stCompare:'Comparação (hunt anterior)', stPrev:'anterior', stCur:'atual', stMoney:'dólares', stPerAcc:'Por conta',
       stShinyFound:'Shiny enc.', stShinyCap:'✨ Shiny capturados', stShinyF:'Shiny enc.', stShinyC:'Shiny capt.', stSupplies:'Suprimentos', stAssets:'Patrimônio',
@@ -419,6 +423,7 @@
       cards:'🃏 Cards', cardsTitle:'Ultra-light dashboard: hides the game and shows only the numbers (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
       cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
       sellguard:'🛡 Sell guard', sellguardTitle:'Asks for confirmation before selling shiny, Legendary+ or rare items (green = on)',
+      reset:'Reset', resetTitle:'Resets the session stats (all accounts), to monitor from now on', resetConfirm:'Reset the session stats for all accounts? Account totals (gold, level, lifetime shinies) are unchanged.',
       msgShiny:'found a SHINY! ✨', msgFaint:'had a Pokémon knocked out', msgBallsLow:'is low on Poké Balls', msgPotionsLow:'is low on potions', msgRevivesLow:'is low on revives',
       stAllTitle:'Overview', stTotal:'Total', stAcc:'Account', stCompare:'Comparison (previous hunt)', stPrev:'previous', stCur:'current', stMoney:'dollars', stPerAcc:'Per account',
       stShinyFound:'Shiny found', stShinyCap:'✨ Shiny captured', stShinyF:'Shiny found', stShinyC:'Shiny capt.', stSupplies:'Supplies', stAssets:'Assets',
@@ -1121,7 +1126,7 @@
 
   const statsEl = document.createElement('div');
   statsEl.id = 'stats';
-  statsEl.innerHTML = '<div class="sb-top"></div><div class="st-head"><span>📊 Resumo</span><button class="st-gear" title="Configurar o painel">⚙</button><button class="st-x" title="Fechar">✕</button></div><div class="st-tabs"></div><div class="st-body"></div><div class="st-cfg"></div><div class="st-resize" title="Arraste para ajustar a largura"></div>';
+  statsEl.innerHTML = '<div class="sb-top"></div><div class="st-head"><span>📊 Resumo</span><button class="st-reset" title="Zerar a sessão (todas as contas)">⟲</button><button class="st-gear" title="Configurar o painel">⚙</button><button class="st-x" title="Fechar">✕</button></div><div class="st-tabs"></div><div class="st-body"></div><div class="st-cfg"></div><div class="st-resize" title="Arraste para ajustar a largura"></div>';
   document.body.appendChild(statsEl);
   statsEl.style.top = document.getElementById('topbar').offsetHeight + 'px';
   statsEl.style.bottom = '0';
@@ -1619,7 +1624,7 @@
 
     const arrow = (k) => dsort.k === k ? (dsort.d < 0 ? ' ▾' : ' ▴') : '';
     const TH = [['name', t('cdConta')], ['hunt', t('cdHunt')], ['gph', 'Gold/h'], ['xph', 'XP/h'], ['kph', 'Kills/h'], ['caps', t('stCaptures')], ['sh', '✨'], ['best', t('cdBest')], ['last', t('cdLast')], ['st', t('cdStatus')]];
-    h += '<div class="cd-sec"><div class="cd-h">' + t('cdByAcc') + '</div><table class="cd-table"><thead><tr>'
+    h += '<div class="cd-sec"><div class="cd-h" style="display:flex;align-items:center;gap:8px">' + t('cdByAcc') + '<button id="cdReset" style="margin-left:auto" title="' + t('resetTitle') + '">⟲ ' + t('reset') + '</button></div><table class="cd-table"><thead><tr>'
       + TH.map(x => '<th data-k="' + x[0] + '">' + x[1] + arrow(x[0]) + '</th>').join('') + '</tr></thead><tbody>';
     ordered.forEach(r => {
       const stTxt = r.st === 'off' ? '<span style="color:#6e7681">' + t('cdOff') + '</span>'
@@ -1696,6 +1701,7 @@
     cardsEl.scrollTop = st0; // nao perde a rolagem no refresh
     cardsEl.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (dsort.k === k) dsort.d *= -1; else dsort = { k, d: -1 }; refreshCards(); });
     cardsEl.querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => { const i = +tr.dataset.i; cardsOn = false; applyCards(); toggleExpand(i); });
+    const rb = cardsEl.querySelector('#cdReset'); if (rb) rb.onclick = resetSessao;
     const hs = cardsEl.querySelector('#cdHuntSort'); if (hs) hs.onchange = () => { huntSort = hs.value; refreshCards(); };
     const ha2 = cardsEl.querySelector('#cdHuntAcc'); if (ha2) ha2.onchange = () => { huntAccSel = +ha2.value; refreshCards(); };
     cardsEl.querySelectorAll('.cd-fav').forEach(f => f.onclick = () => { const k = f.dataset.h; if (huntFavs[k]) delete huntFavs[k]; else huntFavs[k] = 1; try { localStorage.setItem('huntFavs', JSON.stringify(huntFavs)); } catch {} refreshCards(); });
@@ -1709,6 +1715,18 @@
   }
   cardsBtn.onclick = () => { cardsOn = !cardsOn; applyCards(); };
   setInterval(() => { if (cardsOn && !document.hidden) refreshCards(); }, 2500);
+
+  // Zerar a sessao: nossos numeros vem de P.sess (acumulador proprio), que so reseta na troca de hunt.
+  // Isso reinicia o acumulador de todas as contas AGORA, pra monitorar a partir deste ponto. Nao mexe
+  // em totais da conta (gold, nivel, shinies de vida) nem em knownPokes (senao contaria captura repetida).
+  const RESET_SESS = "(()=>{const P=window.__poke;if(!P)return;P.sess={start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,hp:{}};P.catchLog=[];P.shinyLog=[];})()";
+  function resetSessao() {
+    if (!window.confirm(t('resetConfirm'))) return;
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(RESET_SESS).catch(() => {}); } catch {} });
+    dhist = []; // zera a tendencia (sparklines) tambem
+    refreshStats(); if (cardsOn) refreshCards();
+  }
+  statsEl.querySelector('.st-reset').onclick = resetSessao;
 
   // ===== Gerenciador de scripts / extras (userscripts injetados nos painéis) =====
   const PRESETS = [{ id: 'justpokedex', name: 'JustPokédex — Calculadora de IV', file: 'justpokedex.js', author: 'guilherme-se' }];

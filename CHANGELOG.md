@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.2
+
+- **Botão de zerar a sessão** (⟲ no Painel e no Modo Cartas): reinicia as estatísticas da sessão de todas as contas na hora, pra monitorar a partir de um momento escolhido. Diferente do Hunt Analyzer do jogo, que não zera os nossos números. Os totais da conta (gold, nível, shinies de vida) não mudam.
+  *Reset-session button (⟲ in the Panel and Cards mode): restarts the session stats for all accounts on the spot, to monitor from a chosen moment. Unlike the game's Hunt Analyzer, which doesn't reset our numbers. Account totals (gold, level, lifetime shinies) are unchanged.*
+
 ## 1.3.1
 
 - **Correção: a calculadora de IV (JustPokédex) voltou a funcionar com o jogo em inglês.** Uma atualização do jogo trocou os rótulos do tooltip; agora o leitor entende português e inglês (Nv/Lv, Qualidade/Quality, Poder/Power, Vel/Spe).

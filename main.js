@@ -132,6 +132,9 @@ app.whenReady().then(() => {
     webPreferences: { webviewTag: true, preload: path.join(__dirname, 'preload.js') }
   });
   win.loadFile(path.join(__dirname, 'index.html')); // caminho absoluto: robusto no build empacotado (asar)
+  // a janela principal so mostra index.html: bloqueia qualquer navegacao dela (canal de exfiltracao se houver XSS)
+  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('file://')) { e.preventDefault(); abreFora(url); } });
+  win.webContents.setWindowOpenHandler(({ url }) => { abreFora(url); return { action: 'deny' }; });
 
   // registra travamento/queda da propria interface no relatorio de erros
   win.webContents.on('unresponsive', () => logErro('janela', 'interface travou (sem responder)'));

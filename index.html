@@ -223,6 +223,8 @@
   .cd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 2px; flex: none; }
   .cd-spark { width: 100%; height: 44px; display: block; }
   .cd-empty { color: #6e7681; font-size: 12px; padding: 8px 0; }
+  .cd-h select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 10px; padding: 2px 6px; outline: none; }
+  .cd-fav { flex: none; font-size: 13px; }
   #stats .team { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 15px 6px; }
   #stats .tm { font-size: 11px; color: #8b949e; background: #12171e; border: 1px solid #1c2229; border-radius: 6px; padding: 3px 7px; white-space: nowrap; }
   #stats .tm b { color: #c9d1d9; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -385,6 +387,7 @@
       alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Bolas / potions gastas', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time',
       cards:'🃏 Cartas', cardsTitle:'Dashboard ultra leve: esconde o jogo e mostra só os números (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
+      cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
       msgShiny:'encontrou um SHINY! ✨', msgFaint:'teve um pokémon derrubado', msgBallsLow:'está com poucas pokébolas', msgPotionsLow:'está com poucas potions', msgRevivesLow:'está com poucos revives',
       stAllTitle:'Resumo geral', stTotal:'Total', stAcc:'Conta', stCompare:'Comparação (hunt anterior)', stPrev:'anterior', stCur:'atual', stMoney:'dólares', stPerAcc:'Por conta',
       stShinyFound:'Shiny enc.', stShinyCap:'✨ Shiny capturados', stShinyF:'Shiny enc.', stShinyC:'Shiny capt.', stSupplies:'Suprimentos', stAssets:'Patrimônio',
@@ -409,6 +412,7 @@
       alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Balls / potions used', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team',
       cards:'🃏 Cards', cardsTitle:'Ultra-light dashboard: hides the game and shows only the numbers (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
+      cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
       msgShiny:'found a SHINY! ✨', msgFaint:'had a Pokémon knocked out', msgBallsLow:'is low on Poké Balls', msgPotionsLow:'is low on potions', msgRevivesLow:'is low on revives',
       stAllTitle:'Overview', stTotal:'Total', stAcc:'Account', stCompare:'Comparison (previous hunt)', stPrev:'previous', stCur:'current', stMoney:'dollars', stPerAcc:'Per account',
       stShinyFound:'Shiny found', stShinyCap:'✨ Shiny captured', stShinyF:'Shiny found', stShinyC:'Shiny capt.', stSupplies:'Supplies', stAssets:'Assets',
@@ -476,10 +480,12 @@
         if (!off[i]) { dot.className = 'dot ok'; status.textContent = t('stOnline'); fails = 0; alertedDown = false; } // carregou: zera o watchdog
         try {
           wv.setAudioMuted(muted); wv.setZoomFactor(zoom);
-          wv.executeJavaScript(`(()=>{if(window.__poke)return;const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();}else if(m.type==='field-kill'){S.kills++;S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});}else if(m.type==='catch-result'){S.balls++;if(m.success)S.captures++;}else if(m.type==='field'){(m.mobs||[]).forEach(mo=>{if(mo.shiny){const k=mo.slot+'_'+mo.speciesId;if(!S.shinySeen[k]){S.shinySeen[k]=1;S.shinyN++;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:mo.name||mo.speciesName||('#'+mo.speciesId),t:Date.now()});if(SL.length>30)SL.shift();}}});}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const LP=P.ws.pokes&&P.ws.pokes.list;if(LP){const ix=LP.findIndex(x=>x.id===pk.id);if(ix>=0)Object.assign(LP[ix],pk);else LP.push(pk);}const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++;const CL=P.catchLog=P.catchLog||[];CL.push({n:pk.name||'?',iv:pk.ivTotal||0,q:pk.quality||0,sh:!!pk.shiny,t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++;const CL=P.catchLog=P.catchLog||[];CL.push({n:pk.name||'?',iv:pk.ivTotal||0,q:pk.quality||0,sh:!!pk.shiny,t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au)auth=au;}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'&&(!j||!j.character))return;P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
+          wv.executeJavaScript(`(()=>{if(window.__poke)return;const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();}else if(m.type==='field-kill'){S.kills++;S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});}else if(m.type==='catch-result'){S.balls++;S.sinceCatch=(S.sinceCatch||0)+1;if(m.success){S.captures++;S.lastCatchT=Date.now();S.sinceCatch=0;}}else if(m.type==='field'){(m.mobs||[]).forEach(mo=>{if(mo.shiny){const k=mo.slot+'_'+mo.speciesId;if(!S.shinySeen[k]){S.shinySeen[k]=1;S.shinyN++;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:mo.name||mo.speciesName||('#'+mo.speciesId),t:Date.now()});if(SL.length>30)SL.shift();}}});}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const LP=P.ws.pokes&&P.ws.pokes.list;if(LP){const ix=LP.findIndex(x=>x.id===pk.id);if(ix>=0)Object.assign(LP[ix],pk);else LP.push(pk);}const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++;const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:pk.ivTotal||0,q:pk.quality||0,sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny)S.shinyCapN++;const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:pk.ivTotal||0,q:pk.quality||0,sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}else if(m.type==='chat'||m.type==='history'){const chS=(mm)=>{try{if(!mm||!mm.body)return;const re=/\\[poke!([A-Za-z0-9_-]+)\\]/g;let mt;while((mt=re.exec(mm.body))){try{const j=JSON.parse(atob(mt[1].replace(/-/g,'+').replace(/_/g,'/')));if(j&&j.k==='poke'){const CS=P.chatShares=P.chatShares||[];if(!CS.some(c=>c.n===j.n&&c.iv===(j.iv||0)&&c.lv===(j.lv||0)&&c.fr===(mm.fromName||''))){CS.push({fr:mm.fromName||'',n:j.n||'?',sh:!!j.sh,lv:j.lv||0,q:j.q||0,iv:j.iv||0,pw:j.pw||0,t:Date.now()});if(CS.length>15)CS.shift();}}}catch(x){}}}catch(x){}};if(m.type==='chat')chS(m.msg);else['world','trade','help'].forEach(c2=>(m[c2]||[]).forEach(chS));}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au)auth=au;}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'&&(!j||!j.character))return;P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
           wv.executeJavaScript(ecoScript(ecoFps())).catch(() => {});
           if (cardsOn) wv.executeJavaScript(ultraScript(true)).catch(() => {}); // reaplica o ultra apos reload/relogin
           wv.executeJavaScript(POPUP_SCRIPT).catch(() => {});
+          wv.executeJavaScript(SELLGUARD).catch(() => {});
+          wv.executeJavaScript(QOL_UI).catch(() => {});
           wv.executeJavaScript(chatScript(chatHidden)).catch(() => {});
           wv.executeJavaScript(dockScript(dockHidden)).catch(() => {});
           // so na tela de login, pra nao rodar a toa dentro do jogo
@@ -693,6 +699,105 @@
     localStorage.setItem('eco', eco ? '1' : '0');
   }
   ecoBtn.onclick = () => { eco = !eco; applyEco(); };
+
+  // ----- Guarda de venda: intercepta os POSTs de venda e pede confirmacao pra coisa valiosa -----
+  // Protege sem agir no jogo: shiny e qualidade Lendaria+ (>=1.7), e itens raros nomeados.
+  const SELLGUARD = `(() => {
+    if (window.__pgSellGuard) return; window.__pgSellGuard = true;
+    const PROT = ['strange pheromone', 'rare pokémon picture', 'rare pokemon picture'];
+    const nomeItem = (id) => { try { const P = window.__poke; const doc = P && P.api && P.api['/game/items.json']; const it = doc && doc.items && doc.items.find(x => x.id === id); return it ? it.name : ''; } catch (x) { return ''; } };
+    const OF2 = window.fetch;
+    window.fetch = function(...a) {
+      try {
+        const u = (a[0] && a[0].url) || a[0]; const ini = a[1] || {};
+        if (typeof u === 'string' && ini.body && typeof ini.body === 'string') {
+          const avisos = [];
+          if (/\\/api\\/game\\/pokemon\\/sell/.test(u)) {
+            const b = JSON.parse(ini.body); const ids = (b && b.pokeIds) || [];
+            const P = window.__poke; const LP = (P && P.ws && P.ws.pokes && P.ws.pokes.list) || [];
+            ids.forEach(id => { const p = LP.find(x => x.id === id); if (p && (p.shiny || (p.quality || 0) >= 1.7)) avisos.push((p.shiny ? 'SHINY ' : '') + p.name + ' x' + (p.quality || 0).toFixed(2)); });
+          } else if (/\\/api\\/game\\/(shop|flint)\\/sell/.test(u)) {
+            const b = JSON.parse(ini.body); const its = b && b.items ? b.items : (b && b.itemId ? [{ itemId: b.itemId, qty: b.qty }] : []);
+            its.forEach(x => { const nm = nomeItem(x.itemId); if (nm && PROT.includes(nm.toLowerCase())) avisos.push(nm + ' x' + (x.qty || 1)); });
+          }
+          if (avisos.length) {
+            const ok = window.confirm('PokeGrid: voce esta vendendo coisas valiosas:\\n\\n' + avisos.join('\\n') + '\\n\\nConfirmar a venda?');
+            if (!ok) return Promise.reject(new Error('Venda cancelada pelo PokeGrid'));
+          }
+        }
+      } catch (x) {}
+      return OF2.apply(this, a);
+    };
+  })()`;
+
+  // ----- Filtros na Pokedex e no Mercado (so leitura: esconde/ordena o que ja esta na tela) -----
+  const QOL_UI = `(() => {
+    if (window.__pgQol) return; window.__pgQol = true;
+    const css = document.createElement('style'); css.id = 'pg-qol-css';
+    css.textContent = '.pg-qbar{display:flex;gap:6px;align-items:center;padding:6px 10px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.07);font-size:11px;flex-wrap:wrap}'
+      + '.pg-qbar select,.pg-qbar input,.pg-qbar button{background:#151d2a;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#fff;font-size:11px;padding:3px 7px;cursor:pointer;outline:none}'
+      + '.pg-qbar button.on{background:#7c2d2d;border-color:#e3350d}'
+      + 'body.pg-dex-c .dex-cell:not(.caught){display:none}body.pg-dex-n .dex-cell.caught{display:none}';
+    document.head.appendChild(css);
+    let svMap = null;
+    const carrega = () => { if (svMap) return; svMap = {}; fetch('/game/creatures.json').then(r => r.json()).then(j => { (j.creatures || []).forEach(c => { svMap[(c.name || '').toLowerCase()] = c.sellValue || 0; }); }).catch(() => { svMap = null; }); };
+    function dex() {
+      const win = document.querySelector('.dex-window'); if (!win) return;
+      const ctr = win.querySelector('.dex-controls'); if (!ctr || ctr.querySelector('.pg-qbar')) return;
+      carrega();
+      const bar = document.createElement('div'); bar.className = 'pg-qbar'; bar.style.width = '100%';
+      bar.innerHTML = '<button data-f="t" class="on">Todos</button><button data-f="c">✓ Caught</button><button data-f="n">✗ Not caught</button><button data-f="v">$ Menor valor</button>';
+      ctr.appendChild(bar);
+      bar.querySelectorAll('button[data-f]').forEach(b => b.onclick = () => {
+        const f = b.dataset.f;
+        if (f === 'v') { b.classList.toggle('on'); aplicaValor(win, b.classList.contains('on')); return; }
+        bar.querySelectorAll('button').forEach(x => { if (x.dataset.f !== 'v') x.classList.remove('on'); }); b.classList.add('on');
+        document.body.classList.toggle('pg-dex-c', f === 'c');
+        document.body.classList.toggle('pg-dex-n', f === 'n');
+      });
+    }
+    function aplicaValor(win, on) {
+      const grid = win.querySelector('.dex-grid'); if (!grid) return;
+      grid.querySelectorAll('.dex-cell').forEach(c => {
+        if (!on) { c.style.removeProperty('order'); return; }
+        const nm = (c.getAttribute('title') || '').toLowerCase();
+        c.style.order = String((svMap && svMap[nm]) || 999999999);
+      });
+    }
+    function mercado() {
+      const head = document.querySelector('.mkt2-trow--head'); if (!head) return;
+      const parent = head.parentElement; if (!parent || parent.querySelector('.pg-qbar')) return;
+      const bar = document.createElement('div'); bar.className = 'pg-qbar';
+      bar.innerHTML = '<select id="pg-mk-r"><option value="">Raridade: todas</option>' + ['Fraca','Comum','Incomum','Rara','Épica','Lendária','Mítica','Anciã','Divina'].map(x => '<option>' + x + '</option>').join('') + '</select>'
+        + '<input id="pg-mk-iv" type="number" placeholder="IV min" style="width:70px">'
+        + '<select id="pg-mk-s"><option value="">Ordem padrão</option><option value="iv">IV ↓</option><option value="q">Qualidade ↓</option><option value="p">Preço ↑</option></select>';
+      parent.insertBefore(bar, head);
+      const ap = () => aplicaMercado(parent);
+      bar.querySelector('#pg-mk-r').onchange = ap; bar.querySelector('#pg-mk-iv').oninput = ap; bar.querySelector('#pg-mk-s').onchange = ap;
+      if (!parent.__pgObs) { parent.__pgObs = new MutationObserver(ap); parent.__pgObs.observe(parent, { childList: true }); }
+    }
+    function aplicaMercado(parent) {
+      try {
+        const rar = (parent.querySelector('#pg-mk-r') || {}).value || '';
+        const ivm = parseInt((parent.querySelector('#pg-mk-iv') || {}).value || '0', 10);
+        const srt = (parent.querySelector('#pg-mk-s') || {}).value || '';
+        const rows = [...parent.querySelectorAll('.mkt2-trow')].filter(r => !r.classList.contains('mkt2-trow--head'));
+        if (srt) { parent.style.setProperty('display', 'flex', 'important'); parent.style.setProperty('flex-direction', 'column', 'important'); }
+        else { parent.style.removeProperty('display'); parent.style.removeProperty('flex-direction'); }
+        rows.forEach(r => {
+          const tx = r.innerText || '';
+          const iv = parseInt((tx.match(/IV\\s*(\\d+)/i) || [])[1] || '0', 10);
+          const q = parseFloat(((tx.match(/×\\s*([\\d.,]+)/) || [])[1] || '0').replace(',', '.')) || 0;
+          const pEl = r.querySelector('.mkt2-price'); const pr = pEl ? parseInt((pEl.innerText || '').replace(/\\D/g, ''), 10) || 0 : 0;
+          const okR = !rar || tx.includes(rar);
+          const okI = !ivm || iv >= ivm;
+          r.style.setProperty('display', okR && okI ? '' : 'none', 'important');
+          if (srt) { r.style.order = String(srt === 'iv' ? -iv : srt === 'q' ? -Math.round(q * 100) : pr); } else r.style.removeProperty('order');
+        });
+      } catch (x) {}
+    }
+    new MutationObserver(() => { dex(); mercado(); }).observe(document.body, { childList: true, subtree: true });
+  })()`;
 
   // ----- Fecha o popup de promoção (<div class="promo-overlay"> com <button class="promo-close">) -----
   const POPUP_SCRIPT = `(() => {
@@ -961,7 +1066,7 @@
       for (const id in S.drops) { const dd = S.drops[id]; const g = dd.qty * ((cat[id] && cat[id].npcPrice) || 0); lootGold += g; dr.push({ name: dd.name, qty: dd.qty, gold: g }); }
       dr.sort((x, y) => y.gold - x.gold);
       const capGold = S.sellG || 0, supplyGold = S.balls * ballPrice, balance = lootGold + capGold - supplyGold, ph = v => Math.round(v / secs * 3600);
-      return { kills: S.kills, seconds: secs, captures: S.captures, shinyFound: S.shinyN || 0, shinyCap: S.shinyCapN || 0, xpg: S.xp, lootGold, capturesGold: capGold, supplyGold, balance, gph: ph(balance), xph: ph(S.xp), kph: ph(S.kills), drops: dr };
+      return { kills: S.kills, seconds: secs, captures: S.captures, shinyFound: S.shinyN || 0, shinyCap: S.shinyCapN || 0, xpg: S.xp, lootGold, capturesGold: capGold, supplyGold, balance, gph: ph(balance), xph: ph(S.xp), kph: ph(S.kills), lastCatchT: S.lastCatchT || 0, sinceCatch: S.sinceCatch || 0, drops: dr };
     };
     const a = calc(P.sess, Date.now());
     const drops = a ? a.drops : [];
@@ -982,7 +1087,7 @@
     const pushGrp = c => { const items = groups[c].sort((x,y)=>y.qty-x.qty); bag.push({ label: LABELS[c]||c, total: items.reduce((s,x)=>s+x.qty,0), items }); done[c]=1; };
     ORDER.forEach(c => { if (groups[c]) pushGrp(c); });
     Object.keys(groups).forEach(c => { if (!done[c]) pushGrp(c); });
-    const team = ((ws.pokes && ws.pokes.list)||[]).filter(p=>p.team).sort((x,y)=>(x.slot||0)-(y.slot||0)).map(p=>({name:p.name,level:p.level,shiny:!!p.shiny}));
+    const team = ((ws.pokes && ws.pokes.list)||[]).filter(p=>p.team).sort((x,y)=>(x.slot||0)-(y.slot||0)).map(p=>({name:p.name,level:p.level,shiny:!!p.shiny,t1:p.type1||'',t2:p.type2||'',ld:!!p.leader}));
     let hunt = (ws['field-init'] && ws['field-init'].slug) || '';
     hunt = hunt.replace(/[_-]+/g,' ').replace(/\\b\\w/g, m=>m.toUpperCase());
     const mail = ws['mail-badge'] || {};
@@ -990,7 +1095,7 @@
     bag.forEach(g => { if (g.label === 'Pokébolas') sBalls = g.total; else if (g.label === 'Heal') sPot = g.total; else if (g.label === 'Revive') sRev = g.total; });
     const invMap = {}; inv.forEach(it => invMap[it.itemId] = it.quantity);
     const ballMap = {}; if (bm && bm.counts) for (const bk in bm.counts) ballMap[bk] = bm.counts[bk];
-    return { ok:true, cid: ch.id||'', name: ch.name||'', level: ch.level||0, gold: ch.gold||0, diamonds: ch.diamonds||0, vip: !!ch.isVip, clan: ch.clan||null, clanRank: ch.clanRank||0, shinyEnc: P.shinyEnc||0, usedList: P.usedList||[], catchLog: P.catchLog||[], shinyLog: P.shinyLog||[], balls: sBalls, potions: sPot, revives: sRev, invMap, ballMap,
+    return { ok:true, cid: ch.id||'', name: ch.name||'', level: ch.level||0, gold: ch.gold||0, diamonds: ch.diamonds||0, vip: !!ch.isVip, clan: ch.clan||null, clanRank: ch.clanRank||0, shinyEnc: P.shinyEnc||0, usedList: P.usedList||[], catchLog: P.catchLog||[], shinyLog: P.shinyLog||[], chatShares: P.chatShares||[], balls: sBalls, potions: sPot, revives: sRev, invMap, ballMap,
       prof: ch.profession||'', profRank: ch.professionRank||0, catches: ch.catches||0, hunt, gifts: mail.gifts||0,
       a, drops, bag, team, prev };
   })()`;
@@ -1021,6 +1126,7 @@
   const nc = n => { if (n == null) return '–'; const s = n < 0 ? '-' : '', x = Math.abs(n); if (x >= 1e6) return s + (x / 1e6).toFixed(x >= 1e7 ? 0 : 1).replace('.0', '').replace('.', ',') + 'M'; if (x >= 1e4) return s + (x / 1e3).toFixed(x >= 1e5 ? 0 : 1).replace('.0', '').replace('.', ',') + 'K'; return nf(n); };
   const ncs = n => (n > 0 ? '+' : '') + nc(n);
   const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const fmtHM = (ts) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const sec = (color, lb, rt) => '<div class="div"></div><div class="sec"><span class="mk" style="background:' + color + ';"></span><span class="lb">' + lb + '</span>' + (rt ? '<span class="rt">' + rt + '</span>' : '') + '</div>';
   const row = (l, v, c) => '<div class="r"><span class="l">' + l + '</span><span class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</span></div>';
   const g4 = (l, v, c) => '<div class="g4"><div class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div><div class="l">' + l + '</div></div>';
@@ -1090,7 +1196,8 @@
       return sec('#58a6ff', t('stSession'), tsec(a.seconds))
         + '<div class="grid4">' + g4(t('stDefeated'), nf(a.kills)) + g4(t('stXpGain'), nc(a.xpg), '#79c0ff') + g4(t('stCaptures'), nf(a.captures)) + g4(t('stShinyFound'), nf(a.shinyFound), a.shinyFound > 0 ? '#f778ba' : '#e6edf3') + '</div>'
         + row(t('stShinyCap'), '✨ ' + nf(a.shinyCap), a.shinyCap > 0 ? '#f778ba' : '#6e7681')
-        + row(t('stShinyLife'), '✨ ' + nf(life), '#f2c665');
+        + row(t('stShinyLife'), '✨ ' + nf(life), '#f2c665')
+        + (a.lastCatchT ? row('🔴 ' + t('stLastCatch'), fmtHM(a.lastCatchT) + ' · ' + nf(a.sinceCatch || 0) + ' ' + t('stSince'), '#f0883e') : '');
     },
     gold: (d, a) => {
       if (!a) return '';
@@ -1423,10 +1530,31 @@
   const cardsBtn = document.getElementById('cardsBtn');
   let dhist = [];                      // amostras {t,g,x} da ultima hora pros sparklines
   let dsort = { k: 'gph', d: -1 };     // ordenacao da tabela
-  const fmtHM = (ts) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   // raridade pela qualidade: mesmos limites e cores da funcao qualityInfo do jogo
   const RARO = (q) => q >= 4 ? ['Divina', '#dbefff'] : q >= 3 ? ['Anciã', '#b8860b'] : q >= 2 ? ['Mítica', '#6a0dad'] : q >= 1.7 ? ['Lendária', '#ff8c3c'] : q >= 1.5 ? ['Épica', '#f0c040'] : q >= 1.3 ? ['Rara', '#b06cff'] : q >= 1.1 ? ['Incomum', '#7fd4ff'] : q >= 1 ? ['Comum', '#63d873'] : ['Fraca', '#9aa6b3'];
   const raroHtml = (q) => { if (!q) return ''; const r = RARO(q); return ' <b style="color:' + r[1] + '">' + r[0] + '</b>'; };
+  // ranking de hunts: tabela de efetividade do proprio jogo (dano do MEU tipo no tipo da hunt)
+  const CHART = {NORMAL:{ROCK:.5,GHOST:0,STEEL:.5},FIRE:{FIRE:.5,WATER:.5,GRASS:2,ICE:2,BUG:2,ROCK:.5,DRAGON:.5,STEEL:2},WATER:{FIRE:2,WATER:.5,GRASS:.5,GROUND:2,ROCK:2,DRAGON:.5},ELECTRIC:{WATER:2,ELECTRIC:.5,GRASS:.5,GROUND:0,FLYING:2,DRAGON:.5},GRASS:{FIRE:.5,WATER:2,GRASS:.5,POISON:.5,GROUND:2,FLYING:.5,BUG:.5,ROCK:2,DRAGON:.5,STEEL:.5},ICE:{FIRE:.5,WATER:.5,GRASS:2,ICE:.5,GROUND:2,FLYING:2,DRAGON:2,STEEL:.5},FIGHTING:{NORMAL:2,ICE:2,POISON:.5,FLYING:.5,PSYCHIC:.5,BUG:.5,ROCK:2,GHOST:0,DARK:2,STEEL:2,FAIRY:.5},POISON:{GRASS:2,POISON:.5,GROUND:.5,ROCK:.5,GHOST:.5,STEEL:0,FAIRY:2},GROUND:{FIRE:2,ELECTRIC:2,GRASS:.5,POISON:2,FLYING:0,BUG:.5,ROCK:2,STEEL:2},FLYING:{ELECTRIC:.5,GRASS:2,FIGHTING:2,BUG:2,ROCK:.5,STEEL:.5},PSYCHIC:{FIGHTING:2,POISON:2,PSYCHIC:.5,DARK:0,STEEL:.5},BUG:{FIRE:.5,GRASS:2,FIGHTING:.5,POISON:.5,FLYING:.5,PSYCHIC:2,GHOST:.5,DARK:2,STEEL:.5,FAIRY:.5},ROCK:{FIRE:2,ICE:2,FIGHTING:.5,GROUND:.5,FLYING:2,BUG:2,STEEL:.5},GHOST:{NORMAL:0,PSYCHIC:2,GHOST:2,DARK:.5},DRAGON:{DRAGON:2,STEEL:.5,FAIRY:0},DARK:{FIGHTING:.5,PSYCHIC:2,GHOST:2,DARK:.5,FAIRY:.5},STEEL:{FIRE:.5,WATER:.5,ELECTRIC:.5,ICE:2,ROCK:2,STEEL:.5,FAIRY:2},FAIRY:{FIRE:.5,FIGHTING:2,POISON:.5,DRAGON:2,DARK:2,STEEL:.5}};
+  const effVs = (lead, h2) => {
+    if (!lead || !h2 || !h2.t1) return 1;
+    const alvo = [String(h2.t1 || '').toUpperCase(), String(h2.t2 || '').toUpperCase()].filter(Boolean);
+    const meus = [String(lead.t1 || '').toUpperCase(), String(lead.t2 || '').toUpperCase()].filter(Boolean);
+    if (!meus.length || !alvo.length) return 1;
+    return Math.max(...meus.map(a2 => alvo.reduce((m2, dfn) => m2 * ((CHART[a2] || {})[dfn] != null ? CHART[a2][dfn] : 1), 1)));
+  };
+  let huntsCache = null, huntsCacheT = 0, huntSort = 'sv', huntAccSel = -1;
+  let huntFavs = {}; try { huntFavs = JSON.parse(localStorage.getItem('huntFavs') || '{}'); } catch {}
+  // junta os marcadores do mapa com o catalogo de criaturas (tudo dado que o jogo ja entrega ao cliente)
+  const HUNTS_JS = `(async()=>{try{const [mk,cr]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null)]);const cs={};((cr&&cr.creatures)||[]).forEach(c=>{cs[(c.name||'').toLowerCase()]={t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||0,xp:c.xp||c.xpValue||c.exp||0,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string')}});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const lim=String(nm).toLowerCase().replace(/[_-]+/g,' ');const c=cs[lim]||cs[String(nm).toLowerCase()]||null;out.push({name:String(nm).replace(/[_-]+/g,' '),level:m2.level||m2.lvl||m2.minLevel||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?c.xp:0,loot:c?c.loot:[]});});return out;}catch(e){return null}})()`;
+  function carregaHunts() {
+    if (huntsCache || Date.now() - huntsCacheT < 60e3) return;
+    huntsCacheT = Date.now();
+    for (let i = 0; i < count; i++) {
+      if (off[i] || !webviews[i]) continue;
+      webviews[i].executeJavaScript(HUNTS_JS).then(r => { if (r && r.length) { const seen = {}; huntsCache = r.filter(x => !seen[x.name + x.level] && (seen[x.name + x.level] = 1)); } }).catch(() => {});
+      break;
+    }
+  }
   function spark(vals, color) {
     if (vals.length < 2) return '<div class="cd-empty">' + t('cdNone') + '</div>';
     const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
@@ -1450,7 +1578,7 @@
       const last = cl.length ? cl[cl.length - 1] : null;
       cl.forEach(x => catches.push(Object.assign({}, x, { dot, acc: d.name || nm0 })));
       (d.shinyLog || []).forEach(x => shinies.push(Object.assign({}, x, { dot, acc: d.name || nm0 })));
-      rows.push({ i, dot, name: d.name || nm0, st: 'on', hunt: d.hunt || '', gph: a.gph || 0, xph: a.xph || 0, kph: a.kph || 0, caps: a.captures || 0, sh: a.shinyFound || 0, best, last });
+      rows.push({ i, dot, name: d.name || nm0, st: 'on', hunt: d.hunt || '', gph: a.gph || 0, xph: a.xph || 0, kph: a.kph || 0, caps: a.captures || 0, sh: a.shinyFound || 0, best, last, since: a.sinceCatch || 0, lead: (d.team || []).find(p => p.ld) || (d.team || [])[0] || null, shares: d.chatShares || [] });
     }
     dhist.push({ t: Date.now(), g: sumG, x: sumX });
     dhist = dhist.filter(p => p.t > Date.now() - 3600e3);
@@ -1486,7 +1614,7 @@
         + '<td>' + (r.st === 'on' ? nf(r.caps) : '—') + '</td>'
         + '<td style="color:' + ((r.sh || 0) > 0 ? '#f778ba' : '#8b949e') + '">' + (r.st === 'on' ? nf(r.sh) : '—') + '</td>'
         + '<td>' + (r.best ? '<span style="color:' + (r.best.q ? RARO(r.best.q)[1] : '#e6edf3') + '">' + esc(r.best.n) + '</span> <span style="color:#55e6d3">' + r.best.iv + '/192</span>' : '—') + '</td>'
-        + '<td>' + (r.last ? '<span style="color:' + (r.last.q ? RARO(r.last.q)[1] : '#e6edf3') + '">' + esc(r.last.n) + '</span> <span style="color:#6e7681">' + fmtHM(r.last.t) + '</span>' : '—') + '</td>'
+        + '<td>' + (r.last ? '<span style="color:' + (r.last.q ? RARO(r.last.q)[1] : '#e6edf3') + '">' + esc(r.last.n) + '</span> <span style="color:#6e7681">' + fmtHM(r.last.t) + '</span>' + (r.since ? ' <span style="color:#f0883e">· ' + nf(r.since) + '🔴</span>' : '') : '—') + '</td>'
         + '<td>' + stTxt + '</td></tr>';
     });
     h += '</tbody><tfoot><tr><td>' + t('cdTotal') + ' (' + ativos + ')</td><td></td>'
@@ -1504,17 +1632,54 @@
     const lost = Math.max(0, sumSF - sumSC);
     h += '<div class="cd-2col">'
       + '<div class="cd-sec"><div class="cd-h">' + t('cdCatches') + '</div>'
-      + (catches.length ? catches.slice(0, 10).map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">' + (x.sh ? '✨ ' : '') + esc(x.n) + raroHtml(x.q) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span style="color:#55e6d3">' + (x.iv || 0) + '/192</span>' + (x.q ? '<span style="color:#f2c665">×' + Number(x.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtHM(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'
+      + (catches.length ? catches.slice(0, 10).map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">' + (x.fx ? '<span title="' + t('cdFirst') + '">🆕</span> ' : '') + (x.sh ? '✨ ' : '') + esc(x.n) + raroHtml(x.q) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span style="color:#55e6d3">' + (x.iv || 0) + '/192</span>' + (x.q ? '<span style="color:#f2c665">×' + Number(x.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtHM(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'
       + '<div class="cd-sec"><div class="cd-h">' + t('cdShinies') + '</div>'
       + '<div style="display:flex;gap:10px;margin-bottom:8px;font-size:11px"><span style="color:#3fb950">' + nf(sumSC) + ' ' + t('cdCaught') + '</span><span style="color:#f2c665">' + nf(sumSF) + ' ' + t('cdSeen') + '</span><span style="color:#f85149">' + nf(lost) + ' ' + t('cdLost') + '</span></div>'
       + (shinies.length ? shinies.slice(0, 10).map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">✨ ' + esc(x.n) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span class="rt">' + fmtHM(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'
       + '</div>';
+
+    // ranking de hunts: valor de venda, XP e efetividade vs o lider da conta escolhida
+    carregaHunts();
+    const leadRow = on.find(r => r.i === huntAccSel) || on[0];
+    h += '<div class="cd-sec"><div class="cd-h" style="display:flex;gap:8px;align-items:center">' + t('cdHunts')
+      + '<select id="cdHuntSort" style="margin-left:auto">'
+      + '<option value="sv"' + (huntSort === 'sv' ? ' selected' : '') + '>' + t('cdSortPrice') + '</option>'
+      + '<option value="xp"' + (huntSort === 'xp' ? ' selected' : '') + '>' + t('cdSortXp') + '</option>'
+      + '<option value="ef"' + (huntSort === 'ef' ? ' selected' : '') + '>' + t('cdSortEff') + '</option></select>'
+      + (on.length ? '<select id="cdHuntAcc" title="' + t('cdEffOf') + '">' + on.map(r => '<option value="' + r.i + '"' + (leadRow && leadRow.i === r.i ? ' selected' : '') + '>' + esc(r.name) + '</option>').join('') + '</select>' : '') + '</div>';
+    if (!huntsCache) h += '<div class="cd-empty">' + t('cdLoading') + '</div>';
+    else {
+      const lead2 = leadRow ? leadRow.lead : null;
+      const lista = huntsCache.map(x2 => Object.assign({}, x2, { ef: effVs(lead2, x2), fav: !!huntFavs[x2.name] }));
+      lista.sort((p, q) => (q.fav - p.fav) || (huntSort === 'xp' ? q.xp - p.xp : huntSort === 'ef' ? q.ef - p.ef : q.sv - p.sv));
+      h += lista.slice(0, 15).map(x2 => {
+        const efc = x2.ef >= 2 ? '#3fb950' : x2.ef > 1 ? '#7ee0a0' : x2.ef === 1 ? '#8b949e' : x2.ef === 0 ? '#f85149' : '#f0883e';
+        return '<div class="cd-row" title="' + esc((x2.loot || []).join(', ')) + '">'
+          + '<span class="cd-fav" data-h="' + esc(x2.name) + '" style="cursor:pointer;color:' + (x2.fav ? '#f2c665' : '#444c56') + '">★</span>'
+          + '<span class="rn">' + esc(x2.name) + (x2.level ? ' <span style="color:#7d8590">Lv ' + x2.level + '</span>' : '') + (x2.t1 ? ' <span style="color:#6e7681;font-size:10px">' + esc((x2.t1 + (x2.t2 ? '/' + x2.t2 : '')).toLowerCase()) + '</span>' : '') + '</span>'
+          + '<span style="color:' + efc + '">×' + (Math.round(x2.ef * 100) / 100) + '</span>'
+          + '<span style="color:#f2c665">$' + nc(x2.sv) + '</span>'
+          + (x2.xp ? '<span style="color:#79c0ff">' + nc(x2.xp) + ' xp</span>' : '')
+          + '</div>';
+      }).join('');
+    }
+    h += '</div>';
+
+    // compartilhados no chat: tokens [poke!...] decodificados (so leitura)
+    const shMap = {};
+    rows.forEach(r => (r.shares || []).forEach(x2 => { shMap[x2.fr + '|' + x2.n + '|' + x2.iv + '|' + x2.lv] = x2; }));
+    const shList = Object.values(shMap).sort((p, q) => q.t - p.t).slice(0, 8);
+    h += '<div class="cd-sec"><div class="cd-h">' + t('cdShared') + '</div>'
+      + (shList.length ? shList.map(x2 => '<div class="cd-row"><span class="rn">' + (x2.sh ? '✨ ' : '') + '<b style="color:' + RARO(x2.q || 1)[1] + '">' + esc(x2.n) + '</b>' + (x2.lv ? ' <span style="color:#7d8590">Lv ' + x2.lv + '</span>' : '') + ' <span style="color:#7d8590">· ' + esc(x2.fr || '?') + '</span></span>' + (x2.iv ? '<span style="color:#55e6d3">' + x2.iv + '/192</span>' : '') + (x2.q ? '<span style="color:#f2c665">×' + Number(x2.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtHM(x2.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>';
 
     const st0 = cardsEl.scrollTop;
     cardsEl.innerHTML = h;
     cardsEl.scrollTop = st0; // nao perde a rolagem no refresh
     cardsEl.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { const k = th.dataset.k; if (dsort.k === k) dsort.d *= -1; else dsort = { k, d: -1 }; refreshCards(); });
     cardsEl.querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => { const i = +tr.dataset.i; cardsOn = false; applyCards(); toggleExpand(i); });
+    const hs = cardsEl.querySelector('#cdHuntSort'); if (hs) hs.onchange = () => { huntSort = hs.value; refreshCards(); };
+    const ha2 = cardsEl.querySelector('#cdHuntAcc'); if (ha2) ha2.onchange = () => { huntAccSel = +ha2.value; refreshCards(); };
+    cardsEl.querySelectorAll('.cd-fav').forEach(f => f.onclick = () => { const k = f.dataset.h; if (huntFavs[k]) delete huntFavs[k]; else huntFavs[k] = 1; try { localStorage.setItem('huntFavs', JSON.stringify(huntFavs)); } catch {} refreshCards(); });
   }
   function applyCards() {
     document.body.classList.toggle('cards-on', cardsOn);

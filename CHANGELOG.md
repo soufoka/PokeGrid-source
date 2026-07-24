@@ -18,6 +18,20 @@
   *Capture log: sort by quality or IV, ascending or descending.*
 - **Visual do JustPokédex** no tema do app: um só chip "Ativo", cores de tipo corretas no card, botão de histórico compacto e tudo até o Poder total cabe sem rolar.
   *JustPokédex visuals matching the app theme: a single "Active" chip, correct type colors on the card, compact history button, and everything up to Total Power fits without scrolling.*
+- **🃏 Modo Cartas**: um dashboard ultra leve que esconde o jogo (canvas oculto, ~1 fps) e mostra só os números, KPIs totais, tabela por conta ordenável, tendência da última hora, últimas capturas e aparições de shiny. O farm continua rodando.
+  *🃏 Cards mode: an ultra-light dashboard that hides the game (canvas off, ~1 fps) and shows only the numbers, total KPIs, sortable per-account table, last-hour trend, latest captures and shiny appearances. Farming keeps running.*
+- **Melhorias de qualidade de vida**: bolas desde o último catch, marca de 1ª captura da espécie, ranking de hunts com favoritos e efetividade de tipo, e os pokémon compartilhados no chat com IV e raridade.
+  *Quality-of-life: balls since the last catch, first-capture-of-species mark, a hunt ranking with favorites and type effectiveness, and Pokémon shared in chat with IV and rarity.*
+- **🛡 Venda protegida** (menu Opções): pede confirmação antes de vender shiny, Lendária+ ou item raro. Dá pra desligar.
+  *🛡 Sell guard (Options menu): asks for confirmation before selling shiny, Legendary+ or rare items. Can be turned off.*
+- **Filtros na Pokédex e no Mercado**: caught / não caught / menor valor na Pokédex; raridade, IV mínimo e ordenação no mercado.
+  *Pokédex and Market filters: caught / not caught / lowest value in the Pokédex; rarity, minimum IV and sorting in the market.*
+- **🐞 Relatório de erros** (menu Opções): crashes, travamentos e erros caem num arquivo fácil de enviar pro suporte.
+  *🐞 Error report (Options menu): crashes, freezes and errors are saved to a file that's easy to send to support.*
+- **Correções**: nível do time atualiza ao vivo e a raridade dos capturados usa as cores certas do jogo.
+  *Fixes: team level updates live and captured Pokémon rarity uses the game's correct colors.*
+- **Segurança**: corrigido um XSS que um pokémon malicioso compartilhado no chat poderia explorar, com CSP e trava de navegação na interface como reforço.
+  *Security: fixed an XSS a malicious chat-shared Pokémon could exploit, hardened with a CSP and navigation lock on the UI.*
 
 ## 1.3.0
 

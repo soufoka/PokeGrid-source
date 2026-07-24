@@ -48,6 +48,7 @@
   }
   /* painel aberto empurra o grid em vez de cobrir a coluna da esquerda */
   body.stats-open #grid { margin-left: var(--statsw, 350px); }
+  #grid.count-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
   #grid.count-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
   #grid.count-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
   #grid.count-3 .panel:last-child { grid-column: 1 / -1; }   /* 3o painel ocupa a linha de baixo inteira */
@@ -319,7 +320,7 @@
       <div id="menu">
         <button id="hunt" title="Abre o Hunt Analyzer em todos os painéis">🎯 Hunt</button>
         <button id="scriptsBtn" title="Rode userscripts (IV calc e os seus) nos painéis">🧩 Scripts</button>
-        <button id="count" title="Quantas contas rodar ao mesmo tempo (2 a 4)">🔢 Painéis: 4</button>
+        <button id="count" title="Quantas contas rodar ao mesmo tempo (1 a 4)">🔢 Painéis: 4</button>
         <button id="alerts" title="Avisa quando uma conta cai ou fica sem pokébola">🔔 Alertas</button>
         <button id="sellguard" title="Pede confirmação antes de vender shiny, Lendária+ ou item raro">🛡 Venda protegida</button>
         <button id="chat" title="Mostra ou esconde o chat do jogo em todos os painéis">💬 Chat</button>
@@ -379,7 +380,7 @@
   const off = [false, false, false, false];
   const lastLogin = [0, 0, 0, 0]; // cooldown do auto-login por painel (evita ressubmeter em loop)
   const alertedBalls = [false, false, false, false]; // ja avisou "sem pokebola" nesta falta?
-  let count = Math.min(4, Math.max(2, +localStorage.getItem('count') || 4)); // quantos paineis rodar (2 a 4)
+  let count = Math.min(4, Math.max(1, +localStorage.getItem('count') || 4)); // quantos paineis rodar (1 a 4)
   let muted = localStorage.getItem('muted') === '1';
 
   // ----- Idioma (interface + jogo) -----
@@ -394,7 +395,7 @@
       alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Bolas / potions gastas', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time',
       cards:'🃏 Cartas', cardsTitle:'Dashboard ultra leve: esconde o jogo e mostra só os números (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
-      cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
+      cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdSortMeasured:'Medido: gold/h ↓', cdMeasured:'sua média', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
       sellguard:'🛡 Venda protegida', sellguardTitle:'Pede confirmação antes de vender shiny, Lendária+ ou item raro (verde = ligado)',
       reset:'Zerar', resetTitle:'Zera as estatísticas da sessão (todas as contas), pra monitorar a partir de agora', resetConfirm:'Zerar as estatísticas da sessão de todas as contas? Os totais da conta (gold, nível, shinies de vida) não mudam.',
       msgShiny:'encontrou um SHINY! ✨', msgFaint:'teve um pokémon derrubado', msgBallsLow:'está com poucas pokébolas', msgPotionsLow:'está com poucas potions', msgRevivesLow:'está com poucos revives',
@@ -421,7 +422,7 @@
       alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Balls / potions used', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team',
       cards:'🃏 Cards', cardsTitle:'Ultra-light dashboard: hides the game and shows only the numbers (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
-      cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
+      cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdSortMeasured:'Measured: gold/h ↓', cdMeasured:'your average', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
       sellguard:'🛡 Sell guard', sellguardTitle:'Asks for confirmation before selling shiny, Legendary+ or rare items (green = on)',
       reset:'Reset', resetTitle:'Resets the session stats (all accounts), to monitor from now on', resetConfirm:'Reset the session stats for all accounts? Account totals (gold, level, lifetime shinies) are unchanged.',
       msgShiny:'found a SHINY! ✨', msgFaint:'had a Pokémon knocked out', msgBallsLow:'is low on Poké Balls', msgPotionsLow:'is low on potions', msgRevivesLow:'is low on revives',
@@ -535,14 +536,14 @@
   // ----- Numero de paineis (2 a 4), escolhido no menu -----
   const countBtn = document.getElementById('count');
   function aplicaCountLayout() {
-    grid.classList.remove('count-2', 'count-3', 'count-4');
+    grid.classList.remove('count-1', 'count-2', 'count-3', 'count-4');
     grid.classList.add('count-' + count);
     countBtn.textContent = t('count') + ': ' + count;
     localStorage.setItem('count', count);
   }
   function build() { for (let i = 0; i < count; i++) criarPainel(i); aplicaCountLayout(); }
   function setCount(n) {
-    n = Math.min(4, Math.max(2, n));
+    n = Math.min(4, Math.max(1, n));
     const atual = webviews.length;
     count = n;
     if (n < atual) { // remove os paineis do fim (remover do DOM ja destroi o webview)
@@ -555,7 +556,7 @@
     }
     aplicaCountLayout();
   }
-  countBtn.onclick = () => setCount(count === 4 ? 2 : count + 1); // cicla 4 -> 2 -> 3 -> 4
+  countBtn.onclick = () => setCount(count === 4 ? 1 : count + 1); // cicla 4 -> 1 -> 2 -> 3 -> 4
 
   function toggleExpand(i) {
     const p = grid.children[i];
@@ -1568,6 +1569,27 @@
   };
   let huntsCache = null, huntsCacheT = 0, huntSort = 'sv', huntAccSel = -1;
   let huntFavs = {}; try { huntFavs = JSON.parse(localStorage.getItem('huntFavs') || '{}'); } catch {}
+  // base medida por hunt: media (EWMA) do que VOCE realmente fez ali (gold/h, xp/h, capturas/h).
+  // amostra a taxa acumulada da sessao (ja e uma media) quando a hunt rodou tempo suficiente pra estabilizar.
+  const hkey = s => String(s || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+  let huntStats = {}; try { huntStats = JSON.parse(localStorage.getItem('huntStats') || '{}'); } catch {}
+  function amostraHunt(nome, a) {
+    const k = hkey(nome);
+    if (!k || !a || (a.seconds || 0) < 300) return; // 5 min pra a taxa acumulada assentar
+    const cph = a.captures / a.seconds * 3600, al = 0.25, c = huntStats[k];
+    huntStats[k] = c
+      ? { gph: Math.round(c.gph * (1 - al) + a.gph * al), xph: Math.round(c.xph * (1 - al) + a.xph * al), cph: c.cph * (1 - al) + cph * al, n: (c.n || 0) + 1, t: Date.now() }
+      : { gph: Math.round(a.gph), xph: Math.round(a.xph), cph, n: 1, t: Date.now() };
+  }
+  // amostrador de fundo: roda mesmo com painel/cartas fechados, pra base acumular durante o farm
+  setInterval(async () => {
+    let mudou = false;
+    for (let i = 0; i < count; i++) {
+      if (off[i] || !webviews[i]) continue;
+      try { const d = await webviews[i].executeJavaScript(READ_STATE); if (d && d.ok && d.hunt && d.a) { amostraHunt(d.hunt, d.a); mudou = true; } } catch {}
+    }
+    if (mudou) { try { localStorage.setItem('huntStats', JSON.stringify(huntStats)); } catch {} }
+  }, 30000);
   // junta os marcadores do mapa com o catalogo de criaturas (tudo dado que o jogo ja entrega ao cliente)
   const HUNTS_JS = `(async()=>{try{const [mk,cr]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null)]);const cs={};((cr&&cr.creatures)||[]).forEach(c=>{cs[(c.name||'').toLowerCase()]={t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||0,xp:c.xp||c.xpValue||c.exp||0,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string')}});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const lim=String(nm).toLowerCase().replace(/[_-]+/g,' ');const c=cs[lim]||cs[String(nm).toLowerCase()]||null;out.push({name:String(nm).replace(/[_-]+/g,' '),level:m2.level||m2.lvl||m2.minLevel||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?c.xp:0,loot:c?c.loot:[]});});return out;}catch(e){return null}})()`;
   function carregaHunts() {
@@ -1669,18 +1691,22 @@
       + '<select id="cdHuntSort" style="margin-left:auto">'
       + '<option value="sv"' + (huntSort === 'sv' ? ' selected' : '') + '>' + t('cdSortPrice') + '</option>'
       + '<option value="xp"' + (huntSort === 'xp' ? ' selected' : '') + '>' + t('cdSortXp') + '</option>'
-      + '<option value="ef"' + (huntSort === 'ef' ? ' selected' : '') + '>' + t('cdSortEff') + '</option></select>'
+      + '<option value="ef"' + (huntSort === 'ef' ? ' selected' : '') + '>' + t('cdSortEff') + '</option>'
+      + '<option value="md"' + (huntSort === 'md' ? ' selected' : '') + '>' + t('cdSortMeasured') + '</option></select>'
       + (on.length ? '<select id="cdHuntAcc" title="' + t('cdEffOf') + '">' + on.map(r => '<option value="' + r.i + '"' + (leadRow && leadRow.i === r.i ? ' selected' : '') + '>' + esc(r.name) + '</option>').join('') + '</select>' : '') + '</div>';
     if (!huntsCache) h += '<div class="cd-empty">' + t('cdLoading') + '</div>';
     else {
       const lead2 = leadRow ? leadRow.lead : null;
-      const lista = huntsCache.map(x2 => Object.assign({}, x2, { ef: effVs(lead2, x2), fav: !!huntFavs[x2.name] }));
-      lista.sort((p, q) => (q.fav - p.fav) || (huntSort === 'xp' ? q.xp - p.xp : huntSort === 'ef' ? q.ef - p.ef : q.sv - p.sv));
+      const lista = huntsCache.map(x2 => Object.assign({}, x2, { ef: effVs(lead2, x2), fav: !!huntFavs[x2.name], md: huntStats[hkey(x2.name)] || null }));
+      const mv = (x) => x.md ? x.md.gph : -Infinity; // ordenacao "Medido": quem tem base real primeiro, por gold/h
+      lista.sort((p, q) => (q.fav - p.fav) || (huntSort === 'xp' ? q.xp - p.xp : huntSort === 'ef' ? q.ef - p.ef : huntSort === 'md' ? mv(q) - mv(p) : q.sv - p.sv));
       h += lista.slice(0, 15).map(x2 => {
         const efc = x2.ef >= 2 ? '#3fb950' : x2.ef > 1 ? '#7ee0a0' : x2.ef === 1 ? '#8b949e' : x2.ef === 0 ? '#f85149' : '#f0883e';
         return '<div class="cd-row" title="' + esc((x2.loot || []).join(', ')) + '">'
           + '<span class="cd-fav" data-h="' + esc(x2.name) + '" style="cursor:pointer;color:' + (x2.fav ? '#f2c665' : '#444c56') + '">★</span>'
-          + '<span class="rn">' + esc(x2.name) + (+x2.level ? ' <span style="color:#7d8590">Lv ' + (+x2.level || 0) + '</span>' : '') + (x2.t1 ? ' <span style="color:#6e7681;font-size:10px">' + esc((x2.t1 + (x2.t2 ? '/' + x2.t2 : '')).toLowerCase()) + '</span>' : '') + '</span>'
+          + '<span class="rn">' + esc(x2.name) + (+x2.level ? ' <span style="color:#7d8590">Lv ' + (+x2.level || 0) + '</span>' : '') + (x2.t1 ? ' <span style="color:#6e7681;font-size:10px">' + esc((x2.t1 + (x2.t2 ? '/' + x2.t2 : '')).toLowerCase()) + '</span>' : '')
+          + (x2.md ? '<br><span style="font-size:10px;color:#8b949e">📈 ' + t('cdMeasured') + ': <b style="color:' + (x2.md.gph < 0 ? '#f0883e' : '#3fb950') + '">' + ncs(x2.md.gph) + '/h</b> · <b style="color:#79c0ff">' + nc(x2.md.xph) + ' xp</b> · <b>' + (Math.round(x2.md.cph * 10) / 10) + ' cap/h</b></span>' : '')
+          + '</span>'
           + '<span style="color:' + efc + '">×' + (Math.round(x2.ef * 100) / 100) + '</span>'
           + '<span style="color:#f2c665">$' + nc(x2.sv) + '</span>'
           + (x2.xp ? '<span style="color:#79c0ff">' + nc(x2.xp) + ' xp</span>' : '')

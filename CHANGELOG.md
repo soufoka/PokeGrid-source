@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+
+- **Rode 1 conta também**: o menu Painéis agora vai de 1 a 4. Quem quer focar numa conta só usa a janela inteira.
+  *Run 1 account too: the Panels menu now goes from 1 to 4. Focus on a single account using the whole window.*
+- **Ranking de hunts com a sua média real**: o app grava, por hunt, a média de gold/h, XP/h e capturas/h que você de fato fez ali, e mostra no ranking (com a ordenação "Medido: gold/h"). Assim dá pra escolher a hunt pela sua performance real, não só pela estimativa do catálogo. A base vai se formando conforme você farma.
+  *Hunt ranking with your real average: the app records, per hunt, the average gold/h, XP/h and captures/h you actually got there, and shows it in the ranking (with a "Measured: gold/h" sort). Pick a hunt by your real performance, not just the catalog estimate. The baseline builds up as you farm.*
+
 ## 1.3.2
 
 - **Botão de zerar a sessão** (⟲ no Painel e no Modo Cartas): reinicia as estatísticas da sessão de todas as contas na hora, pra monitorar a partir de um momento escolhido. Diferente do Hunt Analyzer do jogo, que não zera os nossos números. Os totais da conta (gold, nível, shinies de vida) não mudam.

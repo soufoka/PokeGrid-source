@@ -73,6 +73,13 @@ That is it. Log in or create an account in each panel and, under "Treinadores" (
 
 Each panel is an Electron `<webview>` with its own partition (`persist:conta1` to `conta4`), and that is what keeps the accounts isolated and logged in between launches. Whatever the game does not offer, the app injects into each panel: Eco swaps `requestAnimationFrame` for a slower version, the login fills through the input's native setter, and the menu and chat disappear via CSS with a `MutationObserver`. It is all in `main.js`, `preload.js` and `index.html`, nothing hidden.
 
+## Contributing
+
+Bugs, improvements, and technical work live in [GitHub Issues](../../issues).
+Before changing the project, read [CONTRIBUTING.md](CONTRIBUTING.md) and
+[AGENTS.md](AGENTS.md). The collaboration and handoff protocol is documented in
+[docs/COLLABORATION.md](docs/COLLABORATION.md).
+
 ## License
 
 MIT. Independent project, not affiliated with Poke Idle World.

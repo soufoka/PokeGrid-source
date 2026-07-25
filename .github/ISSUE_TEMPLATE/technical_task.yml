@@ -1,0 +1,39 @@
+name: Tarefa técnica ou investigação
+description: Refatoração, segurança, qualidade, infraestrutura ou spike
+title: "[Técnico] "
+labels:
+  - "type:tech-debt"
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto e evidência
+      description: Qual risco, limitação ou pergunta técnica existe?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Riscos e compatibilidade
+      description: Dados locais, foco, login, plataformas, desempenho ou segurança.
+  - type: textarea
+    id: verification
+    attributes:
+      label: Como verificar
+    validations:
+      required: true

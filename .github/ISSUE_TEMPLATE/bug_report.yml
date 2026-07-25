@@ -1,0 +1,59 @@
+name: Bug
+description: Algo deixou de funcionar ou se comporta de forma incorreta
+title: "[Bug] "
+labels:
+  - "type:bug"
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o comportamento observado e o impacto.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Abra...
+        2. Ative...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que deveria acontecer?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versão/commit
+      placeholder: "1.5.2 ou a98ae8b"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Mais de um
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências
+      description: Imagem, vídeo ou trecho do relatório sem credenciais/tokens.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacidade
+      options:
+        - label: Removi senhas, tokens, cookies e dados pessoais das evidências.
+          required: true

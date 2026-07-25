@@ -1,0 +1,46 @@
+name: Melhoria de produto
+description: Proponha uma melhoria a partir de um problema real do usuário
+title: "[Melhoria] "
+labels:
+  - "type:feature"
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema do usuário isso resolve?
+      description: Conte a situação atual antes de descrever a solução.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Solução proposta
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: notscope
+    attributes:
+      label: Fora do escopo
+      description: O que esta entrega não tentará resolver?
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impacto principal
+      options:
+        - Segurança ou dados
+        - Confiabilidade
+        - Experiência de uso
+        - Desempenho
+        - Colaboração/manutenção
+        - Documentação
+    validations:
+      required: true

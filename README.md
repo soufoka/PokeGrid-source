@@ -77,6 +77,13 @@ Pronto. Entre ou crie uma conta em cada painel e, em "Treinadores", salve o logi
 
 Cada painel é um `<webview>` do Electron com partição própria (`persist:conta1` até `conta4`), e é isso que mantém as contas isoladas e logadas entre aberturas. O que o jogo não oferece, o app injeta em cada painel: o Eco troca o `requestAnimationFrame` por uma versão mais lenta, o login preenche pelo setter nativo do input, e o menu e o chat somem via CSS com um `MutationObserver`. Está tudo em `main.js`, `preload.js` e `index.html`, sem nada escondido.
 
+## Contribuindo
+
+Bugs, melhorias e tarefas técnicas vivem no [GitHub Issues](../../issues).
+Antes de alterar o projeto, leia [CONTRIBUTING.md](CONTRIBUTING.md) e
+[AGENTS.md](AGENTS.md). O protocolo de colaboração e handoff está em
+[docs/COLLABORATION.md](docs/COLLABORATION.md).
+
 ## Licença
 
 MIT. Projeto independente, sem ligação com o Poke Idle World.

@@ -5,20 +5,32 @@ real do usuário.
 
 ## Onde o trabalho vive
 
-Use o [GitHub Issues](../../issues) para bugs, melhorias, investigações e dívida
-técnica. Antes de começar:
+Durante a fase local, use `tickets/` para bugs, melhorias, investigações e
+dívida técnica. Antes de começar:
 
 1. procure um ticket existente;
 2. confirme o comportamento esperado;
-3. avise no ticket que vai assumir;
-4. crie uma branch `issue-N/descricao-curta`.
+3. preencha o responsável e registre no log que vai assumir;
+4. crie uma branch `ticket-PG-NNN/descricao-curta`.
 
-Para mudanças simples de documentação, uma issue é opcional. Para comportamento,
-segurança, armazenamento ou arquitetura, ela é obrigatória.
+Para mudanças simples de documentação, um ticket é opcional. Para comportamento,
+segurança, armazenamento ou arquitetura, ele é obrigatório.
 
-## Pull request
+Quando o mantenedor decidir publicar a colaboração, os tickets locais serão
+migrados para GitHub Issues e o fluxo passa a usar `issue-N/descricao-curta`.
 
-O PR deve:
+## Revisão
+
+Na fase local, registre no log do ticket:
+
+- commit e arquivos alterados;
+- verificações executadas;
+- riscos conhecidos;
+- imagem ou vídeo quando houver mudança visual.
+
+## Pull request futuro
+
+Quando a colaboração for publicada, o PR deve:
 
 - apontar para a issue com `Closes #N`;
 - explicar o problema do ponto de vista do usuário;

@@ -79,9 +79,10 @@ Cada painel é um `<webview>` do Electron com partição própria (`persist:cont
 
 ## Contribuindo
 
-Bugs, melhorias e tarefas técnicas vivem no [GitHub Issues](../../issues).
-Antes de alterar o projeto, leia [CONTRIBUTING.md](CONTRIBUTING.md) e
-[AGENTS.md](AGENTS.md). O protocolo de colaboração e handoff está em
+Durante a fase local, bugs, melhorias e tarefas técnicas vivem em
+[`tickets/`](tickets/). Antes de alterar o projeto, leia
+[CONTRIBUTING.md](CONTRIBUTING.md) e [AGENTS.md](AGENTS.md). O protocolo de
+colaboração e handoff está em
 [docs/COLLABORATION.md](docs/COLLABORATION.md).
 
 ## Licença

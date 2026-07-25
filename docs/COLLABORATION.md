@@ -2,26 +2,29 @@
 
 ## Modelo adotado
 
-O GitHub é o ponto de encontro entre o mantenedor, colaboradores e suas IAs:
+O projeto começa em modo local. Os arquivos preservam o contexto entre o
+mantenedor, colaboradores e suas IAs:
 
 ```text
-Issue = pedido + contexto + decisão + estado
-Branch = implementação isolada de um responsável
-PR = evidência, revisão e integração
+ticket = pedido + contexto + decisão + estado
+branch/commit = implementação isolada de um responsável
+log do ticket = evidência, revisão e handoff
 ```
 
-Chats de IA são temporários. Uma decisão que só existe em um chat não existe
-para o projeto.
+Chats de IA são temporários. Uma decisão que só existe em um chat não existe para
+o projeto. O GitHub só entra quando o mantenedor autorizar a publicação.
 
 ## Fluxo de um ticket
 
-1. **Triagem:** definir tipo, prioridade, área, problema e aceite.
+1. **Triagem:** criar `tickets/PG-NNN-slug.md` com tipo, prioridade, área,
+   problema e aceite.
 2. **Pronto:** contexto suficiente para alguém executar sem adivinhar.
-3. **Em andamento:** um responsável comenta que assumiu e publica o plano curto.
-4. **Revisão:** PR com `Closes #N`, evidências e riscos.
-5. **Concluído:** merge fecha a issue; documentação acompanha a mudança.
+3. **Em andamento:** um responsável assume no frontmatter e registra o plano no
+   log.
+4. **Revisão:** commit ligado a `PG-NNN`, com evidências e riscos no log.
+5. **Concluído:** ticket vira `feito`; documentação acompanha a mudança.
 
-Bloqueios ficam no comentário mais recente da issue com:
+Bloqueios ficam na entrada mais recente do log do ticket com:
 
 - o que foi tentado;
 - a evidência observada;
@@ -30,7 +33,7 @@ Bloqueios ficam no comentário mais recente da issue com:
 
 ## Handoff entre IAs
 
-Ao passar um ticket para outro agente, comentar na issue:
+Ao passar um ticket para outro agente, acrescentar no log:
 
 ```text
 HANDOFF
@@ -43,16 +46,15 @@ HANDOFF
 - Riscos ou dúvidas:
 ```
 
-O agente que recebe deve reler a issue, `AGENTS.md` e o diff. Não deve confiar
+O agente que recebe deve reler o ticket, `AGENTS.md` e o diff. Não deve confiar
 somente no resumo do outro agente.
 
-## Labels
+## Campos locais
 
-- Tipo: `type:bug`, `type:feature`, `type:tech-debt`, `type:docs`, `type:spike`
-- Prioridade: `priority:p0`, `priority:p1`, `priority:p2`, `priority:p3`
-- Área: `area:desktop`, `area:data`, `area:dashboard`, `area:security`,
-  `area:ux`, `area:docs`
-- Estado excepcional: `status:blocked`, `status:needs-decision`
+- Tipo: `bug`, `feature`, `tech-debt`, `docs`, `spike`
+- Prioridade: `p0`, `p1`, `p2`, `p3`
+- Área: `desktop`, `data`, `dashboard`, `security`, `ux`, `docs`
+- Estado: `triagem`, `pronto`, `fazendo`, `bloqueado`, `revisao`, `feito`
 
 Prioridades:
 
@@ -79,3 +81,13 @@ Prioridades:
 - Persistir um histórico útil para explicar o que aconteceu durante o farm.
 - Credenciais falham de forma segura; nunca degradam silenciosamente para texto
   puro.
+
+## Migração futura para GitHub
+
+Somente após autorização do mantenedor:
+
+1. criar labels equivalentes aos campos locais;
+2. transformar cada ticket ativo em GitHub Issue;
+3. gravar `github_issue` no arquivo local;
+4. mudar a fonte de verdade para Issues;
+5. abrir PRs sem push direto na `main`.

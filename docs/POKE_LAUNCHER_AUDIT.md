@@ -117,5 +117,6 @@ credenciais ou telas de login.
 8. **P2:** diagnóstico de primeira execução.
 9. **Spike:** viabilidade de `WebContentsView` com critérios de aceite.
 
-Cada item aprovado deve virar GitHub Issue; este documento não substitui o
-backlog operacional.
+Cada item aprovado já foi convertido em ticket local em `tickets/`; este
+documento não substitui o backlog operacional. A migração para GitHub Issues só
+acontece quando o mantenedor autorizar.

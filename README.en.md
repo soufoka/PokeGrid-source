@@ -75,10 +75,10 @@ Each panel is an Electron `<webview>` with its own partition (`persist:conta1` t
 
 ## Contributing
 
-Bugs, improvements, and technical work live in [GitHub Issues](../../issues).
-Before changing the project, read [CONTRIBUTING.md](CONTRIBUTING.md) and
-[AGENTS.md](AGENTS.md). The collaboration and handoff protocol is documented in
-[docs/COLLABORATION.md](docs/COLLABORATION.md).
+During the local phase, bugs, improvements, and technical work live in
+[`tickets/`](tickets/). Before changing the project, read
+[CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). The collaboration
+and handoff protocol is documented in [docs/COLLABORATION.md](docs/COLLABORATION.md).
 
 ## License
 

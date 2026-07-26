@@ -26,10 +26,17 @@ exemplo: `fix(PG-001): refuse insecure credential storage`.
 | [PG-007](PG-007-alertas-por-conta.md) | P2 | pronto | Alertas configuráveis por conta |
 | [PG-008](PG-008-diagnostico-inicial.md) | P2 | pronto | Diagnóstico de primeira execução |
 | [PG-009](PG-009-spike-webcontentsview.md) | P2 | pronto | Spike de WebContentsView |
+| [PG-010](PG-010-adaptadores-pokepedia.md) | P0 | pronto | Adaptadores versionados de Pokepedia, itens e time |
+| [PG-011](PG-011-navegacao-e-palco-global.md) | P1 | pronto | Nova navegação e palco de batalha global |
+| [PG-012](PG-012-inventario-visual.md) | P1 | pronto | Inventário visual com sprites e atenção |
+| [PG-013](PG-013-time-e-pokedex.md) | P1 | pronto | Time atual e ficha Pokepedia |
+| [PG-014](PG-014-laboratorio-iv.md) | P1 | pronto | Laboratório de comparação e projeção de IV |
 
 ## Ordem recomendada
 
-`PG-001 → PG-002 → PG-003 → PG-004 → PG-005/PG-006`
+Base: `PG-001 → PG-002 → PG-003 → PG-004 → PG-005/PG-006`
+
+Experiência V2: `PG-010 → PG-013 → PG-014` e `PG-010 → PG-012/PG-011`
 
 Os tickets de experiência dependem da base segura e modular para não aumentar o
 monólito atual.

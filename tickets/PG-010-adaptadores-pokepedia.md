@@ -3,8 +3,8 @@ id: PG-010
 tipo: feature
 prioridade: p0
 area: data
-estado: pronto
-responsavel:
+estado: fazendo
+responsavel: Leo (arquitetura)
 github_issue:
 ---
 
@@ -41,3 +41,18 @@ PG-002 e PG-003.
 - Evidência: os catálogos públicos atuais expõem 299 criaturas e 261 itens.
 - Próxima ação: capturar fixtures mínimas e definir os tipos normalizados.
 
+### 2026-07-26 — Leo — contrato fechado
+
+- Estado: arquitetura e handoff concluídos em `docs/DATA_CONTRACT_V2.md`.
+- Evidência: catálogo auditado por formato e casos-limite. IDs de espécie são
+  únicos, nomes não: Blastoise aparece como `9` e `10001`; Ditto não possui
+  ataques. Ícones de item aparecem como URL permitida, caminho relativo ou vazio.
+- Decisões: ID vence nome; nome ambíguo não alimenta cálculo; delta preserva
+  campos ausentes e aceita zero/false; PokeAPI é apenas fallback de base e fonte
+  de sprite, nunca de golpes.
+- Verificação: vetores definidos para espécie, item, delta e fórmula no nível
+  138/500.
+- Arquivos previstos na implementação: `src/data/*`, `src/domain/power.js` e
+  `test/fixtures|data`.
+- Próxima ação: agente implementador criar o runner mínimo do PG-002 e executar
+  a ordem de implementação descrita no contrato.

@@ -26,7 +26,7 @@ exemplo: `fix(PG-001): refuse insecure credential storage`.
 | [PG-007](PG-007-alertas-por-conta.md) | P2 | pronto | Alertas configuráveis por conta |
 | [PG-008](PG-008-diagnostico-inicial.md) | P2 | pronto | Diagnóstico de primeira execução |
 | [PG-009](PG-009-spike-webcontentsview.md) | P2 | pronto | Spike de WebContentsView |
-| [PG-010](PG-010-adaptadores-pokepedia.md) | P0 | pronto | Adaptadores versionados de Pokepedia, itens e time |
+| [PG-010](PG-010-adaptadores-pokepedia.md) | P0 | fazendo | Adaptadores versionados de Pokepedia, itens e time |
 | [PG-011](PG-011-navegacao-e-palco-global.md) | P1 | pronto | Nova navegação e palco de batalha global |
 | [PG-012](PG-012-inventario-visual.md) | P1 | pronto | Inventário visual com sprites e atenção |
 | [PG-013](PG-013-time-e-pokedex.md) | P1 | pronto | Time atual e ficha Pokepedia |

@@ -22,12 +22,12 @@ relevantes, apoiada por navegação estável entre áreas.
 
 ## Critérios de aceite
 
-- [ ] Navegação principal tem no máximo cinco áreas persistentes.
+- [x] Navegação principal tem no máximo cinco áreas persistentes.
 - [ ] Configurações ficam em um menu único.
 - [ ] Palco mostra líder, inimigo, níveis, HP, hunt e último golpe.
 - [ ] Sprites usam PokeAPI com fallback e cache por espécie.
-- [ ] Cenário continua legível sem rede ou sprite.
-- [ ] Apenas o palco em foco pode usar animação.
+- [x] Cenário continua legível sem rede ou sprite.
+- [x] Apenas o palco em foco pode usar animação.
 - [ ] CPU e foco são verificados com quatro contas.
 - [ ] Modo Simples antigo permanece acessível durante o rollout.
 
@@ -67,3 +67,25 @@ PG-010 e PG-006.
   webview da conta correspondente em modo foco.
 - Validado no Electron com quatro webviews, 1440×900 e 1024×720, zero erro de
   console/page e sem overflow horizontal.
+
+### 2026-07-26 — Codex — Outland, capturas e navegação compacta
+
+- Variantes de Outland agora preservam nome, ID, stats e golpes do registro
+  próprio, mas resolvem a imagem pelo `captureBase`; `Brave Steelix` (10534),
+  por exemplo, usa o sprite do Steelix (208).
+- A Central ganhou troca rápida entre as quatro contas e um botão `Jogo N` que
+  fecha o overlay e devolve a conta selecionada já ampliada.
+- Nova quinta área `Capturas`, com busca, conta, IV mínimo, qualidade mínima,
+  período, tipo e ordenação; até 10 mil registros persistidos são apresentados
+  em páginas de 100 para manter o painel leve.
+- Inventário e Poké Balls usam os ícones entregues pelos catálogos do próprio
+  jogo; sprites genéricos de itens da PokeAPI foram removidos.
+- O modo `Limpar jogo` não esconde mais o Auto Helper. Dock, HUD, Auto Helper,
+  janelas internas e cabeçalhos dos quatro painéis receberam regras compactas
+  para viewport reduzida.
+- As quatro prévias globais usam imagens estáticas; somente a conta em foco usa
+  sprite animado, reduzindo trabalho visual quando todos os campos estão abertos.
+- Validação estrutural: scripts principal e inline compilam, `git diff --check`
+  passa e as asserções de aliases Outland, ícones oficiais, filtros, retenção e
+  responsividade estão verdes. Validação visual final continua no cliente
+  Electron, porque o navegador incorporado bloqueia páginas `file://`.

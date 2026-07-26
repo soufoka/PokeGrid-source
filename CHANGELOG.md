@@ -10,12 +10,27 @@
   chat, recursos e medições de hunt.
 - **Clique para focar**: uma batalha ou linha de desempenho fecha a Central e
   amplia diretamente a conta correspondente.
+- **Navegação sem beco sem saída**: a Central agora tem atalhos fixos para as
+  quatro contas e um botão `Jogo N` que fecha o painel e volta ao webview
+  selecionado; `Alt+1..4` também abre uma conta e `Esc` volta à grade.
 - **Visão geral com palco de batalha**, sprites animados da PokeAPI, quatro KPIs,
   saúde das contas e eventos recentes.
+- **Variantes de Outland reconhecidas**: dados continuam vindo da variante do
+  jogo, enquanto a imagem usa a espécie-base indicada por `captureBase` — por
+  exemplo, `Brave Steelix` mostra o sprite do Steelix.
+- **Capturas completas e filtráveis**: busca, conta, IV mínimo, qualidade,
+  período, shiny/primeira espécie e ordenação por tempo, IV, qualidade ou
+  potencial; retenção local ampliada para 10 mil registros e paginação de 100.
 - **Time & IV** com os seis integrantes, IV total, qualidade, golpes do catálogo
   oficial, comparação e projeção de nível 1 a 500.
-- **Inventário visual** com sprites de `items.json`, quantidade, valor NPC,
-  filtros e estado de atenção.
+- **Inventário visual com os ícones reais do jogo**: itens usam `items.json` e
+  Poké Balls usam o catálogo de Balls; quantidade, valor, filtros e estado de
+  atenção permanecem no mesmo contexto.
+- **Quatro telas mais utilizáveis**: cabeçalhos compactos por painel e ajustes
+  responsivos no dock, HUD, Auto Helper, captura, Pokédex e mercado. `Limpar
+  jogo` não oculta mais o Auto Helper.
+- **Menos custo no painel global**: as quatro prévias usam sprites estáticos;
+  animação fica reservada ao palco da conta em foco.
 - **Dados reais quando a conta está conectada** e modo demonstrativo claramente
   identificado durante login ou ausência de dados.
 - A prévia vive em `src/ui/experience-v2.*`; o painel antigo continua disponível.

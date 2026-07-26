@@ -16,7 +16,10 @@
   #topbar {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 14px; background: #161b22; border-bottom: 1px solid #21262d; flex-shrink: 0;
+    overflow-x: auto; overflow-y: visible; white-space: nowrap; scrollbar-width: none;
   }
+  #topbar::-webkit-scrollbar { display: none; }
+  #topbar > button, #topbar > div { flex: none; }
   #topbar .logo { display: flex; align-items: center; gap: 8px; font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-size: 15px; font-weight: 800; letter-spacing: 2.5px; margin-right: auto; }
   #topbar .logo svg { display: block; }
   button {
@@ -66,7 +69,7 @@
   #grid.one-row { grid-template-columns: none !important; grid-template-rows: 1fr !important; grid-auto-flow: column; grid-auto-columns: 1fr; }
   #grid.one-row .panel { grid-column: auto !important; }
 
-  .panel { display: flex; flex-direction: column; min-height: 0;
+  .panel { display: flex; flex-direction: column; min-height: 0; container-type: inline-size;
     background: #161b22; border: 1px solid #21262d; border-radius: 8px; overflow: hidden; }
   .panel.expanded { position: absolute; inset: 6px; z-index: 10; }
   .panel.off webview { visibility: hidden; }
@@ -81,6 +84,24 @@
   .panel-header button { padding: 2px 8px; font-size: 11px; }
   .panel-header .power.isoff { color: #f0491f; }
   webview { flex: 1; border: none; background: #000; }
+
+  @container (max-width: 600px) {
+    .panel-header { gap: 3px; padding: 3px 5px; min-height: 31px; }
+    .panel-header .status { display: none; }
+    .panel-header .name { min-width: 0; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: auto; }
+    .panel-header button { width: 25px; height: 25px; padding: 0; display: grid; place-items: center; font-size: 10px; }
+    .panel-header .expand { border-color: #3e5f7e; color: #a8d3ff; }
+  }
+
+  @media (max-width: 1100px) {
+    #topbar { gap: 5px; padding: 6px 8px; }
+    #topbar .logo { margin-right: 2px; font-size: 0; }
+    #topbar .logo svg { width: 22px; height: 22px; }
+    #topbar button { padding: 5px 8px; font-size: 11px; }
+    #refBtn { margin-left: 0; }
+    #grid { gap: 4px; padding: 4px; }
+    .panel.expanded { inset: 4px; }
+  }
 
   /* Modal Contas */
   #overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 100; }
@@ -453,7 +474,7 @@
         <button id="alerts" title="Avisa quando uma conta cai ou fica sem pokébola">🔔 Alertas</button>
         <button id="sellguard" title="Pede confirmação antes de vender shiny, Lendária+ ou item raro">🛡 Venda protegida</button>
         <button id="chat" title="Mostra ou esconde o chat do jogo em todos os painéis">💬 Chat</button>
-        <button id="cleanHud" title="Esconde o auto-helper, o popup de captura e o HUD do canto; a conta e o menu do jogo aparecem ao passar o mouse">🧼 Limpar jogo</button>
+        <button id="cleanHud" title="Reduz o HUD e o popup de captura sem esconder o Auto Helper">🧼 Limpar jogo</button>
         <button id="muteAll">🔊 Som</button>
         <button id="eco">⚡ Eco</button>
         <button id="awake" title="Impede o PC de dormir enquanto farma (a tela ainda pode desligar)">💤 Dormir</button>
@@ -535,7 +556,7 @@
       cdShinyTried:'Shinies tentados (bolas jogadas)', cdConfig:'Configurar o painel', cdConfigH:'Seções (arraste pra reordenar, marque pra mostrar)', cdSecKpis:'Resumo (KPIs)', cdByAcc2:'Tabela por conta', cdScopeMine:'Minhas hunts', cdScopeAll:'Todas as hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Voltar a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder as ocultas',
       stDragHint:'Arraste para reordenar', stHideSec:'Esconder esta seção (restaure na engrenagem ⚙)',
       sellguard:'🛡 Venda protegida', sellguardTitle:'Pede confirmação antes de vender shiny, Lendária+ ou item raro (verde = ligado)',
-      clean:'🧼 Limpar jogo', cleanTitle:'Esconde o auto-helper, o popup de captura e o HUD do canto; a conta e o menu do jogo aparecem ao passar o mouse (verde = ligado)',
+      clean:'🧼 Limpar jogo', cleanTitle:'Reduz o HUD e o popup de captura sem esconder o Auto Helper (verde = ligado)',
       reset:'Zerar', resetTitle:'Zera as estatísticas da sessão (todas as contas), pra monitorar a partir de agora', resetConfirm:'Zerar as estatísticas da sessão de todas as contas? Os totais da conta (gold, nível, shinies de vida) não mudam.',
       msgShiny:'encontrou um SHINY! ✨', msgShinyCap:'CAPTUROU um SHINY! ✨🎉', spTitle:'Shiny capturado!', spClose:'Fechar o aviso', msgFaint:'teve um pokémon derrubado', msgBallsLow:'está com poucas pokébolas', msgPotionsLow:'está com poucas potions', msgRevivesLow:'está com poucos revives',
       stAllTitle:'Resumo geral', stTotal:'Total', stAcc:'Conta', stCompare:'Comparação (hunt anterior)', stPrev:'anterior', stCur:'atual', stMoney:'dólares', stPerAcc:'Por conta',
@@ -574,7 +595,7 @@
       cdShinyTried:'Shinies attempted (balls thrown)', cdConfig:'Configure the panel', cdConfigH:'Sections (drag to reorder, check to show)', cdSecKpis:'Summary (KPIs)', cdByAcc2:'Per-account table', cdScopeMine:'My hunts', cdScopeAll:'All hunts', cdHide:'Hide this hunt', cdUnhide:'Show again', cdShowHiddenN:'show hidden ({n})', cdHideHidden:'hide the hidden ones',
       stDragHint:'Drag to reorder', stHideSec:'Hide this section (restore it in the gear ⚙)',
       sellguard:'🛡 Sell guard', sellguardTitle:'Asks for confirmation before selling shiny, Legendary+ or rare items (green = on)',
-      clean:'🧼 Clean game', cleanTitle:'Hides the auto-helper, the capture popup and the corner HUD; the account and game menu appear on hover (green = on)',
+      clean:'🧼 Clean game', cleanTitle:'Reduces the HUD and capture popup without hiding Auto Helper (green = on)',
       reset:'Reset', resetTitle:'Resets the session stats (all accounts), to monitor from now on', resetConfirm:'Reset the session stats for all accounts? Account totals (gold, level, lifetime shinies) are unchanged.',
       msgShiny:'found a SHINY! ✨', msgShinyCap:'CAUGHT a SHINY! ✨🎉', spTitle:'Shiny caught!', spClose:'Close this notice', msgFaint:'had a Pokémon knocked out', msgBallsLow:'is low on Poké Balls', msgPotionsLow:'is low on potions', msgRevivesLow:'is low on revives',
       stAllTitle:'Overview', stTotal:'Total', stAcc:'Account', stCompare:'Comparison (previous hunt)', stPrev:'previous', stCur:'current', stMoney:'dollars', stPerAcc:'Per account',
@@ -613,7 +634,7 @@
       cdShinyTried:'Shinies intentados (balls lanzadas)', cdConfig:'Configurar el panel', cdConfigH:'Secciones (arrastra para reordenar, marca para mostrar)', cdSecKpis:'Resumen (KPIs)', cdByAcc2:'Tabla por cuenta', cdScopeMine:'Mis hunts', cdScopeAll:'Todas las hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Volver a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder las ocultas',
       stDragHint:'Arrastra para reordenar', stHideSec:'Ocultar esta sección (restáurala en el engranaje ⚙)',
       sellguard:'🛡 Venta protegida', sellguardTitle:'Pide confirmación antes de vender shiny, Legendaria+ o ítem raro (verde = activado)',
-      clean:'🧼 Limpiar juego', cleanTitle:'Oculta el auto-helper, el popup de captura y el HUD de la esquina; la cuenta y el menú del juego aparecen al pasar el mouse (verde = activado)',
+      clean:'🧼 Limpiar juego', cleanTitle:'Reduce el HUD y el popup de captura sin ocultar Auto Helper (verde = activado)',
       reset:'Reiniciar', resetTitle:'Reinicia las estadísticas de la sesión (todas las cuentas), para monitorear desde ahora', resetConfirm:'¿Reiniciar las estadísticas de sesión de todas las cuentas? Los totales de la cuenta (oro, nivel, shinies de vida) no cambian.',
       msgShiny:'¡encontró un SHINY! ✨', msgShinyCap:'¡CAPTURÓ un SHINY! ✨🎉', spTitle:'¡Shiny capturado!', spClose:'Cerrar el aviso', msgFaint:'tuvo un Pokémon derribado', msgBallsLow:'tiene pocas Pokéballs', msgPotionsLow:'tiene pocas pociones', msgRevivesLow:'tiene pocos revives',
       stAllTitle:'Resumen general', stTotal:'Total', stAcc:'Cuenta', stCompare:'Comparación (hunt anterior)', stPrev:'anterior', stCur:'actual', stMoney:'dólares', stPerAcc:'Por cuenta',
@@ -791,6 +812,21 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     [...grid.children].forEach(c => c.classList.remove('expanded')); // um por vez
     if (on) p.classList.add('expanded');
   }
+
+  // Navegação rápida: Alt+1..4 abre a conta em foco; Esc volta à grade.
+  document.addEventListener('keydown', e => {
+    if (e.altKey && /^[1-4]$/.test(e.key)) {
+      const i = +e.key - 1;
+      if (i < grid.children.length) {
+        e.preventDefault();
+        [...grid.children].forEach(c => c.classList.remove('expanded'));
+        grid.children[i].classList.add('expanded');
+        try { webviews[i].focus(); } catch {}
+      }
+    } else if (e.key === 'Escape' && grid.querySelector('.panel.expanded')) {
+      [...grid.children].forEach(c => c.classList.remove('expanded'));
+    }
+  });
 
   function togglePower(i) {
     const panel = grid.children[i];
@@ -978,7 +1014,18 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     css.textContent = '.pg-qbar{display:flex;gap:6px;align-items:center;padding:6px 10px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.07);font-size:11px;flex-wrap:wrap}'
       + '.pg-qbar select,.pg-qbar input,.pg-qbar button{background:#151d2a;border:1px solid rgba(255,255,255,.12);border-radius:5px;color:#fff;font-size:11px;padding:3px 7px;cursor:pointer;outline:none}'
       + '.pg-qbar button.on{background:#7c2d2d;border-color:#e3350d}'
-      + 'body.pg-dex-c .dex-cell:not(.caught){display:none}body.pg-dex-n .dex-cell.caught{display:none}';
+      + 'body.pg-dex-c .dex-cell:not(.caught){display:none}body.pg-dex-n .dex-cell.caught{display:none}'
+      + '@media(max-width:780px){'
+      + 'nav.game-dock{max-width:calc(100vw - 8px)!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;padding:3px!important;gap:3px!important}'
+      + 'nav.game-dock::-webkit-scrollbar{display:none!important}'
+      + '.game-hud-tl{transform:scale(.82)!important;transform-origin:top left!important}'
+      + '.game-hud-tr{transform:scale(.82)!important;transform-origin:top right!important}'
+      + '.ah-panel{width:min(440px,calc(100vw - 10px))!important;max-width:calc(100vw - 10px)!important;max-height:calc(100vh - 10px)!important;overflow:auto!important}'
+      + '.cap-panel{max-width:calc(100vw - 10px)!important;max-height:calc(100vh - 10px)!important;overflow:auto!important}'
+      + '.dex-window,.market-window,.mkt2-window{width:calc(100vw - 8px)!important;max-width:calc(100vw - 8px)!important;max-height:calc(100vh - 8px)!important}'
+      + '.pg-qbar{position:sticky!important;top:0!important;z-index:20!important;padding:4px 6px!important;gap:4px!important}'
+      + '.pg-qbar select,.pg-qbar input,.pg-qbar button{min-height:28px!important;font-size:10px!important;flex:1 1 auto!important}'
+      + '}';
     document.head.appendChild(css);
     let svMap = null;
     const carrega = () => { if (svMap) return; svMap = {}; fetch('/game/creatures.json').then(r => r.json()).then(j => { (j.creatures || []).forEach(c => { svMap[(c.name || '').toLowerCase()] = c.sellValue || 0; }); }).catch(() => { svMap = null; }); };
@@ -1131,13 +1178,13 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   }
   dockBtn.onclick = () => { dockHidden = !dockHidden; applyDock(); };
 
-  // ----- Limpar jogo: esconde o auto-helper (.ah-panel), o popup de captura (.cap-panel) e o HUD
-  // do canto sup. esquerdo (.game-hud-tl); a conta (.game-hud-tr) e o menu (.game-dock) aparecem no hover.
+  // ----- Limpar jogo: reduz o popup de captura e o HUD, mas preserva o Auto Helper.
+  // A conta (.game-hud-tr) e o menu (.game-dock) aparecem no hover.
   const cleanScript = (on) => `(() => {
     const ID = 'pg-clean'; let s = document.getElementById(ID);
     if (!${on}) { if (s) s.remove(); return; }
     if (!s) { s = document.createElement('style'); s.id = ID; document.head.appendChild(s); }
-    s.textContent = '.ah-panel,.cap-panel,.game-hud-tl{display:none !important}'
+    s.textContent = '.cap-panel,.game-hud-tl{display:none !important}'
       + '.game-hud-tr,nav.game-dock{opacity:0 !important;transition:opacity .18s ease !important}'
       + '.game-hud-tr:hover,nav.game-dock:hover{opacity:1 !important}';
   })()`;
@@ -1332,14 +1379,14 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // Tudo que vem do disco e saneado: o "Importar config" grava localStorage arbitrario e a
   // lista poe dot em atributo style; campo fora do formato viraria XSS armazenado.
   const COR_OK = /^#[0-9a-fA-F]{3,8}$/;
-  const saneiaLog = (arr, extra) => (Array.isArray(arr) ? arr : []).slice(-500).map(x => {
+  const saneiaLog = (arr, extra, limit = 500) => (Array.isArray(arr) ? arr : []).slice(-limit).map(x => {
     if (!x || typeof x !== 'object') return null;
     const e = { n: String(x.n || '').slice(0, 40), sid: +x.sid || 0, t: +x.t || 0, p: +x.p || 0, acc: String(x.acc || '').slice(0, 40), dot: COR_OK.test(String(x.dot)) ? String(x.dot) : '#8b949e' };
     extra(e, x); return e;
   }).filter(Boolean);
   let lifeShiny = [], lifeCatch = [];
   try { lifeShiny = saneiaLog(JSON.parse(localStorage.getItem('lifeShiny') || '[]'), (e, x) => { e.cap = x.cap ? 1 : 0; e.def = x.def ? 1 : 0; }); } catch {}
-  try { lifeCatch = saneiaLog(JSON.parse(localStorage.getItem('lifeCatch') || '[]'), (e, x) => { e.iv = +x.iv || 0; e.q = +x.q || 0; e.sh = !!x.sh; e.fx = !!x.fx; }); } catch {}
+  try { lifeCatch = saneiaLog(JSON.parse(localStorage.getItem('lifeCatch') || '[]'), (e, x) => { e.iv = +x.iv || 0; e.q = +x.q || 0; e.sh = !!x.sh; e.fx = !!x.fx; }, 10000); } catch {}
   // chave de dedupe inclui o painel (indice, nao o nome: o nome comeca padrao e muda ao carregar,
   // o que duplicaria a entrada e o aviso). Assim duas contas com a mesma especie no mesmo ms nao colidem.
   const kSh = (p, x) => 's' + p + '_' + x.t + '_' + (x.sid || x.n);
@@ -1364,7 +1411,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     (r.catchLog || []).forEach(x => { const key = kCa(i, x); if (seenLog[key]) return; seenLog[key] = 1; dirty = true; lifeCatch.push({ n: String(x.n || '').slice(0, 40), sid: +x.sid || 0, iv: +x.iv || 0, q: +x.q || 0, sh: !!x.sh, fx: !!x.fx, t: +x.t || 0, p: i, acc, dot }); });
     if (dirty) {
       if (lifeShiny.length > 500) lifeShiny = lifeShiny.slice(-500);
-      if (lifeCatch.length > 300) lifeCatch = lifeCatch.slice(-300);
+      if (lifeCatch.length > 10000) lifeCatch = lifeCatch.slice(-10000);
       try { localStorage.setItem('lifeShiny', JSON.stringify(lifeShiny)); localStorage.setItem('lifeCatch', JSON.stringify(lifeCatch)); } catch {}
     }
   }
@@ -2378,7 +2425,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     goals: { g: +goals.g || 0, c: +goals.c || 0 },
     huntStats: JSON.parse(JSON.stringify(huntStats || {})),
     trend: dhist.slice(-240).map(x => ({ t: +x.t || 0, g: +x.g || 0, x: +x.x || 0 })),
-    captures: lifeCatch.slice(-300).map(x => ({
+    captures: lifeCatch.slice(-10000).map(x => ({
       name: String(x.n || '').slice(0, 40), speciesId: +x.sid || 0, time: +x.t || 0,
       accountIndex: +x.p || 0, account: String(x.acc || '').slice(0, 40),
       iv: +x.iv || 0, quality: +x.q || 0, shiny: !!x.sh, first: !!x.fx

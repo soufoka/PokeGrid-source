@@ -3,8 +3,8 @@ id: PG-011
 tipo: feature
 prioridade: p1
 area: ux
-estado: pronto
-responsavel:
+estado: fazendo
+responsavel: Codex (prévia local)
 github_issue:
 ---
 
@@ -43,3 +43,12 @@ PG-010 e PG-006.
 - Evidência: protótipo `pokegrid-experience.html`.
 - Próxima ação: implementar primeiro com sprites estáticos e dados demonstráveis.
 
+### 2026-07-26 — Codex — prévia integrada
+
+- Botão `✨ Novo painel` e navegação Visão geral/Time & IV/Inventário integrados.
+- Palco usa líder, encontro e sprites PokeAPI com fallback estático.
+- Quatro KPIs, saúde das contas e eventos já usam o coletor quando há login.
+- Webviews permanecem vivos sob o overlay.
+- Validado no Electron em 2294×890 e 1024×720, sem overflow ou erro de console.
+- Pendente para aceite final: confirmar encontro/último golpe com uma conta
+  autenticada e medir CPU numa sessão longa.

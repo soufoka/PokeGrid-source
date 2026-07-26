@@ -219,3 +219,19 @@ O protótipo navegável desta direção foi criado no artefato de conversa
 `pokegrid-experience.html`. Os dados nele são demonstrativos; nenhuma conta real
 foi acessada.
 
+## Implementação local de prévia
+
+Em 2026-07-26, a direção foi integrada ao cliente local em
+`src/ui/experience-v2.css` e `src/ui/experience-v2.js`.
+
+O botão `✨ Novo painel` abre a experiência por cima da grade sem destruir,
+desligar ou recriar os webviews. O módulo:
+
+- lê estado e catálogos dentro da própria origem do jogo;
+- usa dados reais quando a conta está conectada;
+- usa demonstração neutra e explicitamente identificada durante o login;
+- implementa palco global, Time & IV, comparação/projeção e inventário;
+- mantém o Modo Simples e o painel antigo disponíveis.
+
+É uma prévia funcional para validação visual. Os adaptadores ainda devem ser
+extraídos para `src/data/*` antes de a experiência substituir painéis existentes.

@@ -3,8 +3,8 @@ id: PG-013
 tipo: feature
 prioridade: p1
 area: ux
-estado: pronto
-responsavel:
+estado: fazendo
+responsavel: Codex (prévia local)
 github_issue:
 ---
 
@@ -43,3 +43,13 @@ PG-010.
 - Evidência: `creatures.json.attacks` contém os nove golpes do Gyarados.
 - Próxima ação: reconciliar os stats observados do WebSocket com o leitor atual.
 
+### 2026-07-26 — Codex — prévia integrada
+
+- Time atual lê até seis integrantes do WebSocket e enriquece por espécie.
+- Cards mostram sprite, nível, qualidade e IV total.
+- Ficha mostra tipos, stats projetados e golpes do `creatures.json`.
+- A interface distingue IV individual confirmado, estimado por stats e
+  distribuição aproximada a partir do total.
+- Smoke test demonstrativo: seis integrantes e nove golpes do Gyarados.
+- Pendente: validar aliases dos IVs individuais contra payload autenticado e
+  acrescentar fraquezas/resistências.

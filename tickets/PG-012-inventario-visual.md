@@ -3,8 +3,8 @@ id: PG-012
 tipo: feature
 prioridade: p1
 area: ux
-estado: pronto
-responsavel:
+estado: fazendo
+responsavel: Codex (prévia local)
 github_issue:
 ---
 
@@ -42,3 +42,10 @@ PG-010 e PG-007.
 - Evidência: `/game/items.json` já fornece `icon`, `category` e `npcPrice`.
 - Próxima ação: definir as metas padrão e o fallback de ícones.
 
+### 2026-07-26 — Codex — prévia integrada
+
+- Inventário lê quantidade e catálogo na origem do jogo.
+- URLs relativas são resolvidas e o renderer aceita somente hosts conhecidos.
+- Implementados placeholder, filtros Atenção/Todos/Batalha/Loot e valor NPC.
+- Smoke test: 4 itens em Atenção, 6 em Todos e sprites carregados sem erro.
+- Pendente: filtro Raros e metas configuráveis por conta.

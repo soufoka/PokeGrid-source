@@ -3,8 +3,8 @@ id: PG-014
 tipo: feature
 prioridade: p1
 area: calculator
-estado: pronto
-responsavel:
+estado: fazendo
+responsavel: Codex (prévia local)
 github_issue:
 ---
 
@@ -43,3 +43,12 @@ PG-010 e PG-013.
 - Evidência: fórmula oficial documentada em `/pokepedia/systems/power`.
 - Próxima ação: extrair a fórmula já usada por `JustPokedex` e criar fixtures.
 
+### 2026-07-26 — Codex — prévia integrada
+
+- Comparação de dois integrantes e slider de nível 1–500 implementados.
+- Espécie, qualidade e IV permanecem fixos durante a projeção.
+- Cada stat arredonda antes da soma e a qualidade multiplica o poder final.
+- Smoke test: nível 500 abriu por padrão; mudança para 250 recalculou Gyarados
+  para poder 4.910 e Dragonite para 4.775 no cenário demonstrativo.
+- Pendente: cenário editável de qualidade, diferenças percentuais e testes
+  automatizados fora do módulo de UI.

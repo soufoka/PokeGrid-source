@@ -1,5 +1,19 @@
 # Changelog
 
+## Próxima versão — prévia local Experience V2
+
+- **Novo painel moderno dentro do cliente**, acessível por `✨ Novo painel`,
+  sem desligar ou recriar os webviews do jogo.
+- **Visão geral com palco de batalha**, sprites animados da PokeAPI, quatro KPIs,
+  saúde das contas e eventos recentes.
+- **Time & IV** com os seis integrantes, IV total, qualidade, golpes do catálogo
+  oficial, comparação e projeção de nível 1 a 500.
+- **Inventário visual** com sprites de `items.json`, quantidade, valor NPC,
+  filtros e estado de atenção.
+- **Dados reais quando a conta está conectada** e modo demonstrativo claramente
+  identificado durante login ou ausência de dados.
+- A prévia vive em `src/ui/experience-v2.*`; o painel antigo continua disponível.
+
 ## 1.5.4
 
 ### Segurança

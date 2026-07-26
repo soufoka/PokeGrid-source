@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <!-- Defesa em profundidade: a interface nao faz rede (fetch/XHR/WS bloqueados), so carrega img do jogo/data.
      Se algum dado escapar do escape, nao ha canal pra vazar as contas salvas. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: https://poke.idleworld.online https://raw.githubusercontent.com; font-src 'self' data:; connect-src 'none'; frame-src https://poke.idleworld.online; child-src https://poke.idleworld.online; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://poke.idleworld.online https://raw.githubusercontent.com https://pokexguides.com; font-src 'self' data:; connect-src 'none'; frame-src https://poke.idleworld.online; child-src https://poke.idleworld.online; base-uri 'none'; form-action 'none'">
 <title>PokeGrid</title>
+<link rel="stylesheet" href="src/ui/experience-v2.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; background: #0d1117; color: #e6edf3; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; overflow: hidden; }
@@ -439,6 +440,7 @@
     <button id="accounts">👤 Treinadores</button>
     <button id="reloadAll">⟳ Atualizar tudo</button>
     <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">🎛 Menu do jogo</button>
+    <button id="experienceV2Btn" title="Abre a nova visão global, time, IV e inventário">✨ Novo painel</button>
     <button id="statsBtn" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">📊 Painel</button>
     <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">🃏 Cartas</button>
     <button id="ivsBtn" title="Abre ou fecha a calculadora de IV (JustPokédex) em todos os painéis"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M2 12h20" stroke="#8f1408" stroke-width="3"/><circle cx="12" cy="12" r="3.4" fill="#fff" stroke="#8f1408" stroke-width="2.5"/></svg>IV's</button>
@@ -2585,5 +2587,6 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     applyCards(); // restaura o modo cartas se estava ligado
   })();
 </script>
+<script src="src/ui/experience-v2.js"></script>
 </body>
 </html>

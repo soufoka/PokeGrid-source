@@ -3240,6 +3240,7 @@
 
         ultimoTexto = texto;
         ultimoPokemon = pokemon;
+        try { window.__pgIv && window.__pgIv.reportar(); } catch (x) {} // alimenta o card unico do app
 
         const painel =
             document.getElementById(CONFIG.panelId);
@@ -5523,6 +5524,71 @@
     } catch (e) {
         console.warn("[Poké Leitor] Erro ao carregar dados salvos:", e);
     }
+
+    // ===== Ponte pro card unico do PokeGrid =====
+    // O card fica na janela do app (fora dos paineis), pra poder abrir no centro da tela e maior.
+    // O calculo continua aqui, que e onde estao as formulas e a busca dos atributos-base, entao
+    // nao existe formula duplicada: o app so pede o resultado e mostra.
+    window.__pgIv = {
+        async calc(entrada) {
+            const e = entrada || {};
+            const pk = e.pokemon || ultimoPokemon;
+            if (!pk || !pk.nome) return null;
+            let bases = e.bases;
+            if (!bases) {
+                try { bases = await buscarAtributosBase(pk.nome); }
+                catch (err) { return { erro: String((err && err.message) || err), nome: pk.nome }; }
+            }
+            const nivel = Number(e.nivel != null ? e.nivel : pk.nivel);
+            const qualidade = Number(e.qualidade != null ? e.qualidade : (pk.multiplicadorQualidade || 1));
+            const atuais = e.atuais || { hp: pk.hp, atk: pk.atk, def: pk.def, spa: pk.spa, spd: pk.spd, vel: pk.vel };
+            if (!Number.isFinite(nivel) || !Number.isFinite(qualidade)) return { erro: "dados incompletos", nome: pk.nome };
+            const ivsFloats = {}, ivs = {};
+            for (const chave of Object.keys(CONFIG.expoentes)) {
+                ivsFloats[chave] = estimarIVIndividual({
+                    atributoAtual: atuais[chave], atributoBase: bases[chave],
+                    nivel, qualidade, expoente: CONFIG.expoentes[chave]
+                });
+                ivs[chave] = arredondar(ivsFloats[chave] ?? 0, 1);
+            }
+            const soma = Object.values(ivsFloats).reduce((t, v) => t + (v || 0), 0);
+            // mesmo criterio do painel: o IV informado pelo jogo tem prioridade se o nivel nao mudou
+            const ivObs = (pk.ivAtual != null && Number(pk.nivel) === nivel) ? Number(pk.ivAtual) : null;
+            const usaObs = Number.isFinite(ivObs) && ivObs > 0;
+            const pct = ((usaObs ? ivObs : soma) / CONFIG.maxIVTotal) * 100;
+            const ehShiny = /shiny/i.test(String(pk.nome || ""));
+            // sprite: o id ja fica no apiCache depois do buscarAtributosBase
+            let sprite = null;
+            try { const ci = apiCache[normalizarNomePokemon(pk.nome)]; if (ci && ci.id) sprite = obterUrlsSprite(ci.id, ehShiny); } catch (x) {}
+            // golpes com poder de catalogo + dano observado em batalha (mesma fonte da aba Moves)
+            let golpes = [];
+            try {
+                golpes = (obterMovesDoPokemon(pk) || []).slice(0, 8).map(mv => {
+                    const ch = String(mv.name || "").toLowerCase().trim();
+                    const di = danoPorGolpe.get(ch);
+                    return { nome: mv.name, tipo: mv.type || "", poder: mv.power != null ? +mv.power : null,
+                        dano: di ? (+di.lastDmg || 0) : 0, eff: di && di.eff ? +di.eff : 0, ativo: ultimoGolpeUsado === ch };
+                });
+            } catch (x) {}
+            return {
+                nome: pk.nome, tipos: pk.tipos || [], shiny: ehShiny,
+                nivel, qualidade, qualidadeTexto: pk.qualidade || "",
+                bases, atuais, ivs,
+                ivTotal: usaObs ? ivObs : Math.ceil(soma),
+                ivMax: CONFIG.maxIVTotal, ivMaxInd: CONFIG.maxIVIndividual,
+                percentual: pct,
+                classificacao: classificarPotencial(pct),
+                sprite, golpes,
+                poder: calcularPoderEstimado({ bases, ivs, nivel, qualidade }),
+                poderJogo: pk.poder || 0,
+                pokemon: { nome: pk.nome, nivel: pk.nivel, ivAtual: pk.ivAtual, poder: pk.poder, tipos: pk.tipos || [], qualidade: pk.qualidade || "", multiplicadorQualidade: pk.multiplicadorQualidade || 1, hp: pk.hp, atk: pk.atk, def: pk.def, spa: pk.spa, spd: pk.spd, vel: pk.vel }
+            };
+        },
+        // avisa o app: o canal e o console do painel, que o app escuta (sem ficar consultando)
+        async reportar() {
+            try { const r = await window.__pgIv.calc(); if (r) console.log("__PGIV__" + JSON.stringify(r)); } catch (x) {}
+        }
+    };
 
     carregarCreatures();
     criarPainel();

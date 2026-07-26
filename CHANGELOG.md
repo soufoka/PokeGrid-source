@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.5.4
+
+### Segurança
+
+- **Correção importante no card de IV.** A URL da sprite era validada só pelo início do endereço, e um dado forjado conseguia escapar do atributo e rodar código na janela do app, que é onde ficam as credenciais salvas. Agora o endereço passa por lista branca estrita e tudo que chega pelo canal é conferido (tipo, tamanho e formato) antes de ir pra tela.
+  *Important fix in the IV card. The sprite URL was validated only by its prefix, and a forged value could break out of the attribute and run code in the app window, which is where saved credentials live. The address now goes through a strict allowlist, and everything arriving through the channel is checked (type, size and shape) before rendering.*
+- **Limites contra payload inflado**: no máximo 12 golpes, 4 tipos e nomes de 40 caracteres, pra um dado torto não travar a tela.
+  *Caps against inflated payloads: at most 12 moves, 4 types and 40-character names, so malformed data cannot freeze the screen.*
+- **Itens fixados do painel** passaram a ser escapados e validados na carga, e ids vindos do jogo são convertidos pra número antes de entrar na página. Fecha o mesmo tipo de brecha por arquivo de configuração importado.
+  *Pinned panel items are now escaped and validated on load, and ids coming from the game are coerced to numbers before reaching the page. Closes the same class of hole via imported config files.*
+
+### Leitor de IV
+
+- **Sprite do pokémon** no cabeçalho do card (animada, com imagem estática de reserva).
+  *Pokémon sprite in the card header (animated, with a static fallback).*
+- **Anel de potencial** com a porcentagem, a classificação e a descrição, igual ao da aba de análise.
+  *Potential ring with the percentage, classification and description, same as the analysis tab.*
+- **Golpes com o poder de cada um**, chip de tipo colorido, o dano observado na última batalha com a efetividade, e o golpe em uso destacado.
+  *Moves with each ones power, colored type chip, the damage seen in the last battle with effectiveness, and the move in use highlighted.*
+
+## 1.5.3
+
+- **Uma calculadora de IV só, no centro da tela e maior.** Antes eram quatro, uma presa dentro de cada painel. Agora o botão IV's abre um card único na janela do app, que você arrasta pra onde quiser: passe o mouse num pokémon em qualquer painel e os dados aparecem nele. Mostra tipos, nível, qualidade, IV total, os 6 atributos com IV por stat e o poder, e todos os campos são editáveis pra recalcular. O cálculo continua sendo feito pela extensão dentro do painel, então o resultado é o mesmo de sempre.
+  *A single IV calculator, centered and bigger. There used to be four, each trapped inside its panel. The IV's button now opens one card in the app window that you can drag anywhere: hover a Pokémon in any panel and the data lands there. It shows types, level, quality, total IV, the 6 stats with per-stat IV and power, and every field is editable to recalculate. The math is still done by the extension inside the panel, so results are unchanged.*
+  - Quem precisa das abas de golpes ou comparar usa o botão ⧉ no cabeçalho do card, que abre a calculadora dentro do painel de origem.
+    *For the moves or compare tabs, use the ⧉ button in the card header to open the calculator inside the source panel.*
+
 ## 1.5.2
 
 - **Aviso claro quando um shiny é CAPTURADO.** Como é o evento mais raro, agora aparece um cartão na tela com o sprite do shiny, o nome, a conta, IV e qualidade, e ele fica até você fechar. O som é mais longo que o de "apareceu" e a notificação é própria.

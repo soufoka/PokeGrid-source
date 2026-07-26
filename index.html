@@ -214,6 +214,56 @@
   #stats .st-resize:hover { background: rgba(227,53,13,.18); }
   #stats .st-resize:hover::before { background: #e3350d; }
 
+  /* Calculadora de IV única: vive na janela do app (não dentro de um painel), então pode ficar
+     no centro da tela, por cima de todos, e do tamanho que precisar. Alimentada por qualquer painel. */
+  #ivCard { display: none; position: fixed; z-index: 850; width: 560px; max-width: 96vw; max-height: 92vh; overflow-y: auto;
+    background: linear-gradient(165deg, #161b22, #0d1117 60%); border: 1px solid #30363d; border-top: 2px solid #e3350d;
+    border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
+  #ivCard.show { display: block; }
+  #ivCard::-webkit-scrollbar { width: 9px; }
+  #ivCard::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
+  #ivCard .iv-hd { display: flex; align-items: center; gap: 9px; padding: 10px 13px; border-bottom: 1px solid #21262d; cursor: grab; user-select: none; }
+  #ivCard .iv-hd.drag { cursor: grabbing; }
+  #ivCard .iv-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 6px currentColor; flex: none; }
+  #ivCard .iv-nm { font-size: 17px; font-weight: 700; color: #f0f6fc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #ivCard .iv-acc { font-size: 11px; color: #7d8590; flex: none; }
+  #ivCard .iv-hd button { margin-left: 0; background: transparent; border: 1px solid #30363d; border-radius: 7px; color: #8b949e; font-size: 12px; padding: 2px 8px; cursor: pointer; flex: none; }
+  #ivCard .iv-hd button:hover { border-color: #e3350d; color: #fff; }
+  #ivCard .iv-hd .iv-sp { margin-left: auto; }
+  #ivCard .iv-body { padding: 12px 13px 14px; }
+  #ivCard .iv-tipos { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  #ivCard .iv-tp { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 3px 9px; border-radius: 999px; color: #0d1117; }
+  #ivCard .iv-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  #ivCard .iv-kpi { background: #12171e; border: 1px solid #21262d; border-radius: 9px; padding: 8px 10px; }
+  #ivCard .iv-kpi .k { font-size: 9.5px; color: #7d8590; text-transform: uppercase; letter-spacing: .05em; }
+  #ivCard .iv-kpi .v { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  #ivCard .iv-inp { width: 100%; margin-top: 3px; background: #0b0f15; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 15px; font-weight: 700; padding: 2px 6px; outline: none; font-variant-numeric: tabular-nums; }
+  #ivCard .iv-inp:focus { border-color: #e3350d; }
+  #ivCard .iv-sec { font-size: 10px; font-weight: 600; color: #7d8590; text-transform: uppercase; letter-spacing: .07em; margin: 4px 0 7px; }
+  #ivCard .iv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  #ivCard .iv-st { background: #12171e; border: 1px solid #21262d; border-radius: 9px; padding: 8px 9px; }
+  #ivCard .iv-st-h { display: flex; align-items: baseline; gap: 6px; }
+  #ivCard .iv-st-n { font-size: 10px; font-weight: 700; letter-spacing: .06em; }
+  #ivCard .iv-st-iv { margin-left: auto; font-size: 12px; font-weight: 700; color: #55e6d3; font-variant-numeric: tabular-nums; }
+  #ivCard .iv-bar { height: 5px; background: #21262d; border-radius: 3px; overflow: hidden; margin: 5px 0 6px; }
+  #ivCard .iv-bar > i { display: block; height: 100%; border-radius: 3px; }
+  #ivCard .iv-st-l { display: flex; gap: 6px; align-items: center; font-size: 10px; color: #6e7681; }
+  #ivCard .iv-st-l input { flex: 1; min-width: 0; background: #0b0f15; border: 1px solid #262d36; border-radius: 5px; color: #adbac7; font-size: 11px; padding: 1px 5px; outline: none; font-variant-numeric: tabular-nums; }
+  #ivCard .iv-st-l input:focus { border-color: #e3350d; color: #fff; }
+  #ivCard .iv-spr { width: 52px; height: 52px; object-fit: contain; image-rendering: pixelated; flex: none; filter: drop-shadow(0 0 6px rgba(0,0,0,.5)); }
+  #ivCard .iv-pot { display: flex; align-items: center; gap: 12px; background: #12171e; border: 1px solid #21262d; border-radius: 9px; padding: 9px 12px; margin-bottom: 12px; }
+  #ivCard .iv-ring { width: 54px; height: 54px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; position: relative; }
+  #ivCard .iv-ring::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #12171e; }
+  #ivCard .iv-ring span { position: relative; z-index: 1; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  #ivCard .iv-pot-t { font-size: 15px; font-weight: 800; }
+  #ivCard .iv-pot-d { font-size: 11px; color: #8b949e; margin-top: 2px; line-height: 1.4; }
+  #ivCard .iv-mv { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 1px solid #21262d; border-radius: 8px; background: #12171e; font-size: 12px; margin-bottom: 5px; }
+  #ivCard .iv-mv.on { border-color: #f2c665; box-shadow: 0 0 0 1px rgba(242,198,101,.35); }
+  #ivCard .iv-mv .mv-n { color: #e6edf3; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #ivCard .iv-mv .mv-p { margin-left: auto; color: #f0883e; font-variant-numeric: tabular-nums; flex: none; }
+  #ivCard .iv-mv .mv-d { color: #55e6d3; font-variant-numeric: tabular-nums; flex: none; }
+  #ivCard .iv-foot { display: flex; align-items: center; gap: 8px; margin-top: 11px; font-size: 11px; color: #6e7681; flex-wrap: wrap; }
+  #ivCard .iv-vazio { padding: 26px 16px; text-align: center; color: #7d8590; font-size: 13px; line-height: 1.7; }
   /* Shiny CAPTURADO: o evento mais raro do jogo, então o aviso fica na tela até ser fechado */
   #shinyParty { position: fixed; top: 58px; left: 50%; /* abaixo da barra: nao cobre os botoes do app */ transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
   #shinyParty .sp { pointer-events: auto; display: flex; align-items: center; gap: 14px; min-width: 380px; max-width: 92vw;
@@ -419,6 +469,7 @@
   <div id="grid"></div>
   <div id="cards"></div>
 
+  <div id="ivCard"></div>
   <div id="shinyParty"></div>
   <div id="overlay">
     <div id="modal">
@@ -474,7 +525,7 @@
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visível',
       optionsBtn:'☰ Opções', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
       dockLabel:'🎛 Menu do jogo', dockTitle:'Mostra ou esconde o menu de ícones do jogo (verde = visível). F2 alterna no painel em foco.',
-      hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', accClear:'Limpar esta conta', ivsTitle:'Abre ou fecha a calculadora de IV (JustPokédex) em todos os painéis',
+      hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', accClear:'Limpar esta conta', ivsTitle:'Abre a calculadora de IV do app: uma só, no centro da tela, alimentada por qualquer painel', ivcTitle:"Calculadora de IV", ivcHint:'Passe o mouse sobre um pokémon em qualquer painel.<br>Os dados aparecem aqui, e você pode ajustar nível e atributos pra recalcular.', ivcLevel:'Nível', ivcQuality:'Qualidade', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'atual', ivcBase:'base', ivcPowerGame:'Poder no jogo', ivcFooter:'edite qualquer campo pra recalcular', ivcOpenPanel:'Abrir a calculadora dentro do painel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder do golpe', ivcMoveLast:'último dano observado em batalha',
       alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Suprimentos gastos', stBalls:'bolas', stPots:'cura', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time',
       cards:'🍃 Simples', cardsShort:'Simples', cardsTitle:'Modo simples e ultra leve: esconde o jogo e mostra só os números, gastando o mínimo do PC (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
@@ -513,7 +564,7 @@
       chatHidden:'💬 Chat hidden', chatShown:'💬 Chat shown',
       optionsBtn:'☰ Options', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
       dockLabel:'🎛 Game menu', dockTitle:'Shows or hides the game icon menu (green = shown). F2 toggles it in the focused panel.',
-      hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', accClear:'Clear this account', ivsTitle:'Opens or closes the IV calculator (JustPokédex) in all panels',
+      hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', accClear:'Clear this account', ivsTitle:'Opens the app IV calculator: a single one, centered, fed by any panel', ivcTitle:"IV calculator", ivcHint:'Hover a Pokémon in any panel.<br>The data shows up here, and you can adjust level and stats to recalculate.', ivcLevel:'Level', ivcQuality:'Quality', ivcIvTotal:'Total IV', ivcPower:'Estimated power', ivcStats:'Stats and IV per stat', ivcCurrent:'current', ivcBase:'base', ivcPowerGame:'Power in game', ivcFooter:'edit any field to recalculate', ivcOpenPanel:'Open the calculator inside the panel (compare)', ivcMoves:'Moves', ivcMovePower:'move power', ivcMoveLast:'last damage seen in battle',
       alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Supplies used', stBalls:'balls', stPots:'heals', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team',
       cards:'🍃 Simple', cardsShort:'Simple', cardsTitle:'Simple, ultra-light mode: hides the game and shows only the numbers, using the least PC possible (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
@@ -552,7 +603,7 @@
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visible',
       optionsBtn:'☰ Opciones', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
       dockLabel:'🎛 Menú del juego', dockTitle:'Muestra u oculta el menú de iconos del juego (verde = visible). F2 alterna en el panel enfocado.',
-      hunt:'🎯 Hunt', huntTitle:'Abre el Hunt Analyzer en todos los paneles', accClear:'Limpiar esta cuenta', ivsTitle:'Abre o cierra la calculadora de IV (JustPokédex) en todos los paneles',
+      hunt:'🎯 Hunt', huntTitle:'Abre el Hunt Analyzer en todos los paneles', accClear:'Limpiar esta cuenta', ivsTitle:'Abre la calculadora de IV del app: una sola, en el centro, alimentada por cualquier panel', ivcTitle:"Calculadora de IV", ivcHint:'Pasa el mouse sobre un pokémon en cualquier panel.<br>Los datos aparecen aquí, y puedes ajustar nivel y atributos para recalcular.', ivcLevel:'Nivel', ivcQuality:'Calidad', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'actual', ivcBase:'base', ivcPowerGame:'Poder en el juego', ivcFooter:'edita cualquier campo para recalcular', ivcOpenPanel:'Abrir la calculadora dentro del panel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder del golpe', ivcMoveLast:'último daño observado en batalla',
       alerts:'🔔 Alertas', alertsTitle:'Avisa con notificación cuando una cuenta se cae o se queda sin Pokéballs', msgDown:'se desconectó', msgBalls:'se quedó sin Pokéballs', count:'🔢 Paneles', stats:'📊 Panel', statsTitle:'Resumen de la cuenta enfocada (oro/h, XP/h, bolsa, drops)', statsResumo:'Resumen', statsWaiting:'Esperando datos del juego…', statsWaiting2:'Deja el panel conectado y farmeando unos segundos.', statsOff:'Panel apagado.',
       stLevel:'Nivel', stSession:'Sesión', stDefeated:'Derrotados', stXpGain:'XP ganada', stCaptures:'Capturas', stGold:'Oro de la sesión', stLoot:'Loot (venta)', stCapSell:'Capturas (venta)', stSupply:'Suministros gastados', stBalls:'balls', stPots:'curas', stBalance:'Balance de la sesión', stDrops:'Drops de la sesión', stAccount:'Cuenta', stProfession:'Profesión', stMail:'Regalos en el correo', stCatchTotal:'Capturas totales', stTeam:'Equipo',
       cards:'🍃 Simple', cardsShort:'Simple', cardsTitle:'Modo simple y ultraligero: oculta el juego y muestra solo los números, gastando lo mínimo del PC (el farmeo sigue)', cdGold:'oro/h neto', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sesión)', cdShiny:'shiny enc/cap', cdActive:'cuentas activas', cdByAcc:'Por cuenta · clic en el encabezado para ordenar, en la fila para abrir el juego', cdTrend:'Tendencia · última hora', cdCatches:'Últimas capturas · todas las cuentas', cdShinies:'Apariciones de shiny ✨', cdConta:'Cuenta', cdHunt:'Hunt', cdStatus:'Estado', cdBest:'Mejor catch', cdLast:'Último catch', cdWaiting:'esperando…', cdOff:'apagado', cdHunting:'cazando', cdTotal:'Total', cdSeen:'aparecieron', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada todavía',
@@ -629,6 +680,12 @@
       // o did-stop-loading sempre fecha o par do did-start-loading. Sem ele, navegacao interna da
       // SPA do jogo (que nao redispara o dom-ready) deixava o painel preso em "carregando...".
       wv.addEventListener('did-stop-loading', () => { if (!off[i] && !falhou) { dot.className = 'dot ok'; status.textContent = t('stOnline'); } });
+      // canal do painel pro card de IV do app: a extensao marca a mensagem, aqui a gente pesca
+      wv.addEventListener('console-message', (e) => {
+        const m = e && e.message;
+        if (typeof m !== 'string' || m.lastIndexOf('__PGIV__', 0) !== 0) return;
+        try { ivRecebe(i, JSON.parse(m.slice(8))); } catch {}
+      });
       let fails = 0, alertedDown = false; // watchdog: falhas de carga do painel e se ja avisou a queda
       let zoom = +(localStorage.getItem('zoom' + i) || 1);
       const setZoom = (z) => {
@@ -1118,24 +1175,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     webviews.forEach((w, i) => { if (off[i]) return; try { w.executeJavaScript(huntScript).catch(() => {}); } catch {} });
   };
 
-  // ----- IV's: abre/fecha o JustPokédex em todos os painéis, sincronizado -----
-  // Usa o botão #minimize da própria extensão, então o estado interno dela continua consistente.
+  // ----- IV's: o card unico do app (a logica esta na secao 'Calculadora de IV unica') -----
   const ivsBtn = document.getElementById('ivsBtn');
-  ivsBtn.onclick = async () => {
-    let abrir = true; // sem painel nenhum respondendo, tenta abrir
-    for (let i = 0; i < count; i++) {
-      if (off[i] || !webviews[i]) continue;
-      try {
-        const min = await webviews[i].executeJavaScript("(()=>{const p=document.getElementById('pokemon-reader-panel');return p?p.classList.contains('minimized'):null})()");
-        if (min !== null) { abrir = !!min; break; } // espelha o primeiro painel que tem a extensão
-      } catch {}
-    }
-    webviews.forEach((w, i) => {
-      if (off[i] || !w) return;
-      try { w.executeJavaScript("(()=>{const p=document.getElementById('pokemon-reader-panel');if(!p)return;if(p.classList.contains('minimized')===" + abrir + "){const b=document.getElementById('minimize');if(b)b.click();}})()").catch(() => {}); } catch {}
-    });
-  };
-
 
   // ----- Anti-sono: impede o PC de dormir enquanto farma -----
   const awakeBtn = document.getElementById('awake');
@@ -1602,7 +1643,10 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     c.hide = c.hide || {};
     c.bagHide = c.bagHide || {};
     c.itemHide = c.itemHide || {};
-    c.pinned = Array.isArray(c.pinned) ? c.pinned : [];
+        // vem de arquivo de config importado: so entra com forma conferida (o nome vai pra tela)
+    c.pinned = (Array.isArray(c.pinned) ? c.pinned : []).slice(0, 40)
+      .filter(p => p && typeof p === 'object' && (p.t === 'ball' || p.t === 'item'))
+      .map(p => ({ t: p.t, id: +p.id || 0, name: String(p.name == null ? '' : p.name).slice(0, 40) }));
     c.bagItems = !!c.bagItems;
     c.bagImportantOnly = c.bagImportantOnly !== false; // padrão: mostra só os itens úteis
     return c;
@@ -1694,7 +1738,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     pinned: (d) => {
       if (!cfg.pinned.length) return '';
       let s = sec('#f2c665', t('stPinned')) + '<div class="pb">';
-      cfg.pinned.forEach(p => { const qty = p.t === 'ball' ? ((d.ballMap && d.ballMap[p.id]) || 0) : ((d.invMap && d.invMap[p.id]) || 0); s += '<div class="drop"><span class="dn"><b>' + p.name + '</b></span><span class="dg" style="color:#c9d1d9">' + nf(qty) + '</span></div>'; });
+      cfg.pinned.forEach(p => { const qty = p.t === 'ball' ? ((d.ballMap && d.ballMap[p.id]) || 0) : ((d.invMap && d.invMap[p.id]) || 0); s += '<div class="drop"><span class="dn"><b>' + esc(p.name) + '</b></span><span class="dg" style="color:#c9d1d9">' + nf(qty) + '</span></div>'; });
       return s + '</div>';
     },
     target: (d) => {
@@ -1896,7 +1940,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     h += '<div class="cfg-h">' + t('cfgBagHideItems') + '</div>';
     if (bagNow.length) {
       h += '<div class="cfg-items">';
-      bagNow.forEach(g => { h += '<div class="cfg-isub">' + esc(g.label) + '</div>'; (g.items || []).forEach(it => h += '<label class="cfg-item"><input type="checkbox" data-item="' + it.id + '"' + (cfg.itemHide[it.id] ? '' : ' checked') + '> <span>' + esc(it.name) + '</span><span class="cfg-iq">' + nf(it.qty) + '</span></label>'); });
+      bagNow.forEach(g => { h += '<div class="cfg-isub">' + esc(g.label) + '</div>'; (g.items || []).forEach(it => h += '<label class="cfg-item"><input type="checkbox" data-item="' + (+it.id || 0) + '"' + (cfg.itemHide[it.id] ? '' : ' checked') + '> <span>' + esc(it.name) + '</span><span class="cfg-iq">' + nf(it.qty) + '</span></label>'); });
       h += '</div>';
     } else h += '<div class="cfg-noc" style="padding:2px 15px">' + t('cfgNoCat') + '</div>';
     // Itens fixados
@@ -1939,7 +1983,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       const list = [];
       cat.balls.forEach(b => { if (b.name && b.name.toLowerCase().includes(q)) list.push({ t: 'ball', id: b.id, name: b.name }); });
       cat.items.forEach(it => { if (it.name && it.name.toLowerCase().includes(q)) list.push({ t: 'item', id: it.id, name: it.name }); });
-      results.innerHTML = list.slice(0, 12).map(x => '<div class="cfg-res" data-t="' + x.t + '" data-id="' + x.id + '" data-name="' + esc(x.name) + '">' + esc(x.name) + '</div>').join('') || '<div class="cfg-noc">—</div>';
+      results.innerHTML = list.slice(0, 12).map(x => '<div class="cfg-res" data-t="' + esc(x.t) + '" data-id="' + (+x.id || 0) + '" data-name="' + esc(x.name) + '">' + esc(x.name) + '</div>').join('') || '<div class="cfg-noc">—</div>';
       results.querySelectorAll('.cfg-res').forEach(r => r.onclick = () => {
         const id = +r.dataset.id, tp = r.dataset.t;
         if (!cfg.pinned.some(p => p.t === tp && p.id === id)) { cfg.pinned.push({ t: tp, id, name: r.dataset.name }); saveStatsCfg(); }
@@ -2380,6 +2424,156 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     document.getElementById('scName').value = ''; document.getElementById('scCode').value = '';
     renderScriptsList(); applyScriptToAll(id);
   };
+
+  // ===== Calculadora de IV única, na janela do app =====
+  // Uma só, no centro da tela e do tamanho que precisa: qualquer painel alimenta ela ao passar o
+  // mouse num pokémon. O cálculo continua dentro do painel (é lá que estão as fórmulas e a busca
+  // dos atributos-base), então aqui é exibição e entrada, sem fórmula duplicada.
+  const ivEl = document.getElementById('ivCard');
+  let ivAberto = localStorage.getItem('ivCardOpen') === '1', ivDados = null, ivFonte = -1;
+  let ivPos = null; try { ivPos = JSON.parse(localStorage.getItem('ivCardPos') || 'null'); } catch {}
+  const TIPO_COR = { normal:'#a8a878', fire:'#f08030', water:'#6890f0', electric:'#f8d030', grass:'#78c850', ice:'#98d8d8', fighting:'#c03028', poison:'#a040a0', ground:'#e0c068', flying:'#a890f0', psychic:'#f85888', bug:'#a8b820', rock:'#b8a038', ghost:'#705898', dragon:'#7038f8', dark:'#705848', steel:'#b8b8d0', fairy:'#ee99ac',
+    fogo:'#f08030', agua:'#6890f0', água:'#6890f0', eletrico:'#f8d030', elétrico:'#f8d030', planta:'#78c850', gelo:'#98d8d8', lutador:'#c03028', luta:'#c03028', veneno:'#a040a0', terra:'#e0c068', voador:'#a890f0', psiquico:'#f85888', psíquico:'#f85888', inseto:'#a8b820', pedra:'#b8a038', fantasma:'#705898', dragao:'#7038f8', dragão:'#7038f8', sombrio:'#705848', metal:'#b8b8d0', aco:'#b8b8d0', aço:'#b8b8d0', fada:'#ee99ac' };
+  const ivCorTipo = (tp) => TIPO_COR[String(tp || '').toLowerCase().trim()] || '#8b949e';
+  const IVST = [['hp', '#3fb950'], ['atk', '#f0883e'], ['def', '#f2c665'], ['spa', '#58a6ff'], ['spd', '#55e6d3'], ['vel', '#f778ba']];
+
+  function ivPosiciona() {
+    if (ivPos && Number.isFinite(+ivPos.l) && Number.isFinite(+ivPos.t)) {
+      ivEl.style.left = Math.max(0, Math.min(innerWidth - 80, +ivPos.l)) + 'px';
+      ivEl.style.top = Math.max(0, Math.min(innerHeight - 40, +ivPos.t)) + 'px';
+      ivEl.style.transform = 'none';
+    } else { // padrão: centro da tela, por cima dos painéis
+      ivEl.style.left = '50%'; ivEl.style.top = '50%'; ivEl.style.transform = 'translate(-50%, -50%)';
+    }
+  }
+  function ivRender() {
+    ivEl.classList.toggle('show', ivAberto);
+    localStorage.setItem('ivCardOpen', ivAberto ? '1' : '0');
+    if (!ivAberto) return;
+    const d = ivDados;
+    if (!d || d.erro) {
+      ivEl.innerHTML = '<div class="iv-hd"><span class="iv-nm">' + t('ivcTitle') + '</span><button class="iv-sp" id="ivX">✕</button></div>'
+        + '<div class="iv-vazio">' + (d && d.erro ? esc(d.nome || '') + ': ' + esc(d.erro) : t('ivcHint')) + '</div>';
+    } else {
+      const cor = ACOR[ivFonte] || '#8b949e', acc = tabNames[ivFonte] || stName(ivFonte);
+      const raro = d.qualidade ? RARO(+d.qualidade) : null;
+      const kpi = (k, v, c) => '<div class="iv-kpi"><div class="k">' + k + '</div><div class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div></div>';
+      const kpiInp = (k, id, val, step) => '<div class="iv-kpi"><div class="k">' + k + '</div><input class="iv-inp" id="' + id + '" type="number" step="' + step + '" value="' + val + '"></div>';
+      // sprite: mesma lista branca estrita do saneador, e ainda escapada no atributo
+      const sprOk = (u) => typeof u === 'string' && IV_SPR_OK.test(u);
+      const spr = d.sprite && sprOk(d.sprite.still) ? d.sprite : null;
+      ivEl.innerHTML = '<div class="iv-hd" id="ivDrag"><span class="iv-dot" style="background:' + cor + ';color:' + cor + '"></span>'
+        + (spr ? '<img class="iv-spr" draggable="false" alt="" src="' + esc(sprOk(spr.anim) ? spr.anim : spr.still) + '" data-f="' + esc(spr.still) + '" onerror="if(this.dataset.f){this.src=this.dataset.f;this.dataset.f=\'\';}else this.style.visibility=\'hidden\'">' : '')
+        + '<span class="iv-nm">' + (d.shiny ? '✨ ' : '') + esc(d.nome) + '</span><span class="iv-acc">' + esc(acc) + '</span>'
+        + '<button class="iv-sp" id="ivPanel" title="' + t('ivcOpenPanel') + '">⧉</button><button id="ivX" title="' + t('spClose') + '">✕</button></div>'
+        + '<div class="iv-body">'
+        + (d.tipos && d.tipos.length ? '<div class="iv-tipos">' + d.tipos.map(tp => '<span class="iv-tp" style="background:' + ivCorTipo(tp) + '">' + esc(tp) + '</span>').join('') + '</div>' : '')
+        + '<div class="iv-top">'
+        + kpiInp(t('ivcLevel'), 'ivNv', +d.nivel || 0, '1')
+        + kpiInp(t('ivcQuality'), 'ivQ', +d.qualidade || 0, '0.01')
+        + kpi(t('ivcIvTotal'), (+d.ivTotal || 0) + '<span style="font-size:11px;color:#6e7681">/' + (d.ivMax || 192) + '</span>', '#55e6d3')
+        + kpi(t('ivcPower'), nf(Math.round(+d.poder || 0)), '#f2c665')
+        + '</div>'
+        + (d.classificacao ? (() => { // anel de potencial, igual ao da aba de analise do painel
+            const corPot = COR_OK.test(String(d.classificacao.cor)) ? String(d.classificacao.cor) : '#8b949e';
+            const pctv = Math.max(0, Math.min(100, +d.percentual || 0));
+            return '<div class="iv-pot"><div class="iv-ring" style="background:conic-gradient(' + corPot + ' ' + pctv.toFixed(1) + '%, #21262d 0)"><span style="color:' + corPot + '">' + Math.round(pctv) + '%</span></div>'
+              + '<div><div class="iv-pot-t" style="color:' + corPot + '">' + esc(d.classificacao.texto || '') + '</div>'
+              + '<div class="iv-pot-d">' + esc(d.classificacao.descricao || '') + '</div></div></div>';
+          })() : '')
+        + '<div class="iv-sec">' + t('ivcStats') + ' <span style="color:#586069;text-transform:none">(' + (+d.percentual || 0).toFixed(1) + '% · ' + (raro ? '<span style="color:' + raro[1] + '">' + raro[0] + '</span> ×' + (+d.qualidade).toFixed(2) : '') + ')</span></div>'
+        + '<div class="iv-grid">' + IVST.map(([k, c]) => {
+            const iv = +((d.ivs || {})[k]) || 0, pct = Math.min(100, iv / (d.ivMaxInd || 32) * 100);
+            return '<div class="iv-st"><div class="iv-st-h"><span class="iv-st-n" style="color:' + c + '">' + k.toUpperCase() + '</span>'
+              + '<span class="iv-st-iv">' + iv.toFixed(1) + '<span style="color:#6e7681;font-size:10px">/' + (d.ivMaxInd || 32) + '</span></span></div>'
+              + '<div class="iv-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + c + '"></i></div>'
+              + '<div class="iv-st-l">' + t('ivcCurrent') + ' <input data-at="' + k + '" type="number" value="' + (+((d.atuais || {})[k]) || 0) + '"></div>'
+              + '<div class="iv-st-l" style="margin-top:3px">' + t('ivcBase') + ' <input data-ba="' + k + '" type="number" value="' + (+((d.bases || {})[k]) || 0) + '"></div></div>';
+          }).join('') + '</div>'
+        + (d.golpes && d.golpes.length ? '<div class="iv-sec" style="margin-top:11px">⚔ ' + t('ivcMoves') + '</div>'
+            + d.golpes.map(g => '<div class="iv-mv' + (g.ativo ? ' on' : '') + '">'
+              + (g.tipo ? '<span class="iv-tp" style="background:' + ivCorTipo(g.tipo) + '">' + esc(g.tipo) + '</span>' : '')
+              + '<span class="mv-n">' + esc(g.nome) + '</span>'
+              + (+g.dano ? '<span class="mv-d" title="' + t('ivcMoveLast') + '">' + nf(+g.dano) + (g.eff && +g.eff !== 1 ? ' ×' + (+g.eff) : '') + '</span>' : '')
+              + '<span class="mv-p" title="' + t('ivcMovePower') + '">' + (g.poder != null ? nf(+g.poder) : '–') + '</span></div>').join('') : '')
+        + '<div class="iv-foot">' + t('ivcPowerGame') + ': <b style="color:#adbac7">' + nf(+d.poderJogo || 0) + '</b>'
+        + '<span style="margin-left:auto">' + t('ivcFooter') + '</span></div></div>';
+    }
+    ivPosiciona();
+    const x = ivEl.querySelector('#ivX'); if (x) x.onclick = () => { ivAberto = false; ivRender(); };
+    const ab = ivEl.querySelector('#ivPanel'); // quem precisa das abas de golpes/comparar abre no painel
+    if (ab) ab.onclick = () => { const w = webviews[ivFonte]; if (w) try { w.executeJavaScript("(()=>{const p=document.getElementById('pokemon-reader-panel');if(p&&p.classList.contains('minimized')){const b=document.getElementById('minimize');if(b)b.click();}})()").catch(() => {}); } catch {} };
+    ivEl.querySelectorAll('.iv-inp, .iv-st-l input').forEach(inp => inp.onchange = ivRecalcula);
+    const hd = ivEl.querySelector('#ivDrag');
+    if (hd) hd.addEventListener('mousedown', e => {
+      if (e.target.closest('button')) return;
+      const r = ivEl.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+      hd.classList.add('drag');
+      const mv = ev => { ivPos = { l: ev.clientX - dx, t: ev.clientY - dy }; ivPosiciona(); };
+      const up = () => { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); hd.classList.remove('drag'); try { localStorage.setItem('ivCardPos', JSON.stringify(ivPos)); } catch {} };
+      document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
+    });
+  }
+  // recalcula no painel de origem: a fórmula é a de lá, o app só manda os valores editados
+  function ivRecalcula() {
+    const d = ivDados, w = webviews[ivFonte];
+    if (!d || !w) return;
+    const atuais = {}, bases = {};
+    ivEl.querySelectorAll('[data-at]').forEach(i2 => atuais[i2.dataset.at] = +i2.value || 0);
+    ivEl.querySelectorAll('[data-ba]').forEach(i2 => bases[i2.dataset.ba] = +i2.value || 0);
+    const nv = +(ivEl.querySelector('#ivNv') || {}).value || 0, q = +(ivEl.querySelector('#ivQ') || {}).value || 0;
+    const foco = document.activeElement && document.activeElement.id;
+    const pedido = { pokemon: d.pokemon || { nome: d.nome, nivel: d.nivel, ivAtual: d.ivTotal, poder: d.poderJogo, tipos: d.tipos }, nivel: nv, qualidade: q, atuais, bases };
+    try {
+      w.executeJavaScript('window.__pgIv && window.__pgIv.calc(' + JSON.stringify(pedido) + ')').then(r => {
+        if (!r) return;
+        ivDados = r; ivRender();
+        if (foco) { const el = ivEl.querySelector('#' + foco); if (el) el.focus(); }
+      }).catch(() => {});
+    } catch {}
+  }
+  // Saneador da entrada do canal. Qualquer script rodando na página do jogo pode emitir uma
+  // mensagem marcada, e o renderer tem acesso às credenciais: então nada entra sem tipo, tamanho
+  // e formato conferidos. URL de sprite passa por lista branca estrita (sem aspas, sem espaço),
+  // senão dá pra escapar do atributo src e injetar um handler.
+  const IV_SPR_OK = /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/[\w./-]+\.(?:png|gif)$/;
+  const ivTxt = (v, n) => String(v == null ? '' : v).slice(0, n || 40);
+  const ivNum = (v, d) => { const x = +v; return Number.isFinite(x) ? x : (d || 0); };
+  function ivSane(p) {
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
+    if (p.erro) return { erro: ivTxt(p.erro, 120), nome: ivTxt(p.nome) };
+    const stats = {}, bases = {}, atuais = {};
+    IVST.forEach(([k]) => { stats[k] = ivNum((p.ivs || {})[k]); bases[k] = ivNum((p.bases || {})[k]); atuais[k] = ivNum((p.atuais || {})[k]); });
+    const cl = p.classificacao && typeof p.classificacao === 'object' ? p.classificacao : null;
+    const spr = p.sprite && typeof p.sprite === 'object' ? p.sprite : {};
+    const still = IV_SPR_OK.test(String(spr.still)) ? String(spr.still) : '';
+    const anim = IV_SPR_OK.test(String(spr.anim)) ? String(spr.anim) : '';
+    return {
+      nome: ivTxt(p.nome), shiny: !!p.shiny,
+      tipos: (Array.isArray(p.tipos) ? p.tipos : []).slice(0, 4).map(x => ivTxt(x, 20)),
+      nivel: ivNum(p.nivel), qualidade: ivNum(p.qualidade),
+      ivs: stats, bases, atuais,
+      ivTotal: ivNum(p.ivTotal), ivMax: ivNum(p.ivMax, 192) || 192, ivMaxInd: ivNum(p.ivMaxInd, 32) || 32,
+      percentual: Math.max(0, Math.min(100, ivNum(p.percentual))),
+      classificacao: cl ? { texto: ivTxt(cl.texto, 30), descricao: ivTxt(cl.descricao, 140), cor: COR_OK.test(String(cl.cor)) ? String(cl.cor) : '#8b949e' } : null,
+      sprite: still || anim ? { still: still || anim, anim: anim || still } : null,
+      golpes: (Array.isArray(p.golpes) ? p.golpes : []).slice(0, 12).filter(g => g && typeof g === 'object').map(g => ({
+        nome: ivTxt(g.nome, 30), tipo: ivTxt(g.tipo, 20),
+        poder: g.poder == null ? null : ivNum(g.poder), dano: ivNum(g.dano), eff: ivNum(g.eff), ativo: !!g.ativo
+      })),
+      poder: ivNum(p.poder), poderJogo: ivNum(p.poderJogo),
+      // volta pro painel no recálculo: só campos com tipo conferido
+      pokemon: (() => { const q = p.pokemon && typeof p.pokemon === 'object' ? p.pokemon : {}; const o = { nome: ivTxt(q.nome), nivel: ivNum(q.nivel), ivAtual: ivNum(q.ivAtual), poder: ivNum(q.poder), qualidade: ivTxt(q.qualidade, 30), multiplicadorQualidade: ivNum(q.multiplicadorQualidade, 1), tipos: (Array.isArray(q.tipos) ? q.tipos : []).slice(0, 4).map(x => ivTxt(x, 20)) }; IVST.forEach(([k]) => o[k] = ivNum(q[k])); return o; })()
+    };
+  }
+  // chamado pelo painel (via console-message) quando o mouse passa num pokémon
+  function ivRecebe(i, payload) {
+    const d = ivSane(payload);
+    if (!d) return;
+    ivDados = d; ivFonte = i;
+    if (ivAberto) ivRender();
+  }
+  ivsBtn.onclick = () => { ivAberto = !ivAberto; ivRender(); };
 
   // ----- Init -----
   (async () => {

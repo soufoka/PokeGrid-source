@@ -440,8 +440,8 @@
     <button id="accounts">👤 Treinadores</button>
     <button id="reloadAll">⟳ Atualizar tudo</button>
     <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">🎛 Menu do jogo</button>
-    <button id="experienceV2Btn" title="Abre a nova visão global, time, IV e inventário">✨ Novo painel</button>
-    <button id="statsBtn" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">📊 Painel</button>
+    <button id="experienceV2Btn" title="Abre a central da conta em foco, time, IV e inventário">✨ Central</button>
+    <button id="statsBtn" title="Resumo compacto da conta em foco (gold/h, XP/h, bag, drops)">📊 Conta</button>
     <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">🃏 Cartas</button>
     <button id="ivsBtn" title="Abre ou fecha a calculadora de IV (JustPokédex) em todos os painéis"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M2 12h20" stroke="#8f1408" stroke-width="3"/><circle cx="12" cy="12" r="3.4" fill="#fff" stroke="#8f1408" stroke-width="2.5"/></svg>IV's</button>
     <div id="menuWrap">
@@ -528,9 +528,9 @@
       optionsBtn:'☰ Opções', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
       dockLabel:'🎛 Menu do jogo', dockTitle:'Mostra ou esconde o menu de ícones do jogo (verde = visível). F2 alterna no painel em foco.',
       hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', accClear:'Limpar esta conta', ivsTitle:'Abre a calculadora de IV do app: uma só, no centro da tela, alimentada por qualquer painel', ivcTitle:"Calculadora de IV", ivcHint:'Passe o mouse sobre um pokémon em qualquer painel.<br>Os dados aparecem aqui, e você pode ajustar nível e atributos pra recalcular.', ivcLevel:'Nível', ivcQuality:'Qualidade', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'atual', ivcBase:'base', ivcPowerGame:'Poder no jogo', ivcFooter:'edite qualquer campo pra recalcular', ivcOpenPanel:'Abrir a calculadora dentro do painel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder do golpe', ivcMoveLast:'último dano observado em batalha',
-      alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
+      alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Conta', statsTitle:'Resumo compacto da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Suprimentos gastos', stBalls:'bolas', stPots:'cura', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time',
-      cards:'🍃 Simples', cardsShort:'Simples', cardsTitle:'Modo simples e ultra leve: esconde o jogo e mostra só os números, gastando o mínimo do PC (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
+      cards:'🌐 Todas as contas', cardsShort:'Todas', cardsTitle:'Abre o painel consolidado com todas as contas, batalhas, desempenho, capturas e recursos', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
       cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdSortMeasured:'Medido: gold/h ↓', cdMeasured:'sua média', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
       cdShinyTried:'Shinies tentados (bolas jogadas)', cdConfig:'Configurar o painel', cdConfigH:'Seções (arraste pra reordenar, marque pra mostrar)', cdSecKpis:'Resumo (KPIs)', cdByAcc2:'Tabela por conta', cdScopeMine:'Minhas hunts', cdScopeAll:'Todas as hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Voltar a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder as ocultas',
       stDragHint:'Arraste para reordenar', stHideSec:'Esconder esta seção (restaure na engrenagem ⚙)',
@@ -567,9 +567,9 @@
       optionsBtn:'☰ Options', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
       dockLabel:'🎛 Game menu', dockTitle:'Shows or hides the game icon menu (green = shown). F2 toggles it in the focused panel.',
       hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', accClear:'Clear this account', ivsTitle:'Opens the app IV calculator: a single one, centered, fed by any panel', ivcTitle:"IV calculator", ivcHint:'Hover a Pokémon in any panel.<br>The data shows up here, and you can adjust level and stats to recalculate.', ivcLevel:'Level', ivcQuality:'Quality', ivcIvTotal:'Total IV', ivcPower:'Estimated power', ivcStats:'Stats and IV per stat', ivcCurrent:'current', ivcBase:'base', ivcPowerGame:'Power in game', ivcFooter:'edit any field to recalculate', ivcOpenPanel:'Open the calculator inside the panel (compare)', ivcMoves:'Moves', ivcMovePower:'move power', ivcMoveLast:'last damage seen in battle',
-      alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
+      alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Account', statsTitle:'Compact summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Supplies used', stBalls:'balls', stPots:'heals', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team',
-      cards:'🍃 Simple', cardsShort:'Simple', cardsTitle:'Simple, ultra-light mode: hides the game and shows only the numbers, using the least PC possible (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
+      cards:'🌐 All accounts', cardsShort:'All', cardsTitle:'Opens the consolidated panel with every account, battle, performance, catch and resource', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
       cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdSortMeasured:'Measured: gold/h ↓', cdMeasured:'your average', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
       cdShinyTried:'Shinies attempted (balls thrown)', cdConfig:'Configure the panel', cdConfigH:'Sections (drag to reorder, check to show)', cdSecKpis:'Summary (KPIs)', cdByAcc2:'Per-account table', cdScopeMine:'My hunts', cdScopeAll:'All hunts', cdHide:'Hide this hunt', cdUnhide:'Show again', cdShowHiddenN:'show hidden ({n})', cdHideHidden:'hide the hidden ones',
       stDragHint:'Drag to reorder', stHideSec:'Hide this section (restore it in the gear ⚙)',
@@ -606,9 +606,9 @@
       optionsBtn:'☰ Opciones', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
       dockLabel:'🎛 Menú del juego', dockTitle:'Muestra u oculta el menú de iconos del juego (verde = visible). F2 alterna en el panel enfocado.',
       hunt:'🎯 Hunt', huntTitle:'Abre el Hunt Analyzer en todos los paneles', accClear:'Limpiar esta cuenta', ivsTitle:'Abre la calculadora de IV del app: una sola, en el centro, alimentada por cualquier panel', ivcTitle:"Calculadora de IV", ivcHint:'Pasa el mouse sobre un pokémon en cualquier panel.<br>Los datos aparecen aquí, y puedes ajustar nivel y atributos para recalcular.', ivcLevel:'Nivel', ivcQuality:'Calidad', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'actual', ivcBase:'base', ivcPowerGame:'Poder en el juego', ivcFooter:'edita cualquier campo para recalcular', ivcOpenPanel:'Abrir la calculadora dentro del panel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder del golpe', ivcMoveLast:'último daño observado en batalla',
-      alerts:'🔔 Alertas', alertsTitle:'Avisa con notificación cuando una cuenta se cae o se queda sin Pokéballs', msgDown:'se desconectó', msgBalls:'se quedó sin Pokéballs', count:'🔢 Paneles', stats:'📊 Panel', statsTitle:'Resumen de la cuenta enfocada (oro/h, XP/h, bolsa, drops)', statsResumo:'Resumen', statsWaiting:'Esperando datos del juego…', statsWaiting2:'Deja el panel conectado y farmeando unos segundos.', statsOff:'Panel apagado.',
+      alerts:'🔔 Alertas', alertsTitle:'Avisa con notificación cuando una cuenta se cae o se queda sin Pokéballs', msgDown:'se desconectó', msgBalls:'se quedó sin Pokéballs', count:'🔢 Paneles', stats:'📊 Cuenta', statsTitle:'Resumen compacto de la cuenta enfocada (oro/h, XP/h, bolsa, drops)', statsResumo:'Resumen', statsWaiting:'Esperando datos del juego…', statsWaiting2:'Deja el panel conectado y farmeando unos segundos.', statsOff:'Panel apagado.',
       stLevel:'Nivel', stSession:'Sesión', stDefeated:'Derrotados', stXpGain:'XP ganada', stCaptures:'Capturas', stGold:'Oro de la sesión', stLoot:'Loot (venta)', stCapSell:'Capturas (venta)', stSupply:'Suministros gastados', stBalls:'balls', stPots:'curas', stBalance:'Balance de la sesión', stDrops:'Drops de la sesión', stAccount:'Cuenta', stProfession:'Profesión', stMail:'Regalos en el correo', stCatchTotal:'Capturas totales', stTeam:'Equipo',
-      cards:'🍃 Simple', cardsShort:'Simple', cardsTitle:'Modo simple y ultraligero: oculta el juego y muestra solo los números, gastando lo mínimo del PC (el farmeo sigue)', cdGold:'oro/h neto', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sesión)', cdShiny:'shiny enc/cap', cdActive:'cuentas activas', cdByAcc:'Por cuenta · clic en el encabezado para ordenar, en la fila para abrir el juego', cdTrend:'Tendencia · última hora', cdCatches:'Últimas capturas · todas las cuentas', cdShinies:'Apariciones de shiny ✨', cdConta:'Cuenta', cdHunt:'Hunt', cdStatus:'Estado', cdBest:'Mejor catch', cdLast:'Último catch', cdWaiting:'esperando…', cdOff:'apagado', cdHunting:'cazando', cdTotal:'Total', cdSeen:'aparecieron', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada todavía',
+      cards:'🌐 Todas las cuentas', cardsShort:'Todas', cardsTitle:'Abre el panel consolidado con todas las cuentas, batallas, rendimiento, capturas y recursos', cdGold:'oro/h neto', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sesión)', cdShiny:'shiny enc/cap', cdActive:'cuentas activas', cdByAcc:'Por cuenta · clic en el encabezado para ordenar, en la fila para abrir el juego', cdTrend:'Tendencia · última hora', cdCatches:'Últimas capturas · todas las cuentas', cdShinies:'Apariciones de shiny ✨', cdConta:'Cuenta', cdHunt:'Hunt', cdStatus:'Estado', cdBest:'Mejor catch', cdLast:'Último catch', cdWaiting:'esperando…', cdOff:'apagado', cdHunting:'cazando', cdTotal:'Total', cdSeen:'aparecieron', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada todavía',
       cdHunts:'Ranking de hunts', cdShared:'Compartidos en el chat', cdFirst:'1ª captura de la especie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efectividad ↓', cdSortMeasured:'Medido: oro/h ↓', cdMeasured:'tu promedio', cdEffOf:'efectividad vs líder de', cdLoading:'cargando datos del juego…', stLastCatch:'Último catch', stSince:'balls desde entonces',
       cdShinyTried:'Shinies intentados (balls lanzadas)', cdConfig:'Configurar el panel', cdConfigH:'Secciones (arrastra para reordenar, marca para mostrar)', cdSecKpis:'Resumen (KPIs)', cdByAcc2:'Tabla por cuenta', cdScopeMine:'Mis hunts', cdScopeAll:'Todas las hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Volver a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder las ocultas',
       stDragHint:'Arrastra para reordenar', stHideSec:'Ocultar esta sección (restáurala en el engranaje ⚙)',
@@ -1361,7 +1361,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
         if (alertsOn) alerta(i, 'msgShinyCap');
       }
     });
-    (r.catchLog || []).forEach(x => { const key = kCa(i, x); if (seenLog[key]) return; seenLog[key] = 1; dirty = true; lifeCatch.push({ n: String(x.n || '').slice(0, 40), iv: +x.iv || 0, q: +x.q || 0, sh: !!x.sh, fx: !!x.fx, t: +x.t || 0, p: i, acc, dot }); });
+    (r.catchLog || []).forEach(x => { const key = kCa(i, x); if (seenLog[key]) return; seenLog[key] = 1; dirty = true; lifeCatch.push({ n: String(x.n || '').slice(0, 40), sid: +x.sid || 0, iv: +x.iv || 0, q: +x.q || 0, sh: !!x.sh, fx: !!x.fx, t: +x.t || 0, p: i, acc, dot }); });
     if (dirty) {
       if (lifeShiny.length > 500) lifeShiny = lifeShiny.slice(-500);
       if (lifeCatch.length > 300) lifeCatch = lifeCatch.slice(-300);
@@ -2371,7 +2371,43 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(ultraScript(cardsOn)).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); } catch {} });
     if (cardsOn) { cardsEl.innerHTML = '<div class="cd-empty" style="padding:20px">' + t('cdWaiting') + '</div>'; refreshCards(); }
   }
-  cardsBtn.onclick = () => { cardsOn = !cardsOn; applyCards(); };
+  window.__pgExperienceSnapshot = () => ({
+    today: { ...totalDia(dayKey(0)) },
+    week: { ...somaDias(7) },
+    allTime: { ...somaDias(0) },
+    goals: { g: +goals.g || 0, c: +goals.c || 0 },
+    huntStats: JSON.parse(JSON.stringify(huntStats || {})),
+    trend: dhist.slice(-240).map(x => ({ t: +x.t || 0, g: +x.g || 0, x: +x.x || 0 })),
+    captures: lifeCatch.slice(-300).map(x => ({
+      name: String(x.n || '').slice(0, 40), speciesId: +x.sid || 0, time: +x.t || 0,
+      accountIndex: +x.p || 0, account: String(x.acc || '').slice(0, 40),
+      iv: +x.iv || 0, quality: +x.q || 0, shiny: !!x.sh, first: !!x.fx
+    })),
+    shinies: lifeShiny.slice(-500).map(x => ({
+      name: String(x.n || '').slice(0, 40), speciesId: +x.sid || 0, time: +x.t || 0,
+      accountIndex: +x.p || 0, account: String(x.acc || '').slice(0, 40),
+      captured: !!x.cap, defeated: !!x.def
+    }))
+  });
+  window.__pgFocusAccount = i => {
+    i = Math.max(0, Math.min(grid.children.length - 1, +i || 0));
+    if (cardsOn) { cardsOn = false; applyCards(); }
+    if (statsOpen) { statsOpen = false; applyStats(); }
+    [...grid.children].forEach(c => c.classList.remove('expanded'));
+    const panel = grid.children[i];
+    if (!panel) return false;
+    panel.classList.add('expanded');
+    try { webviews[i].focus(); } catch {}
+    return true;
+  };
+  cardsBtn.onclick = () => {
+    if (typeof window.__pgOpenExperience === 'function') {
+      window.__pgOpenExperience('all');
+      return;
+    }
+    cardsOn = !cardsOn;
+    applyCards();
+  };
   setInterval(() => { if (cardsOn && !document.hidden) refreshCards(); }, 4000); // no modo simples, atualiza menos vezes pra gastar menos
 
   // Zerar a sessao: nossos numeros vem de P.sess (acumulador proprio), que so reseta na troca de hunt.

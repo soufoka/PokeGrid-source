@@ -11,10 +11,11 @@
     <header class="pgx-header">
       <div class="pgx-brand">
         <span class="pgx-brand-mark">PG</span>
-        <span class="pgx-brand-copy"><strong>PokeGrid</strong><small>Nova experiência · prévia local</small></span>
+        <span class="pgx-brand-copy"><strong>PokeGrid</strong><small>Central de comando</small></span>
       </div>
       <nav class="pgx-nav" aria-label="Áreas do novo painel">
-        <button type="button" class="on" data-pgx-tab="overview">Visão geral</button>
+        <button type="button" class="on" data-pgx-tab="all">Todas as contas</button>
+        <button type="button" data-pgx-tab="overview">Conta em foco</button>
         <button type="button" data-pgx-tab="team">Time &amp; IV</button>
         <button type="button" data-pgx-tab="inventory">Inventário</button>
       </nav>
@@ -38,9 +39,11 @@
 
   const state = {
     open: false,
-    tab: "overview",
+    tab: "all",
     accountIndex: 0,
     accounts: [],
+    shellSnapshot: null,
+    trend: [],
     teamIndex: 0,
     compareIndex: 1,
     projectionLevel: 500,
@@ -196,22 +199,64 @@
     }
     const balance = lootGold + (num(S.sellG) || 0) - (num(S.balls) || 0) * ballPrice - (num(S.supGold) || 0);
     const perHour = value => Math.round((num(value) || 0) / seconds * 3600);
-    const catches = Array.isArray(P.catchLog) ? P.catchLog.slice(-4).reverse() : [];
-    const events = catches.map(c => ({
-      title: (c.sh ? "Shiny capturado: " : "Captura: ") + text(c.n || "Pokémon"),
-      detail: "IV " + (num(c.iv) ?? "?") + "/192 · qualidade ×" + (num(c.q) || 0).toFixed(2),
-      time: num(c.t)
+    const catches = (Array.isArray(P.catchLog) ? P.catchLog : []).slice(-120).map(c => ({
+      name: text(c && c.n), speciesId: pick(c && c.sid, c && c.speciesId),
+      iv: num(c && c.iv), quality: num(c && c.q), shiny: !!(c && c.sh),
+      first: !!(c && c.fx), time: num(c && c.t)
+    }));
+    const shinyLog = (Array.isArray(P.shinyLog) ? P.shinyLog : []).slice(-120).map(s => ({
+      name: text(s && s.n), speciesId: pick(s && s.sid, s && s.speciesId),
+      captured: !!(s && s.cap), defeated: !!(s && s.def), time: num(s && s.t)
+    }));
+    const attempts = (Array.isArray(P.usedList) ? P.usedList : []).slice(-120).map(u => ({
+      name: text(u && (u.n || u.name)), speciesId: pick(u && u.sid, u && u.speciesId, u && u.pokeId),
+      attempts: pick(u && u.n, u && u.attempts, u && u.used, u && u.count) || 0,
+      caught: !!(u && (u.cap || u.caught))
+    }));
+    const shares = (Array.isArray(P.chatShares) ? P.chatShares : []).slice(-40).map(s => ({
+      name: text(s && (s.n || s.name)), speciesId: pick(s && s.sid, s && s.speciesId),
+      iv: pick(s && s.iv, s && s.ivTotal), quality: pick(s && s.q, s && s.quality),
+      from: text(s && (s.fr || s.from || s.by)), level: num(s && (s.lv || s.level)),
+      power: num(s && (s.pw || s.power)), shiny: !!(s && (s.sh || s.shiny)),
+      time: num(s && s.t)
+    }));
+    const dropSummary = Object.keys(S.drops || {}).map(id => {
+      const drop = S.drops[id] || {};
+      const cat = catalogMap.get(String(id)) || {};
+      const quantity = num(drop.qty) || 0;
+      return {
+        itemId: num(id), name: text(drop.name || cat.name || ("Item #" + id)),
+        quantity, gold: quantity * (num(cat.npcPrice) || 0)
+      };
+    }).sort((a, b) => b.gold - a.gold).slice(0, 8);
+    const resourceTotals = {
+      balls: Object.values(balls.counts || {}).reduce((sum, value) => sum + (num(value) || 0), 0),
+      potions: inventory.filter(i => /potion|heal/i.test(i.category)).reduce((sum, i) => sum + i.quantity, 0),
+      revives: inventory.filter(i => /revive/i.test(i.category)).reduce((sum, i) => sum + i.quantity, 0)
+    };
+    const events = catches.slice(-4).reverse().map(c => ({
+      title: (c.shiny ? "Shiny capturado: " : "Captura: ") + text(c.name || "Pokémon"),
+      detail: "IV " + (c.iv ?? "?") + "/192 · qualidade ×" + (c.quality || 0).toFixed(2),
+      time: c.time
     }));
 
     const hunt = text((ws["field-init"] && ws["field-init"].slug) || P.lastSlug || "")
       .replace(/[_-]+/g, " ").replace(/\\b\\w/g, m => m.toUpperCase());
     return {
       live: !!(ch.id || ch.name),
-      character: { id: text(ch.id), name: text(ch.name), level: num(ch.level), gold: num(ch.gold) },
-      hunt, team, inventory, foe, events,
+      character: {
+        id: text(ch.id), name: text(ch.name), level: num(ch.level),
+        gold: num(ch.gold), diamonds: num(ch.diamonds)
+      },
+      hunt, team, inventory, foe, events, catches, shinyLog, attempts, shares,
+      resources: resourceTotals, drops: dropSummary,
       metrics: {
         goldPerHour: perHour(balance), xpPerHour: perHour(S.xp),
-        killsPerHour: perHour(S.kills), captures: num(S.captures) || 0
+        killsPerHour: perHour(S.kills), captures: num(S.captures) || 0,
+        kills: num(S.kills) || 0, xp: num(S.xp) || 0, balance,
+        seconds, shinyFound: num(S.shinyN) || 0, shinyCaptured: num(S.shinyCapN) || 0,
+        ballsUsed: num(S.balls) || 0, potionsUsed: num(S.supN) || 0,
+        sinceCatch: num(S.sinceCatch) || 0, lastCatchTime: num(S.lastCatchT) || 0
       },
       updatedAt: Date.now()
     };
@@ -299,11 +344,27 @@
       demoPokemon(248, "Tyranitar", 102, 1.22, 146, null, ["ROCK", "DARK"], { hp: 100, atk: 134, def: 110, spa: 95, spd: 100, speed: 61 }),
       demoPokemon(242, "Blissey", 91, 1.18, 139, null, ["NORMAL"], { hp: 255, atk: 10, def: 10, spa: 75, spd: 135, speed: 55 })
     ];
+    const profiles = [
+      { hunt: "Seafoam Cave", foe: [87, "Dewgong", 112, ["WATER", "ICE"]], gold: 84200, xp: 1380000, kills: 229, catches: 18, shiny: [2, 1], resources: [24, 83, 7] },
+      { hunt: "Power Plant", foe: [82, "Magneton", 106, ["ELECTRIC", "STEEL"]], gold: 61700, xp: 1124000, kills: 193, catches: 11, shiny: [0, 0], resources: [68, 41, 12] },
+      { hunt: "Safari Zone", foe: [127, "Pinsir", 118, ["BUG"]], gold: 93300, xp: 1542000, kills: 246, catches: 27, shiny: [1, 0], resources: [19, 57, 5] },
+      { hunt: "Victory Road", foe: [112, "Rhydon", 126, ["GROUND", "ROCK"]], gold: 72800, xp: 1298000, kills: 207, catches: 14, shiny: [1, 1], resources: [44, 29, 9] }
+    ];
+    const profile = profiles[index % profiles.length];
+    const sampleCaptures = [
+      { name: "Dratini", speciesId: 147, iv: 177, quality: 1.53, shiny: false, first: true, time: Date.now() - 84000 },
+      { name: "Shellder", speciesId: 90, iv: 151, quality: 1.31, shiny: false, first: false, time: Date.now() - 310000 },
+      { name: "Horsea", speciesId: 116, iv: 168, quality: 1.47, shiny: index === 3, first: false, time: Date.now() - 690000 }
+    ];
     return {
       live: false, demo: true,
       character: { name: `Conta ${index + 1}`, level: 138, gold: 0 },
-      hunt: "Seafoam Cave", team,
-      foe: { speciesId: 87, name: "Dewgong", level: 112, shiny: false, hp: { current: 34, max: 100 }, species: demoSpecies(87, "Dewgong", ["WATER", "ICE"], { hp: 90, atk: 70, def: 80, spa: 70, spd: 95, speed: 70 }) },
+      hunt: profile.hunt, team,
+      foe: {
+        speciesId: profile.foe[0], name: profile.foe[1], level: profile.foe[2],
+        shiny: false, hp: { current: 34 + index * 11, max: 100 },
+        species: demoSpecies(profile.foe[0], profile.foe[1], profile.foe[3], { hp: 90, atk: 70, def: 80, spa: 70, spd: 95, speed: 70 })
+      },
       inventory: [
         { itemId: 1, name: "Ultra Ball", quantity: 24, category: "ball", rare: false, npcPrice: 0, icon: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" },
         { itemId: 2, name: "Super Potion", quantity: 83, category: "potion", rare: false, npcPrice: 0, icon: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/super-potion.png" },
@@ -316,7 +377,24 @@
         { title: "Dratini raro capturado", detail: "IV 177/192 · qualidade ×1,53", time: Date.now() },
         { title: "Estoque de Ultra Ball baixo", detail: "Restam 24 unidades", time: Date.now() - 240000 }
       ],
-      metrics: { goldPerHour: 84200, xpPerHour: 1380000, killsPerHour: 229, captures: 18 },
+      catches: sampleCaptures,
+      shinyLog: profile.shiny[0] ? [{ name: index === 3 ? "Horsea" : "Dratini", speciesId: index === 3 ? 116 : 147, captured: !!profile.shiny[1], defeated: !profile.shiny[1], time: Date.now() - 720000 }] : [],
+      attempts: [
+        { name: "Dratini", speciesId: 147, attempts: 43 + index * 8, caught: index === 0 },
+        { name: profile.foe[1], speciesId: profile.foe[0], attempts: 17 + index * 4, caught: false }
+      ],
+      shares: index === 0 ? [{ name: "Dragonite", speciesId: 149, iv: 182, quality: 1.71, from: "Trade chat", level: 144, power: 3894, shiny: false, time: Date.now() - 480000 }] : [], drops: [
+        { itemId: 4, name: "Water Gem", quantity: 146, gold: 26572 },
+        { itemId: 5, name: "Rare fragment", quantity: 3, gold: 3000 }
+      ],
+      resources: { balls: profile.resources[0], potions: profile.resources[1], revives: profile.resources[2] },
+      metrics: {
+        goldPerHour: profile.gold, xpPerHour: profile.xp, killsPerHour: profile.kills,
+        captures: profile.catches, kills: profile.kills * 9, xp: profile.xp * 9,
+        balance: profile.gold * 9, seconds: 32400, shinyFound: profile.shiny[0],
+        shinyCaptured: profile.shiny[1], ballsUsed: 31 + index * 5,
+        potionsUsed: 7 + index, sinceCatch: 12 + index * 7, lastCatchTime: Date.now() - 84000
+      },
       updatedAt: Date.now()
     };
   }
@@ -328,6 +406,17 @@
   function activeAccount() {
     const account = activeRawAccount();
     return account && account.live ? account : demoAccount(state.accountIndex);
+  }
+
+  function displayAccounts() {
+    const hasLive = state.accounts.some(account => account && account.live);
+    if (hasLive) return state.accounts.map((account, index) => account || {
+      live: false, character: { name: `Conta ${index + 1}` }, hunt: "",
+      team: [], inventory: [], catches: [], shinyLog: [], attempts: [], shares: [],
+      resources: {}, drops: [], metrics: {}, foe: null
+    });
+    const count = Math.max(1, state.accounts.length || document.querySelectorAll("#grid webview").length || 4);
+    return Array.from({ length: count }, (_, index) => demoAccount(index));
   }
 
   function normalizedIvs(pokemon) {
@@ -392,14 +481,211 @@
 
   function renderHeader() {
     const raw = activeRawAccount();
-    accountSelect.innerHTML = state.accounts.map((account, index) => {
-      const name = account && account.live && account.character && account.character.name
+    const accounts = displayAccounts();
+    accountSelect.innerHTML = accounts.map((account, index) => {
+      const name = account && account.character && account.character.name
         ? account.character.name : `Conta ${index + 1}`;
       return `<option value="${index}"${index === state.accountIndex ? " selected" : ""}>${esc(name)}</option>`;
     }).join("") || `<option value="0">Conta 1</option>`;
     const label = liveBadge.querySelector("span:last-child");
-    liveBadge.classList.toggle("offline", !(raw && raw.live));
-    label.textContent = raw && raw.live ? "Dados ao vivo" : "Demonstração";
+    const liveCount = state.accounts.filter(account => account && account.live).length;
+    liveBadge.classList.toggle("offline", liveCount === 0);
+    label.textContent = liveCount ? `${liveCount} ${liveCount === 1 ? "conta ao vivo" : "contas ao vivo"}` : "Demonstração";
+    accountSelect.disabled = state.tab === "all";
+  }
+
+  function duration(value) {
+    const seconds = Math.max(0, Math.round(number(value)));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor(seconds % 3600 / 60);
+    return hours ? `${hours}h ${String(minutes).padStart(2, "0")}m` : `${minutes}m`;
+  }
+
+  function timeLabel(value) {
+    const timestamp = number(value);
+    if (!timestamp) return "—";
+    return new Date(timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function bestCatch(account) {
+    return (account.catches || []).slice().sort((a, b) =>
+      number(b.iv) * Math.max(1, number(b.quality, 1)) -
+      number(a.iv) * Math.max(1, number(a.quality, 1))
+    )[0] || null;
+  }
+
+  function sparkline(values, color) {
+    const safe = values.map(number);
+    if (safe.length < 2) return `<div class="pgx-spark-empty">Coletando tendência…</div>`;
+    const min = Math.min(...safe);
+    const max = Math.max(...safe);
+    const span = Math.max(1, max - min);
+    const points = safe.map((value, index) => {
+      const x = index / Math.max(1, safe.length - 1) * 100;
+      const y = 34 - ((value - min) / span * 28);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(" ");
+    return `<svg class="pgx-spark" viewBox="0 0 100 38" preserveAspectRatio="none" aria-hidden="true"><polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"></polyline></svg>`;
+  }
+
+  function renderMiniBattle(account, index) {
+    const leader = (account.team || []).find(p => p.leader) || (account.team || [])[0] || null;
+    const foe = account.foe || null;
+    const theme = String(foe && foe.species && foe.species.types && foe.species.types[0] || "water").toLowerCase();
+    return `
+      <button type="button" class="pgx-battle-card" data-pgx-focus="${index}" data-type="${esc(theme)}" title="Abrir ${esc(account.character && account.character.name || `Conta ${index + 1}`)} em modo foco">
+        <span class="pgx-battle-card-top">
+          <span><strong>${esc(account.character && account.character.name || `Conta ${index + 1}`)}</strong><small>${esc(account.hunt || "Aguardando hunt")}</small></span>
+          <span class="${account.live ? "live" : ""}">${account.live ? "● ao vivo" : "prévia"}</span>
+        </span>
+        <span class="pgx-mini-stage">
+          <span class="pgx-mini-player">${leader ? renderSprite(leader, { back: true }) : `<span class="pgx-sprite-wrap missing"></span>`}<b>${esc(leader && leader.name || "Sem líder")}</b></span>
+          <span class="pgx-mini-vs">VS</span>
+          <span class="pgx-mini-enemy">${foe ? renderSprite(foe) : `<span class="pgx-sprite-wrap missing"></span>`}<b>${esc(foe && foe.name || "Sem encontro")}</b></span>
+        </span>
+        <span class="pgx-battle-card-metrics">
+          <span><small>gold/h</small><strong>${number(account.metrics && account.metrics.goldPerHour) >= 0 ? "+" : ""}${compact(account.metrics && account.metrics.goldPerHour)}</strong></span>
+          <span><small>XP/h</small><strong>${compact(account.metrics && account.metrics.xpPerHour)}</strong></span>
+          <span><small>capturas</small><strong>${formatNumber(account.metrics && account.metrics.captures)}</strong></span>
+        </span>
+        <span class="pgx-focus-hint">Abrir conta em foco <b>↗</b></span>
+      </button>`;
+  }
+
+  function renderPeriod(label, values, accent) {
+    return `
+      <article class="pgx-period" style="--period-accent:${accent}">
+        <div><span>${label}</span><strong>${number(values && values.g) >= 0 ? "+" : ""}${compact(values && values.g)} gold</strong></div>
+        <dl><div><dt>XP</dt><dd>${compact(values && values.x)}</dd></div><div><dt>Kills</dt><dd>${formatNumber(values && values.kl)}</dd></div><div><dt>Capturas</dt><dd>${formatNumber(values && values.c)}</dd></div><div><dt>Shiny</dt><dd>${formatNumber(values && values.sf)}/${formatNumber(values && values.sc)}</dd></div></dl>
+      </article>`;
+  }
+
+  function renderAllAccounts() {
+    const accounts = displayAccounts();
+    const metrics = accounts.reduce((total, account) => {
+      const current = account.metrics || {};
+      total.gold += number(current.goldPerHour);
+      total.xp += number(current.xpPerHour);
+      total.kills += number(current.killsPerHour);
+      total.captures += number(current.captures);
+      total.shinyFound += number(current.shinyFound);
+      total.shinyCaptured += number(current.shinyCaptured);
+      return total;
+    }, { gold: 0, xp: 0, kills: 0, captures: 0, shinyFound: 0, shinyCaptured: 0 });
+    const shell = state.shellSnapshot || {};
+    const periods = {
+      today: shell.today || { g: 0, x: 0, kl: 0, c: 0, sf: 0, sc: 0 },
+      week: shell.week || { g: 0, x: 0, kl: 0, c: 0, sf: 0, sc: 0 },
+      allTime: shell.allTime || { g: 0, x: 0, kl: 0, c: 0, sf: 0, sc: 0 }
+    };
+    const liveCaptures = accounts.flatMap((account, accountIndex) => (account.catches || []).map(capture => ({
+      ...capture, accountIndex, account: account.character && account.character.name || `Conta ${accountIndex + 1}`
+    })));
+    const captures = ((shell.captures && shell.captures.length) ? shell.captures : liveCaptures)
+      .slice().sort((a, b) => number(b.time) - number(a.time)).slice(0, 12);
+    const liveShinies = accounts.flatMap((account, accountIndex) => (account.shinyLog || []).map(shiny => ({
+      ...shiny, accountIndex, account: account.character && account.character.name || `Conta ${accountIndex + 1}`
+    })));
+    const shinies = ((shell.shinies && shell.shinies.length) ? shell.shinies : liveShinies)
+      .slice().sort((a, b) => number(b.time) - number(a.time)).slice(0, 8);
+    const attempts = accounts.flatMap((account, accountIndex) => (account.attempts || []).map(attempt => ({
+      ...attempt, accountIndex, account: account.character && account.character.name || `Conta ${accountIndex + 1}`
+    }))).sort((a, b) => number(b.attempts) - number(a.attempts)).slice(0, 8);
+    const shares = accounts.flatMap((account, accountIndex) => (account.shares || []).map(share => ({
+      ...share, accountIndex, account: account.character && account.character.name || `Conta ${accountIndex + 1}`
+    }))).sort((a, b) => number(b.time) - number(a.time)).slice(0, 6);
+    const huntMeasurements = Object.entries(shell.huntStats || {}).flatMap(([characterId, hunts]) =>
+      Object.entries(hunts && typeof hunts === "object" ? hunts : {}).map(([hunt, measurement]) => {
+        const owner = accounts.find(account => String(account.character && account.character.id || "") === String(characterId));
+        return {
+          hunt: String(hunt || "").slice(0, 80),
+          account: owner && owner.character && owner.character.name || "Conta",
+          gph: number(measurement && measurement.gph),
+          xph: number(measurement && measurement.xph),
+          cph: number(measurement && measurement.cph),
+          samples: number(measurement && measurement.n),
+          time: number(measurement && measurement.t)
+        };
+      })
+    ).sort((a, b) => b.gph - a.gph).slice(0, 6);
+    const trend = state.trend.length > 1 ? state.trend : (shell.trend || []);
+    const goals = shell.goals || {};
+    const todayGold = number(periods.today.g);
+    const todayCaptures = number(periods.today.c);
+    const goldProgress = number(goals.g) > 0 ? clamp(todayGold / number(goals.g) * 100, 0, 100) : 0;
+    const captureProgress = number(goals.c) > 0 ? clamp(todayCaptures / number(goals.c) * 100, 0, 100) : 0;
+    return `
+      <div class="pgx-view pgx-all-view">
+        <div class="pgx-all-intro">
+          <div><div class="pgx-eyebrow">Visão operacional</div><h1>Todas as contas</h1><p>Batalhas, desempenho, capturas e recursos em uma única leitura.</p></div>
+          <span class="pgx-demo-note">${accounts.some(account => account.live) ? "● Atualização automática a cada 4 segundos" : "● Demonstração até as contas terminarem o login"}</span>
+        </div>
+        <div class="pgx-summary-metrics">
+          <article><span>Saldo líquido / hora</span><strong>${metrics.gold >= 0 ? "+" : ""}${compact(metrics.gold)}</strong><small>somado entre as contas</small></article>
+          <article><span>Experiência / hora</span><strong>${compact(metrics.xp)}</strong><small>ritmo global</small></article>
+          <article><span>Abates / hora</span><strong>${compact(metrics.kills)}</strong><small>ritmo global</small></article>
+          <article><span>Capturas</span><strong>${formatNumber(metrics.captures)}</strong><small>nesta sessão</small></article>
+          <article><span>Shiny encontrados</span><strong>${formatNumber(metrics.shinyFound)} / ${formatNumber(metrics.shinyCaptured)}</strong><small>vistos / capturados</small></article>
+          <article><span>Contas ativas</span><strong>${accounts.filter(account => account.live).length || accounts.length}<small> / ${accounts.length}</small></strong><small>${accounts.some(account => account.live) ? "conectadas agora" : "em demonstração"}</small></article>
+        </div>
+        <section>
+          <div class="pgx-section-head pgx-major-head"><div><h2>Campos de batalha</h2><span>Clique em uma batalha para fechar este painel e ampliar a conta.</span></div><span>${accounts.length} campos</span></div>
+          <div class="pgx-battle-grid">${accounts.map(renderMiniBattle).join("")}</div>
+        </section>
+        <div class="pgx-dashboard-grid">
+          <section class="pgx-section pgx-performance">
+            <div class="pgx-section-head"><div><h3>Desempenho por conta</h3><span>O essencial do antigo modo simples, agora no contexto.</span></div><span>sessão atual</span></div>
+            <div class="pgx-table-wrap"><table class="pgx-table pgx-performance-table"><thead><tr><th>Conta</th><th>Hunt</th><th>Tempo</th><th>Gold/h</th><th>XP/h</th><th>Kills/h</th><th>Capturas</th><th>Melhor captura</th><th>Última</th></tr></thead><tbody>
+              ${accounts.map((account, index) => {
+                const best = bestCatch(account);
+                const last = (account.catches || []).slice().sort((a, b) => number(b.time) - number(a.time))[0];
+                return `<tr data-pgx-focus="${index}"><td><strong>${esc(account.character && account.character.name || `Conta ${index + 1}`)}</strong></td><td>${esc(account.hunt || "—")}</td><td>${duration(account.metrics && account.metrics.seconds)}</td><td class="${number(account.metrics && account.metrics.goldPerHour) >= 0 ? "pgx-positive" : "pgx-negative"}">${number(account.metrics && account.metrics.goldPerHour) >= 0 ? "+" : ""}${compact(account.metrics && account.metrics.goldPerHour)}</td><td>${compact(account.metrics && account.metrics.xpPerHour)}</td><td>${compact(account.metrics && account.metrics.killsPerHour)}</td><td>${formatNumber(account.metrics && account.metrics.captures)}</td><td>${best ? `${esc(best.name)} · IV ${formatNumber(best.iv)} · ×${number(best.quality, 1).toFixed(2)}` : "—"}</td><td>${last ? `${esc(last.name)} · ${formatNumber(account.metrics && account.metrics.sinceCatch)} bolas` : "—"}</td></tr>`;
+              }).join("")}
+            </tbody></table></div>
+          </section>
+          <aside class="pgx-section pgx-trend-panel">
+            <div class="pgx-section-head"><div><h3>Tendência</h3><span>Última hora</span></div><span>ao vivo</span></div>
+            <div class="pgx-trend-card"><div><span>Gold/h</span><strong>${metrics.gold >= 0 ? "+" : ""}${compact(metrics.gold)}</strong></div>${sparkline(trend.map(point => point.g), "#55e6d3")}</div>
+            <div class="pgx-trend-card"><div><span>XP/h</span><strong>${compact(metrics.xp)}</strong></div>${sparkline(trend.map(point => point.x), "#5ca9ff")}</div>
+          </aside>
+        </div>
+        <section class="pgx-section">
+          <div class="pgx-section-head"><div><h3>Histórico consolidado</h3><span>Mesmos totais persistidos do modo simples.</span></div><span>até 90 dias</span></div>
+          <div class="pgx-periods">${renderPeriod("Hoje", periods.today, "#55e6d3")}${renderPeriod("Últimos 7 dias", periods.week, "#5ca9ff")}${renderPeriod("Todo o histórico", periods.allTime, "#f4cb63")}</div>
+          ${(number(goals.g) > 0 || number(goals.c) > 0) ? `<div class="pgx-goals">
+            ${number(goals.g) > 0 ? `<div><span><b>Meta de gold</b><small>${compact(todayGold)} de ${compact(goals.g)}</small></span><i><b style="width:${goldProgress}%"></b></i></div>` : ""}
+            ${number(goals.c) > 0 ? `<div><span><b>Meta de capturas</b><small>${formatNumber(todayCaptures)} de ${formatNumber(goals.c)}</small></span><i><b style="width:${captureProgress}%"></b></i></div>` : ""}
+          </div>` : ""}
+        </section>
+        <div class="pgx-activity-grid">
+          <section class="pgx-section">
+            <div class="pgx-section-head"><div><h3>Últimas capturas</h3><span>Todas as contas</span></div><span>${captures.length} recentes</span></div>
+            <div class="pgx-capture-list">${captures.length ? captures.map(capture => `
+              <button type="button" class="pgx-capture-row" data-pgx-account="${clamp(capture.accountIndex, 0, accounts.length - 1)}">
+                <span class="pgx-capture-sprite">${capture.speciesId ? `<img alt="" src="${esc(spriteUrl(capture.speciesId, { shiny: capture.shiny }))}">` : "◈"}</span>
+                <span><strong>${capture.shiny ? "✨ " : ""}${esc(capture.name || "Pokémon")}</strong><small>${esc(capture.account || `Conta ${number(capture.accountIndex) + 1}`)} · ${timeLabel(capture.time)}</small></span>
+                <span><b>IV ${formatNumber(capture.iv)}</b><small>×${number(capture.quality, 1).toFixed(2)}${capture.first ? " · nova" : ""}</small></span>
+              </button>`).join("") : `<div class="pgx-empty">Nenhuma captura registrada ainda.</div>`}</div>
+            ${shares.length ? `<div class="pgx-subsection-title"><span>Compartilhados no chat</span><small>${shares.length} recentes</small></div><div class="pgx-shared-list">${shares.map(share => `
+              <div><span class="pgx-capture-sprite">${share.speciesId ? `<img alt="" src="${esc(spriteUrl(share.speciesId, { shiny: share.shiny }))}">` : "◈"}</span><p><strong>${share.shiny ? "✨ " : ""}${esc(share.name || "Pokémon")}</strong><small>${esc(share.from || "Chat")} · Lv. ${formatNumber(share.level)}</small></p><b>IV ${formatNumber(share.iv)}<small>×${number(share.quality, 1).toFixed(2)}</small></b></div>`).join("")}</div>` : ""}
+          </section>
+          <section class="pgx-section">
+            <div class="pgx-section-head"><div><h3>Shinies & tentativas</h3><span>Encontrados e alvos atuais</span></div><span>✨ ${shinies.filter(item => item.captured).length} capturados</span></div>
+            <div class="pgx-shiny-list">
+              ${shinies.length ? shinies.map(shiny => `<div class="pgx-shiny-row"><span>${shiny.captured ? "✨" : "◇"}</span><div><strong>${esc(shiny.name || "Shiny")}</strong><small>${esc(shiny.account || `Conta ${number(shiny.accountIndex) + 1}`)} · ${timeLabel(shiny.time)}</small></div><b class="${shiny.captured ? "pgx-positive" : "pgx-negative"}">${shiny.captured ? "capturado" : shiny.defeated ? "derrotado" : "perdido"}</b></div>`).join("") : `<div class="pgx-empty compact">Nenhum shiny registrado.</div>`}
+            </div>
+            <div class="pgx-attempts">${attempts.map(attempt => `<div><span>${attempt.speciesId ? `<img alt="" src="${esc(spriteUrl(attempt.speciesId))}">` : "?"}</span><p><strong>${esc(attempt.name || "Alvo")}</strong><small>${esc(attempt.account)}</small></p><b>${formatNumber(attempt.attempts)}<small>tentativas</small></b></div>`).join("") || `<div class="pgx-empty compact">Nenhuma tentativa registrada.</div>`}</div>
+          </section>
+          <section class="pgx-section">
+            <div class="pgx-section-head"><div><h3>Recursos por conta</h3><span>Estoque para manter o farm.</span></div><span>inventário ao vivo</span></div>
+            <div class="pgx-resource-list">${accounts.map((account, index) => {
+              const resources = account.resources || {};
+              return `<button type="button" data-pgx-account="${index}"><span><strong>${esc(account.character && account.character.name || `Conta ${index + 1}`)}</strong><small>${esc(account.hunt || "Sem hunt")}</small></span><dl><div><dt>Pokébolas</dt><dd class="${number(resources.balls) < 30 ? "warn" : ""}">${formatNumber(resources.balls)}</dd></div><div><dt>Poções</dt><dd class="${number(resources.potions) < 20 ? "warn" : ""}">${formatNumber(resources.potions)}</dd></div><div><dt>Revives</dt><dd class="${number(resources.revives) < 10 ? "warn" : ""}">${formatNumber(resources.revives)}</dd></div></dl></button>`;
+            }).join("")}</div>
+            ${huntMeasurements.length ? `<div class="pgx-subsection-title"><span>Hunts medidas</span><small>ordenadas por gold/h</small></div><div class="pgx-hunt-list">${huntMeasurements.map(hunt => `<div><span><strong>${esc(hunt.hunt)}</strong><small>${esc(hunt.account)} · ${formatNumber(hunt.samples)} amostras</small></span><dl><div><dt>Gold/h</dt><dd class="${hunt.gph >= 0 ? "pgx-positive" : "pgx-negative"}">${hunt.gph >= 0 ? "+" : ""}${compact(hunt.gph)}</dd></div><div><dt>XP/h</dt><dd>${compact(hunt.xph)}</dd></div><div><dt>Cap/h</dt><dd>${number(hunt.cph).toFixed(1).replace(".", ",")}</dd></div></dl></div>`).join("")}</div>` : ""}
+          </section>
+        </div>
+      </div>`;
   }
 
   function renderOverview(account) {
@@ -589,7 +875,8 @@
     renderHeader();
     root.querySelectorAll("[data-pgx-tab]").forEach(button => button.classList.toggle("on", button.dataset.pgxTab === state.tab));
     const account = activeAccount();
-    if (state.tab === "team") content.innerHTML = renderTeam(account);
+    if (state.tab === "all") content.innerHTML = renderAllAccounts();
+    else if (state.tab === "team") content.innerHTML = renderTeam(account);
     else if (state.tab === "inventory") content.innerHTML = renderInventory(account);
     else content.innerHTML = renderOverview(account);
   }
@@ -613,6 +900,19 @@
       const webviews = [...document.querySelectorAll("#grid webview")];
       const results = await Promise.all(webviews.map(readWebview));
       state.accounts = results.length ? results : [null];
+      try {
+        state.shellSnapshot = typeof window.__pgExperienceSnapshot === "function"
+          ? window.__pgExperienceSnapshot() : null;
+      } catch {
+        state.shellSnapshot = null;
+      }
+      const source = displayAccounts();
+      const aggregate = source.reduce((total, account) => ({
+        g: total.g + number(account.metrics && account.metrics.goldPerHour),
+        x: total.x + number(account.metrics && account.metrics.xpPerHour)
+      }), { g: 0, x: 0 });
+      state.trend.push({ t: Date.now(), ...aggregate });
+      state.trend = state.trend.filter(point => point.t > Date.now() - 3600e3).slice(-900);
       if (state.accountIndex >= state.accounts.length) state.accountIndex = 0;
       render();
     } finally {
@@ -620,7 +920,8 @@
     }
   }
 
-  function open() {
+  function open(tab) {
+    if (tab) state.tab = tab;
     state.open = true;
     root.classList.add("pgx-open");
     root.setAttribute("aria-hidden", "false");
@@ -636,7 +937,21 @@
     openButton.classList.remove("on");
   }
 
-  openButton.addEventListener("click", () => state.open ? close() : open());
+  function focusAccount(index) {
+    const selected = clamp(index, 0, Math.max(0, displayAccounts().length - 1));
+    state.accountIndex = selected;
+    close();
+    if (typeof window.__pgFocusAccount === "function") {
+      window.__pgFocusAccount(selected);
+      return;
+    }
+    const panels = [...document.querySelectorAll("#grid .panel")];
+    panels.forEach(panel => panel.classList.remove("expanded"));
+    if (panels[selected]) panels[selected].classList.add("expanded");
+  }
+
+  window.__pgOpenExperience = tab => open(tab || "all");
+  openButton.addEventListener("click", () => state.open ? close() : open("overview"));
   root.querySelector("#pgxClose").addEventListener("click", close);
   root.querySelector("#pgxRefresh").addEventListener("click", refresh);
   accountSelect.addEventListener("change", () => {
@@ -647,6 +962,11 @@
   });
 
   root.addEventListener("click", event => {
+    const focus = event.target.closest("[data-pgx-focus]");
+    if (focus) {
+      focusAccount(focus.dataset.pgxFocus);
+      return;
+    }
     const tab = event.target.closest("[data-pgx-tab]");
     if (tab) {
       state.tab = tab.dataset.pgxTab;

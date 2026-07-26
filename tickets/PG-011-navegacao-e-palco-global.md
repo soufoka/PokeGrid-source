@@ -52,3 +52,18 @@ PG-010 e PG-006.
 - Validado no Electron em 2294×890 e 1024×720, sem overflow ou erro de console.
 - Pendente para aceite final: confirmar encontro/último golpe com uma conta
   autenticada e medir CPU numa sessão longa.
+
+### 2026-07-26 — Codex — modo simples integrado
+
+- A navegação passou a ter quatro áreas: Todas as contas, Conta em foco,
+  Time & IV e Inventário.
+- `🌐 Todas as contas` substitui o botão do Modo Simples sem apagar a
+  implementação antiga, que segue como fallback durante o rollout.
+- A visão consolidada reutiliza os mesmos históricos persistidos do Modo
+  Simples: hoje, 7 dias, total, metas, capturas, shinies e medições de hunt.
+- Sessão ao vivo inclui KPIs, tempo, melhor/última captura, tentativas de shiny,
+  recursos, compartilhados no chat e tendência da última hora.
+- Cada prévia de batalha e linha de desempenho fecha overlays e amplia o
+  webview da conta correspondente em modo foco.
+- Validado no Electron com quatro webviews, 1440×900 e 1024×720, zero erro de
+  console/page e sem overflow horizontal.

@@ -2,8 +2,14 @@
 
 ## Próxima versão — prévia local Experience V2
 
-- **Novo painel moderno dentro do cliente**, acessível por `✨ Novo painel`,
-  sem desligar ou recriar os webviews do jogo.
+- **Central moderna dentro do cliente**, acessível por `✨ Central`, sem desligar
+  ou recriar os webviews do jogo.
+- **Modo Simples integrado à Central**: `🌐 Todas as contas` reúne as quatro
+  batalhas, KPIs globais, desempenho por conta, tendência, histórico de
+  hoje/7 dias/total, metas, capturas, shinies, tentativas, compartilhados do
+  chat, recursos e medições de hunt.
+- **Clique para focar**: uma batalha ou linha de desempenho fecha a Central e
+  amplia diretamente a conta correspondente.
 - **Visão geral com palco de batalha**, sprites animados da PokeAPI, quatro KPIs,
   saúde das contas e eventos recentes.
 - **Time & IV** com os seis integrantes, IV total, qualidade, golpes do catálogo

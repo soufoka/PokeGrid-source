@@ -27,7 +27,7 @@ relevantes, apoiada por navegação estável entre áreas.
 - [ ] Palco mostra líder, inimigo, níveis, HP, hunt e último golpe.
 - [ ] Sprites usam PokeAPI com fallback e cache por espécie.
 - [x] Cenário continua legível sem rede ou sprite.
-- [x] Apenas o palco em foco pode usar animação.
+- [x] Os quatro campos globais mantêm líder e inimigo animados.
 - [ ] CPU e foco são verificados com quatro contas.
 - [ ] Modo Simples antigo permanece acessível durante o rollout.
 
@@ -83,9 +83,20 @@ PG-010 e PG-006.
 - O modo `Limpar jogo` não esconde mais o Auto Helper. Dock, HUD, Auto Helper,
   janelas internas e cabeçalhos dos quatro painéis receberam regras compactas
   para viewport reduzida.
-- As quatro prévias globais usam imagens estáticas; somente a conta em foco usa
-  sprite animado, reduzindo trabalho visual quando todos os campos estão abertos.
+- As quatro prévias globais usam sprites animados de líder e inimigo, com
+  fallback estático quando a animação não existe.
 - Validação estrutural: scripts principal e inline compilam, `git diff --check`
   passa e as asserções de aliases Outland, ícones oficiais, filtros, retenção e
   responsividade estão verdes. Validação visual final continua no cliente
   Electron, porque o navegador incorporado bloqueia páginas `file://`.
+
+### 2026-07-26 — Codex — correção após teste do usuário
+
+- Capturas deixou de escolher entre histórico ou sessão: agora mescla e deduplica
+  as duas fontes das quatro contas, tem sincronização explícita e registra o
+  `speciesId` assim que um Pokémon novo entra na coleção.
+- Inventário virou consolidado por padrão, com seções para as quatro contas,
+  seletor global/individual, totais e os mesmos filtros sobre todo o estoque.
+- Sprites animados foram restaurados nos quatro campos de batalha.
+- A linguagem visual da Central foi estendida para barra, menu, painéis,
+  modais, Scripts, Resumo, Cartas e janelas internas responsivas do jogo.

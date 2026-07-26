@@ -20,17 +20,22 @@
   exemplo, `Brave Steelix` mostra o sprite do Steelix.
 - **Capturas completas e filtráveis**: busca, conta, IV mínimo, qualidade,
   período, shiny/primeira espécie e ordenação por tempo, IV, qualidade ou
-  potencial; retenção local ampliada para 10 mil registros e paginação de 100.
+  potencial; histórico persistido e registros vivos das quatro contas são
+  mesclados imediatamente, com sincronização manual, retenção de 10 mil e
+  paginação de 100.
 - **Time & IV** com os seis integrantes, IV total, qualidade, golpes do catálogo
   oficial, comparação e projeção de nível 1 a 500.
-- **Inventário visual com os ícones reais do jogo**: itens usam `items.json` e
-  Poké Balls usam o catálogo de Balls; quantidade, valor, filtros e estado de
-  atenção permanecem no mesmo contexto.
+- **Inventário consolidado das quatro contas**: itens usam `items.json`, Poké
+  Balls usam o catálogo de Balls e cada treinador tem sua própria seção, com
+  seletor global/individual, totais, filtros e estado de atenção.
 - **Quatro telas mais utilizáveis**: cabeçalhos compactos por painel e ajustes
   responsivos no dock, HUD, Auto Helper, captura, Pokédex e mercado. `Limpar
   jogo` não oculta mais o Auto Helper.
-- **Menos custo no painel global**: as quatro prévias usam sprites estáticos;
-  animação fica reservada ao palco da conta em foco.
+- **Batalhas vivas no painel global**: líder e inimigo permanecem animados nos
+  quatro campos, com fallback estático quando uma animação não existe.
+- **Redesign além da Central**: barra principal, menu, painéis dos jogos,
+  Treinadores, Scripts, Resumo, Cartas, Auto Helper, captura, Pokédex e mercado
+  agora compartilham cores, bordas, foco, profundidade e comportamento compacto.
 - **Dados reais quando a conta está conectada** e modo demonstrativo claramente
   identificado durante login ou ausência de dados.
 - A prévia vive em `src/ui/experience-v2.*`; o painel antigo continua disponível.

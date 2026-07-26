@@ -52,6 +52,7 @@
     compareIndex: 1,
     projectionLevel: 500,
     inventoryFilter: "attention",
+    inventoryAccount: "all",
     captureSearch: "",
     captureAccount: "all",
     captureMinIv: 0,
@@ -614,9 +615,9 @@
           <span class="${account.live ? "live" : ""}">${account.live ? "● ao vivo" : "prévia"}</span>
         </span>
         <span class="pgx-mini-stage">
-          <span class="pgx-mini-player">${leader ? renderSprite(leader, { back: true }) : `<span class="pgx-sprite-wrap missing"></span>`}<b>${esc(leader && leader.name || "Sem líder")}</b></span>
+          <span class="pgx-mini-player">${leader ? renderSprite(leader, { back: true, animated: true }) : `<span class="pgx-sprite-wrap missing"></span>`}<b>${esc(leader && leader.name || "Sem líder")}</b></span>
           <span class="pgx-mini-vs">VS</span>
-          <span class="pgx-mini-enemy">${foe ? renderSprite(foe) : `<span class="pgx-sprite-wrap missing"></span>`}<b>${esc(foe && foe.name || "Sem encontro")}</b></span>
+          <span class="pgx-mini-enemy">${foe ? renderSprite(foe, { animated: true }) : `<span class="pgx-sprite-wrap missing"></span>`}<b>${esc(foe && foe.name || "Sem encontro")}</b></span>
         </span>
         <span class="pgx-battle-card-metrics">
           <span><small>gold/h</small><strong>${number(account.metrics && account.metrics.goldPerHour) >= 0 ? "+" : ""}${compact(account.metrics && account.metrics.goldPerHour)}</strong></span>
@@ -734,7 +735,7 @@
         </section>
         <div class="pgx-activity-grid">
           <section class="pgx-section">
-            <div class="pgx-section-head"><div><h3>Últimas capturas</h3><span>Todas as contas</span></div><span>${captures.length} recentes</span></div>
+            <div class="pgx-section-head"><div><h3>Últimas capturas</h3><span>Todas as contas</span></div><button type="button" class="pgx-section-action" data-pgx-open-captures>Ver histórico completo →</button></div>
             <div class="pgx-capture-list">${captures.length ? captures.map(capture => `
               <button type="button" class="pgx-capture-row" data-pgx-account="${clamp(capture.accountIndex, 0, accounts.length - 1)}">
                 <span class="pgx-capture-sprite">${spriteIdFor(capture) ? `<img alt="" src="${esc(spriteUrl(spriteIdFor(capture), { shiny: capture.shiny }))}">` : "◈"}</span>
@@ -781,18 +782,38 @@
     const live = accounts.flatMap((account, accountIndex) => (account.catches || []).map(capture => ({
       ...capture,
       accountIndex,
-      account: account.character && account.character.name || `Conta ${accountIndex + 1}`
+      account: account.character && account.character.name || `Conta ${accountIndex + 1}`,
+      source: "live"
     })));
     const shell = state.shellSnapshot || {};
-    return ((shell.captures && shell.captures.length) ? shell.captures : live)
-      .map(capture => ({
+    const persisted = (shell.captures || []).map(capture => ({ ...capture, source: "history" }));
+    const normalized = [...persisted, ...live].map(capture => {
+      const accountByName = accounts.findIndex(account =>
+        String(account.character && account.character.name || "").toLowerCase() ===
+        String(capture.account || "").toLowerCase()
+      );
+      const rawIndex = Number.isFinite(Number(capture.accountIndex))
+        ? Number(capture.accountIndex) : accountByName;
+      const accountIndex = clamp(rawIndex >= 0 ? rawIndex : 0, 0, Math.max(0, accounts.length - 1));
+      return {
         ...capture,
-        accountIndex: clamp(capture.accountIndex, 0, Math.max(0, accounts.length - 1)),
+        accountIndex,
+        account: String(capture.account || accounts[accountIndex]?.character?.name || `Conta ${accountIndex + 1}`).slice(0, 80),
         name: String(capture.name || "Pokémon").slice(0, 80),
         iv: number(capture.iv),
         quality: number(capture.quality),
         time: number(capture.time)
-      }));
+      };
+    });
+    const unique = new Map();
+    for (const capture of normalized) {
+      const key = [
+        capture.accountIndex, capture.time, capture.name.toLowerCase(),
+        capture.iv, capture.quality.toFixed(4), capture.shiny ? 1 : 0
+      ].join("|");
+      unique.set(key, { ...(unique.get(key) || {}), ...capture });
+    }
+    return [...unique.values()];
   }
 
   function filteredCaptures() {
@@ -838,7 +859,7 @@
       <div class="pgx-view pgx-captures-view">
         <div class="pgx-page-intro">
           <div><div class="pgx-eyebrow">Histórico completo</div><h1>Capturas</h1><p>Encontre os melhores Pokémon sem vasculhar conta por conta.</p></div>
-          <div class="pgx-capture-total"><strong>${formatNumber(captures.length)}</strong><span>de ${formatNumber(all.length)} capturas</span></div>
+          <div class="pgx-page-actions"><button type="button" class="pgx-section-action" data-pgx-sync-captures>↻ Sincronizar agora</button><div class="pgx-capture-total"><strong>${formatNumber(captures.length)}</strong><span>de ${formatNumber(all.length)} capturas</span></div></div>
         </div>
         <section class="pgx-capture-toolbar">
           <label class="wide"><span>Buscar Pokémon</span><div class="pgx-search-field"><b>⌕</b><input id="pgxCaptureSearch" type="search" value="${esc(state.captureSearch)}" placeholder="Steelix, Dragonite…"><button type="button" data-pgx-apply-captures>Filtrar</button></div></label>
@@ -869,7 +890,7 @@
               <td><div class="pgx-capture-tags">${capture.shiny ? "<span>✨ shiny</span>" : ""}${capture.first ? "<span>nova espécie</span>" : ""}${number(capture.speciesId) > 10000 ? "<span>Outland</span>" : ""}</div></td>
               <td><strong>${capture.time ? new Date(capture.time).toLocaleDateString("pt-BR") : "—"}</strong><small class="pgx-table-sub">${timeLabel(capture.time)}</small></td>
             </tr>`;
-          }).join("")}</tbody></table></div>${shown.length < captures.length ? `<button type="button" class="pgx-load-more" data-pgx-more-captures>Mostrar mais ${formatNumber(Math.min(100, captures.length - shown.length))}</button>` : ""}` : `<div class="pgx-empty">Nenhuma captura corresponde aos filtros atuais.</div>`}
+          }).join("")}</tbody></table></div>${shown.length < captures.length ? `<button type="button" class="pgx-load-more" data-pgx-more-captures>Mostrar mais ${formatNumber(Math.min(100, captures.length - shown.length))}</button>` : ""}` : `<div class="pgx-empty"><strong>Nenhuma captura encontrada.</strong><span>${all.length ? "Os filtros atuais removeram todos os resultados." : "A Central sincroniza o histórico e os registros vivos das quatro contas assim que uma captura entra no jogo."}</span></div>`}
         </section>
       </div>`;
   }
@@ -1033,30 +1054,61 @@
     return false;
   }
 
-  function renderInventory(account) {
-    const all = account.inventory || [];
+  function renderInventory() {
+    const accounts = displayAccounts();
+    const selectedIndexes = state.inventoryAccount === "all"
+      ? accounts.map((_, index) => index)
+      : [clamp(state.inventoryAccount, 0, Math.max(0, accounts.length - 1))];
+    const all = selectedIndexes.flatMap(accountIndex => {
+      const account = accounts[accountIndex];
+      return (account.inventory || []).map(item => ({
+        ...item,
+        accountIndex,
+        account: account.character && account.character.name || `Conta ${accountIndex + 1}`
+      }));
+    });
     let filtered = all;
     if (state.inventoryFilter === "attention") filtered = all.filter(isAttention);
     else if (state.inventoryFilter === "battle") filtered = all.filter(item => itemGroup(item) === "battle");
     else if (state.inventoryFilter === "loot") filtered = all.filter(item => itemGroup(item) === "loot");
     else if (state.inventoryFilter === "rare") filtered = all.filter(item => item.rare);
+    const units = filtered.reduce((sum, item) => sum + number(item.quantity), 0);
+    const battleUnits = filtered.filter(item => itemGroup(item) === "battle")
+      .reduce((sum, item) => sum + number(item.quantity), 0);
+    const rareUnits = filtered.filter(item => item.rare)
+      .reduce((sum, item) => sum + number(item.quantity), 0);
+    const accountGroups = selectedIndexes.map(accountIndex => ({
+      accountIndex,
+      account: accounts[accountIndex],
+      items: filtered.filter(item => item.accountIndex === accountIndex)
+    })).filter(group => group.items.length);
+    const renderItem = item => {
+      const icon = safeItemIcon(item.icon);
+      const attention = isAttention(item);
+      const detail = attention ? "Requer atenção" : item.npcPrice
+        ? `${formatNumber(item.npcPrice)} gold/un. · ${item.priceType === "compra" ? "preço no jogo" : "valor NPC"}`
+        : esc(item.category || "Item");
+      return `<article class="pgx-item${attention ? " attention" : ""}"><span class="pgx-item-icon${icon ? "" : " missing"}">${icon ? `<img alt="" src="${esc(icon)}">` : ""}</span><span class="pgx-item-copy"><strong>${esc(item.name)}</strong><small>${detail}</small></span><span class="pgx-item-qty">${formatNumber(item.quantity)}<small>un.</small></span></article>`;
+    };
     return `
-      <div class="pgx-view">
-        ${account.demo ? `<div><span class="pgx-demo-note">● Dados demonstrativos</span></div>` : ""}
+      <div class="pgx-view pgx-inventory-view">
         <div class="pgx-inventory-head">
-          <div><div class="pgx-eyebrow">Conta selecionada</div><h2 class="pgx-title">Inventário visual</h2><p class="pgx-subtitle">Ícones do catálogo oficial do jogo, quantidade e contexto em uma leitura.</p></div>
+          <div><div class="pgx-eyebrow">Estoque consolidado</div><h2 class="pgx-title">Inventário de todas as contas</h2><p class="pgx-subtitle">Itens e Poké Balls do catálogo oficial, separados por treinador.</p></div>
           <div class="pgx-filters">
             ${[["attention", "Atenção"], ["all", "Todos"], ["battle", "Batalha"], ["loot", "Loot"], ["rare", "Raros"]].map(([value, label]) => `<button type="button" class="pgx-filter${state.inventoryFilter === value ? " on" : ""}" data-pgx-filter="${value}">${label}</button>`).join("")}
           </div>
         </div>
-        ${filtered.length ? `<div class="pgx-inventory-grid">${filtered.slice(0, 120).map(item => {
-          const icon = safeItemIcon(item.icon);
-          const attention = isAttention(item);
-          const detail = attention ? "Requer atenção" : item.npcPrice
-            ? `${formatNumber(item.npcPrice)} gold/un. · ${item.priceType === "compra" ? "preço no jogo" : "valor NPC"}`
-            : esc(item.category || "Item");
-          return `<article class="pgx-item${attention ? " attention" : ""}"><span class="pgx-item-icon${icon ? "" : " missing"}">${icon ? `<img alt="" src="${esc(icon)}">` : ""}</span><span class="pgx-item-copy"><strong>${esc(item.name)}</strong><small>${detail}</small></span><span class="pgx-item-qty">${formatNumber(item.quantity)}<small>un.</small></span></article>`;
-        }).join("")}</div>` : `<div class="pgx-empty">${state.inventoryFilter === "attention" ? "Nenhum item exige atenção agora." : "Nenhum item encontrado neste filtro."}</div>`}
+        <div class="pgx-scope-switch"><button type="button" class="${state.inventoryAccount === "all" ? "on" : ""}" data-pgx-inventory-account="all">Todas as contas</button>${accounts.map((account, index) => `<button type="button" class="${String(state.inventoryAccount) === String(index) ? "on" : ""}" data-pgx-inventory-account="${index}"><span>${index + 1}</span>${esc(account.character && account.character.name || `Conta ${index + 1}`)}</button>`).join("")}</div>
+        <div class="pgx-inventory-kpis">
+          <article><span>Contas no recorte</span><strong>${selectedIndexes.length}</strong></article>
+          <article><span>Tipos de item</span><strong>${formatNumber(filtered.length)}</strong></article>
+          <article><span>Unidades</span><strong>${formatNumber(units)}</strong></article>
+          <article><span>Batalha / raros</span><strong>${formatNumber(battleUnits)}<small> / ${formatNumber(rareUnits)}</small></strong></article>
+        </div>
+        ${accountGroups.length ? `<div class="pgx-inventory-accounts">${accountGroups.map(group => {
+          const accountName = group.account.character && group.account.character.name || `Conta ${group.accountIndex + 1}`;
+          return `<section class="pgx-inventory-account"><div class="pgx-section-head"><div><h3><span class="pgx-account-number">${group.accountIndex + 1}</span>${esc(accountName)}</h3><span>${esc(group.account.hunt || (group.account.live ? "Sem hunt ativa" : "Dados demonstrativos"))}</span></div><button type="button" class="pgx-section-action" data-pgx-view-account="${group.accountIndex}">Abrir conta →</button></div><div class="pgx-inventory-grid">${group.items.slice(0, 160).map(renderItem).join("")}</div></section>`;
+        }).join("")}</div>` : `<div class="pgx-empty"><strong>${state.inventoryFilter === "attention" ? "Nenhum item exige atenção agora." : "Nenhum item encontrado neste filtro."}</strong><span>Troque o filtro ou selecione outra conta.</span></div>`}
       </div>`;
   }
 
@@ -1067,7 +1119,7 @@
     if (state.tab === "all") content.innerHTML = renderAllAccounts();
     else if (state.tab === "captures") content.innerHTML = renderCaptures();
     else if (state.tab === "team") content.innerHTML = renderTeam(account);
-    else if (state.tab === "inventory") content.innerHTML = renderInventory(account);
+    else if (state.tab === "inventory") content.innerHTML = renderInventory();
     else content.innerHTML = renderOverview(account);
   }
 
@@ -1180,6 +1232,16 @@
       focusAccount(state.accountIndex);
       return;
     }
+    if (event.target.closest("[data-pgx-open-captures]")) {
+      state.tab = "captures";
+      state.captureLimit = 100;
+      render();
+      return;
+    }
+    if (event.target.closest("[data-pgx-sync-captures]")) {
+      refresh();
+      return;
+    }
     const focus = event.target.closest("[data-pgx-focus]");
     if (focus) {
       focusAccount(focus.dataset.pgxFocus);
@@ -1191,6 +1253,8 @@
       state.teamIndex = 0;
       state.compareIndex = 1;
       if (state.tab === "all") state.tab = "overview";
+      else if (state.tab === "inventory") state.inventoryAccount = String(state.accountIndex);
+      else if (state.tab === "captures") state.captureAccount = String(state.accountIndex);
       render();
       return;
     }
@@ -1241,6 +1305,12 @@
     const team = event.target.closest("[data-pgx-team]");
     if (team) {
       state.teamIndex = clamp(team.dataset.pgxTeam, 0, 5);
+      render();
+      return;
+    }
+    const inventoryAccount = event.target.closest("[data-pgx-inventory-account]");
+    if (inventoryAccount) {
+      state.inventoryAccount = inventoryAccount.dataset.pgxInventoryAccount;
       render();
       return;
     }

@@ -1,8 +1,11 @@
 "use strict";
 
+require("node:events").defaultMaxListeners = 30;
+
 const { app, BrowserWindow, ipcMain, session } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const resultFile = path.join(app.getPath("temp"), "pokegrid-menu-runtime.json");
 ipcMain.handle("creds:load", () => []);
@@ -25,7 +28,7 @@ app.whenReady().then(async () => {
     }
   });
   win.webContents.on("will-attach-webview", (_event, _preferences, params) => {
-    params.src = "about:blank";
+    params.src = pathToFileURL(path.join(__dirname, "webview-fixture.html")).href;
   });
   await win.loadFile(path.join(__dirname, "..", "index.html"));
 
@@ -58,16 +61,31 @@ app.whenReady().then(async () => {
       const button = document.getElementById(id);
       const before = localStorage.getItem(key);
       const beforeOn = button.classList.contains('on');
+      const beforeState = button.dataset.state;
       button.click();
       await new Promise(resolve => setTimeout(resolve, 30));
       assert(menu.open, id + ' fechou o menu sendo toggle');
       assert(localStorage.getItem(key) !== before, id + ' não persistiu estado');
       assert(button.classList.contains('on') !== beforeOn, id + ' não refletiu estado visual');
+      assert(button.dataset.state && button.dataset.state !== beforeState, id + ' não mostrou estado textual');
+      assert(button.dataset.active === (button.classList.contains('on') ? '1' : '0'), id + ' badge divergiu do estado');
       button.click();
       await new Promise(resolve => setTimeout(resolve, 20));
       report.push(id);
     }
     close();
+
+    for (const webview of document.querySelectorAll('#grid webview')) {
+      let clean = null;
+      for (let attempt = 0; attempt < 50 && clean == null; attempt++) {
+        try {
+          clean = await webview.executeJavaScript("(()=>{const hidden=selector=>getComputedStyle(document.querySelector(selector)).display==='none';return ['.game-hud-tl','.game-hud-tr','nav.game-dock','.cap-panel','.ah-panel','.dex-window','.market-window','.mkt2-window','.clog-window','#pokemon-reader-panel','[data-pgchat]','#hunt-window'].every(hidden);})()");
+        } catch {
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+      }
+      assert(clean === true, 'Limpar jogo não ocultou todos os elementos em um painel');
+    }
 
     open();
     document.getElementById('count').click();
@@ -124,6 +142,10 @@ app.whenReady().then(async () => {
     document.getElementById('errlogBtn').click();
     assert(!menu.open, 'Erros não fechou Opções');
     report.push('errlogBtn');
+
+    document.getElementById('experienceV2Btn').click();
+    assert(document.getElementById('experienceV2').classList.contains('pgx-open'), 'Central não abriu');
+    assert(document.querySelector('[data-pgx-tab="all"]').classList.contains('on'), 'Central não abriu em Todas as contas');
 
     assert(report.length === 17, 'quantidade de opções testadas: ' + report.length);
     return { ok: true, controls: report };

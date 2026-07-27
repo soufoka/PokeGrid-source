@@ -539,6 +539,29 @@
     color: #aebfd0;
   }
   #menu button:hover { border-color: var(--shell-line); background: #192737; color: #fff; }
+  #menu button[data-state] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #menu button[data-state]::after {
+    content: attr(data-state);
+    margin-left: auto;
+    padding: 3px 6px;
+    border: 1px solid rgba(255, 103, 95, .28);
+    border-radius: 999px;
+    background: rgba(255, 103, 95, .09);
+    color: #ffaaa4;
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  #menu button[data-active="1"]::after {
+    border-color: rgba(85, 230, 211, .32);
+    background: rgba(85, 230, 211, .1);
+    color: #8ff3e6;
+  }
   #menu .menu-head {
     display: flex;
     align-items: center;
@@ -717,7 +740,7 @@
         <button id="alerts" title="Avisa quando uma conta cai ou fica sem pokébola">🔔 Alertas</button>
         <button id="sellguard" title="Pede confirmação antes de vender shiny, Lendária+ ou item raro">🛡 Venda protegida</button>
         <button id="chat" title="Mostra ou esconde o chat do jogo em todos os painéis">💬 Chat</button>
-        <button id="cleanHud" title="Reduz o HUD e o popup de captura sem esconder o Auto Helper">🧼 Limpar jogo</button>
+        <button id="cleanHud" title="Oculta HUD, menus, chat e janelas auxiliares para deixar somente o cenário do jogo">🧼 Limpar jogo</button>
         <button id="muteAll">🔊 Som</button>
         <button id="eco">⚡ Eco</button>
         <button id="awake" title="Impede o PC de dormir enquanto farma (a tela ainda pode desligar)">💤 Dormir</button>
@@ -728,7 +751,7 @@
         <button id="layout">▦ Grade</button>
         <div id="langRow" title="Idioma / Language / Idioma"><span>🌐</span><button data-lang="pt">PT</button><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
         <button id="errlogBtn" title="Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.">🐞 Erros</button>
-        <div class="menu-hint">Opções verdes estão ligadas. Ações que abrem outra tela fecham este painel automaticamente.</div>
+        <div class="menu-hint">Cada opção mostra seu estado à direita. Ações que abrem outra tela fecham este painel automaticamente.</div>
       </dialog>
     </div>
     <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)">🔗</button>
@@ -790,7 +813,7 @@
       loginAll:'▶ Logar equipe', accounts:'👤 Treinadores', reloadAll:'⟳ Atualizar tudo', layout:'▦ Grade', layoutCol:'▤ Uma coluna', layoutRow:'▥ Uma linha', layoutTitle:'Como os painéis se organizam. Clique pra alternar: grade, uma coluna (empilhado) ou uma linha (lado a lado).',
       sound:'🔊 Som', muted:'🔇 Mudo', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Dormir', awake:'☕ Acordado',
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visível',
-      optionsBtn:'☰ Opções', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
+      optionsBtn:'☰ Opções', optOn:'Ligado', optOff:'Desligado', optMuted:'Mudo', optSound:'Com som', optVisible:'Visível', optHidden:'Oculto', optAwake:'Acordado', optSleep:'Pode dormir', optTray:'Bandeja', optTaskbar:'Barra', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
       dockLabel:'🎛 Menu do jogo', dockTitle:'Mostra ou esconde o menu de ícones do jogo (verde = visível). F2 alterna no painel em foco.',
       hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', accClear:'Limpar esta conta', ivsTitle:'Abre a calculadora de IV do app: uma só, no centro da tela, alimentada por qualquer painel', ivcTitle:"Calculadora de IV", ivcHint:'Passe o mouse sobre um pokémon em qualquer painel.<br>Os dados aparecem aqui, e você pode ajustar nível e atributos pra recalcular.', ivcLevel:'Nível', ivcQuality:'Qualidade', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'atual', ivcBase:'base', ivcPowerGame:'Poder no jogo', ivcFooter:'edite qualquer campo pra recalcular', ivcOpenPanel:'Abrir a calculadora dentro do painel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder do golpe', ivcMoveLast:'último dano observado em batalha',
       alerts:'🔔 Alertas', alertsTitle:'Avisa por notificação quando uma conta cai ou fica sem pokébola', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Conta', statsTitle:'Resumo compacto da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
@@ -800,7 +823,7 @@
       cdShinyTried:'Shinies tentados (bolas jogadas)', cdConfig:'Configurar o painel', cdConfigH:'Seções (arraste pra reordenar, marque pra mostrar)', cdSecKpis:'Resumo (KPIs)', cdByAcc2:'Tabela por conta', cdScopeMine:'Minhas hunts', cdScopeAll:'Todas as hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Voltar a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder as ocultas',
       stDragHint:'Arraste para reordenar', stHideSec:'Esconder esta seção (restaure na engrenagem ⚙)',
       sellguard:'🛡 Venda protegida', sellguardTitle:'Pede confirmação antes de vender shiny, Lendária+ ou item raro (verde = ligado)',
-      clean:'🧼 Limpar jogo', cleanTitle:'Reduz o HUD e o popup de captura sem esconder o Auto Helper (verde = ligado)',
+      clean:'🧼 Limpar jogo', cleanTitle:'Oculta HUD, menus, chat e janelas auxiliares para deixar somente o cenário (ligado = tela limpa)',
       reset:'Zerar', resetTitle:'Zera as estatísticas da sessão (todas as contas), pra monitorar a partir de agora', resetConfirm:'Zerar as estatísticas da sessão de todas as contas? Os totais da conta (gold, nível, shinies de vida) não mudam.',
       msgShiny:'encontrou um SHINY! ✨', msgShinyCap:'CAPTUROU um SHINY! ✨🎉', spTitle:'Shiny capturado!', spClose:'Fechar o aviso', msgFaint:'teve um pokémon derrubado', msgBallsLow:'está com poucas pokébolas', msgPotionsLow:'está com poucas potions', msgRevivesLow:'está com poucos revives',
       stAllTitle:'Resumo geral', stTotal:'Total', stAcc:'Conta', stCompare:'Comparação (hunt anterior)', stPrev:'anterior', stCur:'atual', stMoney:'dólares', stPerAcc:'Por conta',
@@ -829,7 +852,7 @@
       loginAll:'▶ Log in all', accounts:'👤 Accounts', reloadAll:'⟳ Reload all', layout:'▦ Grid', layoutCol:'▤ Single column', layoutRow:'▥ Single row', layoutTitle:'How the panels are arranged. Click to cycle: grid, single column (stacked) or single row (side by side).',
       sound:'🔊 Sound', muted:'🔇 Muted', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Sleep', awake:'☕ Awake',
       chatHidden:'💬 Chat hidden', chatShown:'💬 Chat shown',
-      optionsBtn:'☰ Options', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
+      optionsBtn:'☰ Options', optOn:'On', optOff:'Off', optMuted:'Muted', optSound:'Sound on', optVisible:'Visible', optHidden:'Hidden', optAwake:'Awake', optSleep:'Can sleep', optTray:'Tray', optTaskbar:'Taskbar', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
       dockLabel:'🎛 Game menu', dockTitle:'Shows or hides the game icon menu (green = shown). F2 toggles it in the focused panel.',
       hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', accClear:'Clear this account', ivsTitle:'Opens the app IV calculator: a single one, centered, fed by any panel', ivcTitle:"IV calculator", ivcHint:'Hover a Pokémon in any panel.<br>The data shows up here, and you can adjust level and stats to recalculate.', ivcLevel:'Level', ivcQuality:'Quality', ivcIvTotal:'Total IV', ivcPower:'Estimated power', ivcStats:'Stats and IV per stat', ivcCurrent:'current', ivcBase:'base', ivcPowerGame:'Power in game', ivcFooter:'edit any field to recalculate', ivcOpenPanel:'Open the calculator inside the panel (compare)', ivcMoves:'Moves', ivcMovePower:'move power', ivcMoveLast:'last damage seen in battle',
       alerts:'🔔 Alerts', alertsTitle:'Notifies you when an account drops or runs out of Pokéballs', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Account', statsTitle:'Compact summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
@@ -839,7 +862,7 @@
       cdShinyTried:'Shinies attempted (balls thrown)', cdConfig:'Configure the panel', cdConfigH:'Sections (drag to reorder, check to show)', cdSecKpis:'Summary (KPIs)', cdByAcc2:'Per-account table', cdScopeMine:'My hunts', cdScopeAll:'All hunts', cdHide:'Hide this hunt', cdUnhide:'Show again', cdShowHiddenN:'show hidden ({n})', cdHideHidden:'hide the hidden ones',
       stDragHint:'Drag to reorder', stHideSec:'Hide this section (restore it in the gear ⚙)',
       sellguard:'🛡 Sell guard', sellguardTitle:'Asks for confirmation before selling shiny, Legendary+ or rare items (green = on)',
-      clean:'🧼 Clean game', cleanTitle:'Reduces the HUD and capture popup without hiding Auto Helper (green = on)',
+      clean:'🧼 Clean game', cleanTitle:'Hides HUD, menus, chat and helper windows, leaving only the game scene',
       reset:'Reset', resetTitle:'Resets the session stats (all accounts), to monitor from now on', resetConfirm:'Reset the session stats for all accounts? Account totals (gold, level, lifetime shinies) are unchanged.',
       msgShiny:'found a SHINY! ✨', msgShinyCap:'CAUGHT a SHINY! ✨🎉', spTitle:'Shiny caught!', spClose:'Close this notice', msgFaint:'had a Pokémon knocked out', msgBallsLow:'is low on Poké Balls', msgPotionsLow:'is low on potions', msgRevivesLow:'is low on revives',
       stAllTitle:'Overview', stTotal:'Total', stAcc:'Account', stCompare:'Comparison (previous hunt)', stPrev:'previous', stCur:'current', stMoney:'dollars', stPerAcc:'Per account',
@@ -868,7 +891,7 @@
       loginAll:'▶ Iniciar equipo', accounts:'👤 Entrenadores', reloadAll:'⟳ Recargar todo', layout:'▦ Cuadrícula', layoutCol:'▤ Una columna', layoutRow:'▥ Una fila', layoutTitle:'Cómo se organizan los paneles. Clic para alternar: cuadrícula, una columna (apilado) o una fila (lado a lado).',
       sound:'🔊 Sonido', muted:'🔇 Silencio', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Dormir', awake:'☕ Despierto',
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visible',
-      optionsBtn:'☰ Opciones', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
+      optionsBtn:'☰ Opciones', optOn:'Activado', optOff:'Desactivado', optMuted:'Silenciado', optSound:'Con sonido', optVisible:'Visible', optHidden:'Oculto', optAwake:'Despierto', optSleep:'Puede dormir', optTray:'Bandeja', optTaskbar:'Barra', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
       dockLabel:'🎛 Menú del juego', dockTitle:'Muestra u oculta el menú de iconos del juego (verde = visible). F2 alterna en el panel enfocado.',
       hunt:'🎯 Hunt', huntTitle:'Abre el Hunt Analyzer en todos los paneles', accClear:'Limpiar esta cuenta', ivsTitle:'Abre la calculadora de IV del app: una sola, en el centro, alimentada por cualquier panel', ivcTitle:"Calculadora de IV", ivcHint:'Pasa el mouse sobre un pokémon en cualquier panel.<br>Los datos aparecen aquí, y puedes ajustar nivel y atributos para recalcular.', ivcLevel:'Nivel', ivcQuality:'Calidad', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'actual', ivcBase:'base', ivcPowerGame:'Poder en el juego', ivcFooter:'edita cualquier campo para recalcular', ivcOpenPanel:'Abrir la calculadora dentro del panel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder del golpe', ivcMoveLast:'último daño observado en batalla',
       alerts:'🔔 Alertas', alertsTitle:'Avisa con notificación cuando una cuenta se cae o se queda sin Pokéballs', msgDown:'se desconectó', msgBalls:'se quedó sin Pokéballs', count:'🔢 Paneles', stats:'📊 Cuenta', statsTitle:'Resumen compacto de la cuenta enfocada (oro/h, XP/h, bolsa, drops)', statsResumo:'Resumen', statsWaiting:'Esperando datos del juego…', statsWaiting2:'Deja el panel conectado y farmeando unos segundos.', statsOff:'Panel apagado.',
@@ -878,7 +901,7 @@
       cdShinyTried:'Shinies intentados (balls lanzadas)', cdConfig:'Configurar el panel', cdConfigH:'Secciones (arrastra para reordenar, marca para mostrar)', cdSecKpis:'Resumen (KPIs)', cdByAcc2:'Tabla por cuenta', cdScopeMine:'Mis hunts', cdScopeAll:'Todas las hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Volver a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder las ocultas',
       stDragHint:'Arrastra para reordenar', stHideSec:'Ocultar esta sección (restáurala en el engranaje ⚙)',
       sellguard:'🛡 Venta protegida', sellguardTitle:'Pide confirmación antes de vender shiny, Legendaria+ o ítem raro (verde = activado)',
-      clean:'🧼 Limpiar juego', cleanTitle:'Reduce el HUD y el popup de captura sin ocultar Auto Helper (verde = activado)',
+      clean:'🧼 Limpiar juego', cleanTitle:'Oculta HUD, menús, chat y ventanas auxiliares, dejando solo el escenario',
       reset:'Reiniciar', resetTitle:'Reinicia las estadísticas de la sesión (todas las cuentas), para monitorear desde ahora', resetConfirm:'¿Reiniciar las estadísticas de sesión de todas las cuentas? Los totales de la cuenta (oro, nivel, shinies de vida) no cambian.',
       msgShiny:'¡encontró un SHINY! ✨', msgShinyCap:'¡CAPTURÓ un SHINY! ✨🎉', spTitle:'¡Shiny capturado!', spClose:'Cerrar el aviso', msgFaint:'tuvo un Pokémon derribado', msgBallsLow:'tiene pocas Pokéballs', msgPotionsLow:'tiene pocas pociones', msgRevivesLow:'tiene pocos revives',
       stAllTitle:'Resumen general', stTotal:'Total', stAcc:'Cuenta', stCompare:'Comparación (hunt anterior)', stPrev:'anterior', stCur:'actual', stMoney:'dólares', stPerAcc:'Por cuenta',
@@ -1224,10 +1247,17 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   };
 
   // ----- Topbar -----
+  function setOptionState(button, active, activeLabel = t('optOn'), inactiveLabel = t('optOff')) {
+    button.classList.toggle('on', !!active);
+    button.dataset.active = active ? '1' : '0';
+    button.dataset.state = active ? activeLabel : inactiveLabel;
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
+
   const muteBtn = document.getElementById('muteAll');
   function applyMute() {
     muteBtn.textContent = muted ? t('muted') : t('sound');
-    muteBtn.classList.toggle('on', muted);
+    setOptionState(muteBtn, muted, t('optMuted'), t('optSound'));
     webviews.forEach(w => { try { w.setAudioMuted(muted); } catch {} });
     localStorage.setItem('muted', muted ? '1' : '0');
   }
@@ -1259,7 +1289,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   const ecoFps = () => cardsOn ? 1 : (eco ? 15 : 0);
   function applyEco() {
     ecoBtn.textContent = eco ? t('eco') : t('ecoOff');
-    ecoBtn.classList.toggle('on', eco);
+    setOptionState(ecoBtn, eco);
     webviews.forEach((w, i) => {
       if (off[i]) return;
       try { w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); } catch {}
@@ -1425,7 +1455,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   let chatHidden = localStorage.getItem('chatHidden') !== '0'; // fechado por padrao
   function applyChat() {
     chatBtn.textContent = chatHidden ? t('chatHidden') : t('chatShown');
-    chatBtn.classList.toggle('on', !chatHidden);
+    setOptionState(chatBtn, !chatHidden, t('optVisible'), t('optHidden'));
     webviews.forEach((w, i) => { if (off[i]) return; try { w.executeJavaScript(chatScript(chatHidden)).catch(() => {}); } catch {} });
     localStorage.setItem('chatHidden', chatHidden ? '1' : '0');
   }
@@ -1460,21 +1490,44 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     webviews.forEach((w, i) => { if (off[i]) return; try { w.executeJavaScript(dockScript()).catch(() => {}); } catch {} });
   }
 
-  // ----- Limpar jogo: reduz o popup de captura e o HUD, mas preserva o Auto Helper.
-  // A conta (.game-hud-tr) e o menu (.game-dock) aparecem no hover.
+  // ----- Limpar jogo: deixa somente o cenário/batalha e remove toda interface auxiliar.
   const cleanScript = (on) => `(() => {
     const ID = 'pg-clean'; let s = document.getElementById(ID);
-    if (!${on}) { if (s) s.remove(); return; }
+    const CLS = 'pg-clean-hidden';
+    if (!${on}) {
+      if (s) s.remove();
+      if (window.__pgCleanObs) { window.__pgCleanObs.disconnect(); window.__pgCleanObs = null; }
+      document.querySelectorAll('.' + CLS).forEach(element => element.classList.remove(CLS));
+      return;
+    }
     if (!s) { s = document.createElement('style'); s.id = ID; document.head.appendChild(s); }
-    s.textContent = '.cap-panel{display:none !important}'
-      + '.game-hud-tr,nav.game-dock{opacity:0 !important;transition:opacity .18s ease !important}'
-      + '.game-hud-tr:hover,nav.game-dock:hover{opacity:1 !important}';
+    s.textContent = '.' + CLS + ',.game-hud-tl,.game-hud-tr,nav.game-dock,.cap-panel,.ah-panel,'
+      + '.dex-window,.market-window,.mkt2-window,.clog-window,.promo-overlay,'
+      + '#pokemon-reader-panel,[data-pgchat]{display:none !important}';
+    const markWindows = () => {
+      const x = document.querySelector('button.ha-x');
+      if (!x) return;
+      let element = x;
+      for (let depth = 0; depth < 10 && element; depth++, element = element.parentElement) {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        if ((style.position === 'fixed' || style.position === 'absolute') && rect.width > 220 && rect.height > 140) {
+          element.classList.add(CLS);
+          break;
+        }
+      }
+    };
+    markWindows();
+    if (!window.__pgCleanObs) {
+      window.__pgCleanObs = new MutationObserver(markWindows);
+      window.__pgCleanObs.observe(document.documentElement, { childList: true, subtree: true });
+    }
   })()`;
   const cleanBtn = document.getElementById('cleanHud');
   let cleanOn = localStorage.getItem('cleanHud') !== '0'; // ligado por padrao
   function applyClean() {
     cleanBtn.textContent = t('clean'); cleanBtn.title = t('cleanTitle');
-    cleanBtn.classList.toggle('on', cleanOn);
+    setOptionState(cleanBtn, cleanOn);
     webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(cleanScript(cleanOn)).catch(() => {}); } catch {} });
     localStorage.setItem('cleanHud', cleanOn ? '1' : '0');
   }
@@ -1509,7 +1562,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   let awake = localStorage.getItem('awake') === '1';
   async function applyAwake() {
     awakeBtn.textContent = awake ? t('awake') : t('sleep');
-    awakeBtn.classList.toggle('on', awake);
+    setOptionState(awakeBtn, awake, t('optAwake'), t('optSleep'));
     try { await window.pokeAPI.setAwake(awake); } catch {}
     localStorage.setItem('awake', awake ? '1' : '0');
   }
@@ -1521,7 +1574,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   async function applyMinTray() {
     minTrayBtn.textContent = t(minTray ? 'minTrayOn' : 'minTrayOff');
     minTrayBtn.title = t('minTrayTitle');
-    minTrayBtn.classList.toggle('on', minTray);
+    setOptionState(minTrayBtn, minTray, t('optTray'), t('optTaskbar'));
     try { await window.pokeAPI.setMinToTray(minTray); } catch {}
     localStorage.setItem('minTray', minTray ? '1' : '0');
   }
@@ -1533,7 +1586,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   function applyAlerts() {
     alertBtn.textContent = t('alerts');
     alertBtn.title = t('alertsTitle');
-    alertBtn.classList.toggle('on', alertsOn);
+    setOptionState(alertBtn, alertsOn);
     localStorage.setItem('alerts', alertsOn ? '1' : '0');
   }
   alertBtn.onclick = () => { alertsOn = !alertsOn; applyAlerts(); };
@@ -1544,7 +1597,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   function applySellGuard() {
     sgBtn.textContent = t('sellguard');
     sgBtn.title = t('sellguardTitle');
-    sgBtn.classList.toggle('on', sellGuardOn);
+    setOptionState(sgBtn, sellGuardOn);
     localStorage.setItem('sellguard', sellGuardOn ? '1' : '0');
     webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript('window.__pgSellGuardOn=' + (sellGuardOn ? 'true' : 'false')).catch(() => {}); } catch {} });
   }
@@ -1566,7 +1619,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // ----- Som do shiny: acorde curto via WebAudio (sem arquivo de audio) -----
   let sndShinyOn = localStorage.getItem('sndShiny') !== '0'; // ligado por padrao
   const sndBtn = document.getElementById('sndShiny');
-  function applySndShiny() { sndBtn.textContent = t(sndShinyOn ? 'sndOn' : 'sndOff'); sndBtn.title = t('sndTitle'); sndBtn.classList.toggle('on', sndShinyOn); localStorage.setItem('sndShiny', sndShinyOn ? '1' : '0'); }
+  function applySndShiny() { sndBtn.textContent = t(sndShinyOn ? 'sndOn' : 'sndOff'); sndBtn.title = t('sndTitle'); setOptionState(sndBtn, sndShinyOn); localStorage.setItem('sndShiny', sndShinyOn ? '1' : '0'); }
   sndBtn.onclick = () => { sndShinyOn = !sndShinyOn; applySndShiny(); if (sndShinyOn) beepShiny(); };
   let _ac = null;
   function beepShiny(festa) { // festa = captura: acorde mais longo, pra nao confundir com "apareceu"

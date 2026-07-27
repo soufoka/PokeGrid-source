@@ -27,6 +27,9 @@ assert.match(html, /menu\.showModal\(\)/);
 assert.match(html, /menu\.close\(\)/);
 assert.match(html, /id="menuClose"/);
 assert.match(html, /event\.target !== menu/);
+assert.match(html, /function setOptionState\(/, "toggles precisam expor estado textual");
+assert.match(html, /button\.dataset\.state = active \? activeLabel : inactiveLabel/);
+assert.match(html, /button\[data-state\]::after/);
 
 const handlers = [
   "huntBtn.onclick", "countBtn.onclick", "alertBtn.onclick", "sgBtn.onclick",
@@ -47,6 +50,22 @@ for (const key of [
 
 const huntScript = html.slice(html.indexOf("const huntScript"), html.indexOf("const huntBtn"));
 assert.doesNotMatch(huntScript, /x\.click\(\)/, "Hunt deve abrir sem fechar contas já abertas");
+
+const cleanScript = html.slice(html.indexOf("const cleanScript"), html.indexOf("const cleanBtn"));
+for (const selector of [
+  ".game-hud-tl", ".game-hud-tr", "nav.game-dock", ".cap-panel", ".ah-panel",
+  ".dex-window", ".market-window", ".mkt2-window", ".clog-window",
+  "#pokemon-reader-panel", "[data-pgchat]"
+]) {
+  assert.ok(cleanScript.includes(selector), `Limpar jogo não cobre ${selector}`);
+}
+assert.ok(cleanScript.includes("MutationObserver(markWindows)"), "Limpar jogo deve cobrir janelas abertas depois");
+
+assert.match(
+  fs.readFileSync(path.join(root, "src", "ui", "experience-v2.js"), "utf8"),
+  /openButton\.addEventListener\("click", \(\) => state\.open \? close\(\) : open\("all"\)\)/,
+  "Central deve abrir sempre em Todas as contas"
+);
 
 const scriptsHandler = html.slice(
   html.indexOf("getElementById('scriptsBtn').onclick"),

@@ -1244,8 +1244,8 @@
     render();
   }
 
-  window.__pgOpenExperience = tab => open(tab || "all");
-  openButton.addEventListener("click", () => state.open ? close() : open("overview"));
+  window.__pgOpenExperience = () => open("all");
+  openButton.addEventListener("click", () => state.open ? close() : open("all"));
   root.querySelector("#pgxClose").addEventListener("click", close);
   root.querySelector("#pgxRefresh").addEventListener("click", refresh);
   accountSelect.addEventListener("change", () => {

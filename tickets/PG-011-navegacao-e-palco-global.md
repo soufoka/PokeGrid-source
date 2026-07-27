@@ -100,3 +100,15 @@ PG-010 e PG-006.
 - Sprites animados foram restaurados nos quatro campos de batalha.
 - A linguagem visual da Central foi estendida para barra, menu, painéis,
   modais, Scripts, Resumo, Cartas e janelas internas responsivas do jogo.
+
+### 2026-07-27 — Codex — grade limpa e menus por hover
+
+- Cabeçalhos das janelas deixaram de consumir altura fixa e aparecem como
+  overlay no hover/foco.
+- `Menu do jogo` foi removido da barra; o dock fica sempre habilitado, invisível
+  em repouso e visível no hover.
+- A barra de Pokémon (`game-hud-tl`) não é mais escondida por `Limpar jogo`.
+- O atalho superior redundante `Todas as contas` foi ocultado; a área global
+  permanece dentro da Central.
+- `Opções` foi movido para fora do contêiner rolável da barra e recebe posição
+  fixa calculada pelo botão, corrigindo o dropdown cortado.

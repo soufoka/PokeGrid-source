@@ -499,6 +499,7 @@
     transform: translateY(-1px);
   }
   #topbar > button.on { border-color: rgba(85,230,211,.42); background: rgba(85,230,211,.12); color: #c7faf3; }
+  #topbar > [hidden] { display: none !important; }
   #topbar > button.primary {
     border-color: #df4c31;
     background: linear-gradient(135deg, #e84a2b, #c82f24);
@@ -511,8 +512,13 @@
     color: #dceeff !important;
   }
   #menu {
+    position: fixed;
     top: calc(100% + 10px);
+    right: auto;
+    z-index: 1000;
     min-width: 208px;
+    max-height: calc(100vh - 72px);
+    overflow-y: auto;
     padding: 7px;
     border-color: var(--shell-line);
     border-radius: 12px;
@@ -531,17 +537,36 @@
   #menu button:hover { border-color: var(--shell-line); background: #192737; color: #fff; }
   #grid { gap: 8px; padding: 8px; }
   .panel {
+    position: relative;
     border-color: var(--shell-line);
     border-radius: 12px;
     background: var(--shell-panel);
     box-shadow: 0 14px 34px rgba(0,0,0,.2);
   }
   .panel-header {
+    position: absolute;
+    z-index: 24;
+    top: 0;
+    left: 0;
+    right: 0;
     min-height: 38px;
     gap: 7px;
     padding: 5px 8px;
     border-bottom: 1px solid var(--shell-line-soft);
-    background: linear-gradient(180deg, #152231, #111c28);
+    background: linear-gradient(180deg, rgba(21,34,49,.98), rgba(13,23,34,.96));
+    box-shadow: 0 10px 28px rgba(0,0,0,.34);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-105%);
+    transition: opacity .16s ease, transform .16s ease;
+    backdrop-filter: blur(13px);
+  }
+  .panel:hover .panel-header,
+  .panel:focus-within .panel-header,
+  .panel-header:hover {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
   .panel-header .name { color: #e7f0fa; }
   .panel-header .status { color: var(--shell-muted); }
@@ -634,10 +659,9 @@
     <button id="loginAll" class="primary">▶ Logar equipe</button>
     <button id="accounts">👤 Treinadores</button>
     <button id="reloadAll">⟳ Atualizar tudo</button>
-    <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">🎛 Menu do jogo</button>
     <button id="experienceV2Btn" title="Abre a central da conta em foco, time, IV e inventário">✨ Central</button>
     <button id="statsBtn" title="Resumo compacto da conta em foco (gold/h, XP/h, bag, drops)">📊 Conta</button>
-    <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">🃏 Cartas</button>
+    <button id="cardsBtn" hidden aria-hidden="true" tabindex="-1">Todas as contas</button>
     <button id="ivsBtn" title="Abre ou fecha a calculadora de IV (JustPokédex) em todos os painéis"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M2 12h20" stroke="#8f1408" stroke-width="3"/><circle cx="12" cy="12" r="3.4" fill="#fff" stroke="#8f1408" stroke-width="2.5"/></svg>IV's</button>
     <div id="menuWrap">
       <button id="menuBtn">☰ Opções</button>
@@ -949,7 +973,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
           wv.executeJavaScript('window.__pgSellGuardOn=' + (sellGuardOn ? 'true' : 'false')).catch(() => {});
           wv.executeJavaScript(QOL_UI).catch(() => {});
           wv.executeJavaScript(chatScript(chatHidden)).catch(() => {});
-          wv.executeJavaScript(dockScript(dockHidden)).catch(() => {});
+          wv.executeJavaScript(dockScript()).catch(() => {});
           // so na tela de login, pra nao rodar a toa dentro do jogo
           if ((wv.getURL() || '').startsWith(LOGIN_URL)) wv.executeJavaScript(scrollLoginScript).catch(() => {});
           wv.executeJavaScript(`localStorage.setItem('poke_lang', ${JSON.stringify(lang === 'pt' ? 'pt' : 'en')})`).catch(() => {}); // mantem o jogo no idioma escolhido (es usa en, o jogo so tem pt/en)
@@ -1218,7 +1242,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       + '.pg-qbar button.on{background:#7c2d2d;border-color:#e3350d}'
       + '.ah-panel,.cap-panel,.dex-window,.market-window,.mkt2-window{border:1px solid rgba(140,190,235,.22)!important;border-radius:12px!important;box-shadow:0 18px 55px rgba(0,0,0,.48)!important;overflow:hidden}'
       + '.ah-panel button,.ah-panel input,.ah-panel select{border-radius:7px!important}'
-      + 'nav.game-dock{border:1px solid rgba(140,190,235,.16)!important;border-radius:10px!important;box-shadow:0 10px 30px rgba(0,0,0,.35)!important;backdrop-filter:blur(10px)}'
+      + 'nav.game-dock{opacity:0!important;border:1px solid rgba(140,190,235,.16)!important;border-radius:10px!important;box-shadow:0 10px 30px rgba(0,0,0,.35)!important;backdrop-filter:blur(10px);transition:opacity .18s ease!important}'
+      + 'nav.game-dock:hover,nav.game-dock:focus-within{opacity:1!important}'
       + 'body.pg-dex-c .dex-cell:not(.caught){display:none}body.pg-dex-n .dex-cell.caught{display:none}'
       + '@media(max-width:780px){'
       + 'nav.game-dock{max-width:calc(100vw - 8px)!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;padding:3px!important;gap:3px!important}'
@@ -1355,33 +1380,20 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     }, 500);
   })()`;
 
-  // ----- Barra de icones do jogo (<nav class="game-dock">): esconde e alterna com F2 -----
-  // O atalho e injetado DENTRO da pagina do jogo: assim funciona mesmo com o painel em foco
-  // (atalho de menu do Electron nao dispara quando o webview tem o teclado).
-  const dockScript = (esconder) => `(() => {
-    window.__dockHide = ${esconder};
-    const set = () => { const d = document.querySelector('nav.game-dock'); if (d) d.style.display = window.__dockHide ? 'none' : ''; };
+  // ----- Barra de ícones do jogo: sempre habilitada e revelada pelo hover. -----
+  const dockScript = () => `(() => {
+    const set = () => { const d = document.querySelector('nav.game-dock'); if (d) d.style.display = ''; };
     if (!window.__dockObs) { window.__dockObs = new MutationObserver(set); window.__dockObs.observe(document.documentElement, { childList: true, subtree: true }); }
-    if (!window.__dockKey) {
-      window.__dockKey = true;
-      addEventListener('keydown', (e) => {
-        if (e.key === 'F2') { e.preventDefault(); window.__dockHide = !window.__dockHide; set(); }
-      }, true); // captura: pega a tecla antes do jogo
-    }
     set();
   })()`;
-  const dockBtn = document.getElementById('dock');
   // Migracao: a 1a versao escondia o menu do jogo por padrao e alguns usuarios estranharam.
   // Agora ele vem VISIVEL; limpamos a preferencia antiga uma unica vez pra valer pra quem ja usou.
-  if (localStorage.getItem('dockMigrado') !== '1') { localStorage.removeItem('dockHidden'); localStorage.setItem('dockMigrado', '1'); }
-  let dockHidden = localStorage.getItem('dockHidden') === '1'; // visivel por padrao; usuario esconde se quiser
+  let dockHidden = false;
+  localStorage.removeItem('dockHidden');
   function applyDock() {
-    dockBtn.textContent = t('dockLabel'); // estado vai pela cor (.on = visível), igual o Eco
-    dockBtn.classList.toggle('on', !dockHidden);
-    webviews.forEach((w, i) => { if (off[i]) return; try { w.executeJavaScript(dockScript(dockHidden)).catch(() => {}); } catch {} });
-    localStorage.setItem('dockHidden', dockHidden ? '1' : '0');
+    dockHidden = false;
+    webviews.forEach((w, i) => { if (off[i]) return; try { w.executeJavaScript(dockScript()).catch(() => {}); } catch {} });
   }
-  dockBtn.onclick = () => { dockHidden = !dockHidden; applyDock(); };
 
   // ----- Limpar jogo: reduz o popup de captura e o HUD, mas preserva o Auto Helper.
   // A conta (.game-hud-tr) e o menu (.game-dock) aparecem no hover.
@@ -1389,7 +1401,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     const ID = 'pg-clean'; let s = document.getElementById(ID);
     if (!${on}) { if (s) s.remove(); return; }
     if (!s) { s = document.createElement('style'); s.id = ID; document.head.appendChild(s); }
-    s.textContent = '.cap-panel,.game-hud-tl{display:none !important}'
+    s.textContent = '.cap-panel{display:none !important}'
       + '.game-hud-tr,nav.game-dock{opacity:0 !important;transition:opacity .18s ease !important}'
       + '.game-hud-tr:hover,nav.game-dock:hover{opacity:1 !important}';
   })()`;
@@ -1402,12 +1414,6 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     localStorage.setItem('cleanHud', cleanOn ? '1' : '0');
   }
   cleanBtn.onclick = () => { cleanOn = !cleanOn; applyClean(); };
-
-  // F2 tambem funciona com o foco na interface do app (ai alterna os 4 paineis).
-  // Com o foco no jogo, quem responde e o F2 injetado na pagina, que alterna so aquele painel.
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'F2') { e.preventDefault(); dockBtn.click(); }
-  });
 
   // ----- Hunt Analyzer: abre em todos os paineis de uma vez -----
   // O botao fica no menu de icones do jogo (game-dock); acha pelo title/alt/src que contem "hunt".
@@ -1679,7 +1685,6 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     refBtn.title = t('refTitle');
     awakeBtn.title = t('awakeTitle');
     chatBtn.title = t('chatTitle');
-    dockBtn.title = t('dockTitle');
     huntBtn.textContent = t('hunt'); huntBtn.title = t('huntTitle');
     ivsBtn.title = t('ivsTitle');
     statsBtn.textContent = t('stats'); statsBtn.title = t('statsTitle');
@@ -1745,7 +1750,20 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // ----- Dropdown "Menu" (Som, Eco, Dormir, Chat, Grade, idioma) -----
   const menuWrap = document.getElementById('menuWrap');
   const menu = document.getElementById('menu');
-  document.getElementById('menuBtn').onclick = (e) => { e.stopPropagation(); menu.classList.toggle('show'); };
+  const menuBtn = document.getElementById('menuBtn');
+  document.body.appendChild(menu); // fora da barra rolável: não é mais cortado pelo overflow
+  const positionMenu = () => {
+    const r = menuBtn.getBoundingClientRect();
+    const left = Math.max(8, Math.min(innerWidth - menu.offsetWidth - 8, r.right - menu.offsetWidth));
+    menu.style.left = left + 'px';
+    menu.style.top = (r.bottom + 8) + 'px';
+  };
+  menuBtn.onclick = (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('show');
+    if (menu.classList.contains('show')) positionMenu();
+  };
+  addEventListener('resize', () => { if (menu.classList.contains('show')) positionMenu(); });
   document.getElementById('errlogBtn').onclick = () => { try { window.pokeAPI.openErrorLog(); } catch {} menu.classList.remove('show'); };
   // backup/restore: configuracoes e historico do localStorage (senhas nao: ficam criptografadas no main).
   // userScripts/scriptsOn NUNCA entram: sao codigo injetado nos paineis logados, e um arquivo de
@@ -1776,7 +1794,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     };
     inp.click();
   };
-  document.addEventListener('click', (e) => { if (!menuWrap.contains(e.target)) menu.classList.remove('show'); });
+  document.addEventListener('click', (e) => {
+    if (!menuWrap.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('show');
+  });
 
   // ===== Painel de resumo: le o coletor window.__poke da conta em foco =====
   const READ_STATE = `(() => {

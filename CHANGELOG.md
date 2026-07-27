@@ -36,6 +36,14 @@
 - **Redesign além da Central**: barra principal, menu, painéis dos jogos,
   Treinadores, Scripts, Resumo, Cartas, Auto Helper, captura, Pokédex e mercado
   agora compartilham cores, bordas, foco, profundidade e comportamento compacto.
+- **Mais espaço para o jogo na grade**: o cabeçalho de cada janela virou um
+  overlay que só aparece ao passar o mouse sobre o painel ou focar seus controles.
+- **Menu interno sempre disponível por hover**: o botão `Menu do jogo` saiu da
+  barra; o dock permanece habilitado em todas as contas e se revela ao passar o
+  mouse. A barra dos Pokémon voltou a ficar visível.
+- **Barra superior simplificada**: o atalho redundante `Todas as contas` foi
+  removido; a visão global continua dentro da Central. O dropdown `Opções` agora
+  é posicionado fora da área rolável e deixa de ser cortado.
 - **Dados reais quando a conta está conectada** e modo demonstrativo claramente
   identificado durante login ou ausência de dados.
 - A prévia vive em `src/ui/experience-v2.*`; o painel antigo continua disponível.

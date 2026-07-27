@@ -45,7 +45,8 @@
     padding: 6px; min-width: 168px; z-index: 200;
     box-shadow: 0 10px 28px rgba(0,0,0,.45);
   }
-  #menu.show { display: flex; }
+  #menu.show,
+  #menu:popover-open { display: flex; }
   #menu button { width: 100%; text-align: left; }
   #langRow { display: flex; gap: 4px; align-items: center; }
   #langRow span { padding: 0 4px; }
@@ -513,6 +514,8 @@
   }
   #menu {
     position: fixed;
+    inset: auto;
+    margin: 0;
     top: calc(100% + 10px);
     right: auto;
     z-index: 1000;
@@ -684,8 +687,8 @@
     <button id="cardsBtn" hidden aria-hidden="true" tabindex="-1">Todas as contas</button>
     <button id="ivsBtn" title="Abre ou fecha a calculadora de IV (JustPokédex) em todos os painéis"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M2 12h20" stroke="#8f1408" stroke-width="3"/><circle cx="12" cy="12" r="3.4" fill="#fff" stroke="#8f1408" stroke-width="2.5"/></svg>IV's</button>
     <div id="menuWrap">
-      <button id="menuBtn">☰ Opções</button>
-      <div id="menu">
+      <button id="menuBtn" aria-haspopup="menu" aria-expanded="false">☰ Opções</button>
+      <div id="menu" popover="auto" role="menu" aria-label="Opções do PokeGrid">
         <button id="hunt" title="Abre o Hunt Analyzer em todos os painéis">🎯 Hunt</button>
         <button id="scriptsBtn" title="Rode userscripts (IV calc e os seus) nos painéis">🧩 Scripts</button>
         <button id="count" title="Quantas contas rodar ao mesmo tempo (1 a 4)">🔢 Painéis: 4</button>
@@ -1788,20 +1791,36 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   const menuWrap = document.getElementById('menuWrap');
   const menu = document.getElementById('menu');
   const menuBtn = document.getElementById('menuBtn');
-  document.body.appendChild(menu); // fora da barra rolável: não é mais cortado pelo overflow
+  const nativePopover = typeof menu.showPopover === 'function';
+  const menuIsOpen = () => nativePopover ? menu.matches(':popover-open') : menu.classList.contains('show');
   const positionMenu = () => {
     const r = menuBtn.getBoundingClientRect();
     const left = Math.max(8, Math.min(innerWidth - menu.offsetWidth - 8, r.right - menu.offsetWidth));
     menu.style.left = left + 'px';
     menu.style.top = (r.bottom + 8) + 'px';
   };
+  const closeMenu = () => {
+    if (nativePopover && menu.matches(':popover-open')) menu.hidePopover();
+    else menu.classList.remove('show');
+    menuBtn.setAttribute('aria-expanded', 'false');
+  };
+  const openMenu = () => {
+    if (nativePopover) menu.showPopover();
+    else menu.classList.add('show');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(positionMenu);
+  };
   menuBtn.onclick = (e) => {
     e.stopPropagation();
-    menu.classList.toggle('show');
-    if (menu.classList.contains('show')) positionMenu();
+    if (menuIsOpen()) closeMenu();
+    else openMenu();
   };
-  addEventListener('resize', () => { if (menu.classList.contains('show')) positionMenu(); });
-  document.getElementById('errlogBtn').onclick = () => { try { window.pokeAPI.openErrorLog(); } catch {} menu.classList.remove('show'); };
+  menu.addEventListener('toggle', () => {
+    menuBtn.setAttribute('aria-expanded', menuIsOpen() ? 'true' : 'false');
+    if (menuIsOpen()) requestAnimationFrame(positionMenu);
+  });
+  addEventListener('resize', () => { if (menuIsOpen()) positionMenu(); });
+  document.getElementById('errlogBtn').onclick = () => { try { window.pokeAPI.openErrorLog(); } catch {} closeMenu(); };
   // backup/restore: configuracoes e historico do localStorage (senhas nao: ficam criptografadas no main).
   // userScripts/scriptsOn NUNCA entram: sao codigo injetado nos paineis logados, e um arquivo de
   // config vindo de outra pessoa viraria execucao de codigo na conta de quem importa.
@@ -1810,10 +1829,10 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     const o = {}; Object.entries(localStorage).forEach(([k2, v]) => { if (!BK_SKIP.includes(k2)) o[k2] = v; });
     const a = document.createElement('a');
     a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(o));
-    a.download = 'pokegrid-config.json'; a.click(); menu.classList.remove('show');
+    a.download = 'pokegrid-config.json'; a.click(); closeMenu();
   };
   document.getElementById('bkImp').onclick = () => {
-    menu.classList.remove('show');
+    closeMenu();
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
     inp.onchange = () => {
       const f = inp.files[0]; if (!f) return;
@@ -1832,7 +1851,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     inp.click();
   };
   document.addEventListener('click', (e) => {
-    if (!menuWrap.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('show');
+    if (!menuWrap.contains(e.target) && !menu.contains(e.target)) closeMenu();
   });
 
   // ===== Painel de resumo: le o coletor window.__poke da conta em foco =====

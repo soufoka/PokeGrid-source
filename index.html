@@ -46,7 +46,8 @@
     box-shadow: 0 10px 28px rgba(0,0,0,.45);
   }
   #menu.show,
-  #menu:popover-open { display: flex; }
+  #menu[open] { display: flex; }
+  #menu::backdrop { background: rgba(2, 8, 14, .48); backdrop-filter: blur(2px); }
   #menu button { width: 100%; text-align: left; }
   #langRow { display: flex; gap: 4px; align-items: center; }
   #langRow span { padding: 0 4px; }
@@ -538,6 +539,26 @@
     color: #aebfd0;
   }
   #menu button:hover { border-color: var(--shell-line); background: #192737; color: #fff; }
+  #menu .menu-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 3px 3px 7px 7px;
+    border-bottom: 1px solid var(--shell-line-soft);
+  }
+  #menu .menu-head strong { flex: 1; color: #edf6ff; font-size: 12px; }
+  #menu #menuClose {
+    width: 30px;
+    min-height: 28px;
+    padding: 0;
+    text-align: center;
+  }
+  #menu .menu-hint {
+    padding: 4px 7px 2px;
+    color: var(--shell-muted);
+    font-size: 8px;
+    line-height: 1.35;
+  }
   #grid { gap: 8px; padding: 8px; }
   .panel {
     position: relative;
@@ -687,8 +708,9 @@
     <button id="cardsBtn" hidden aria-hidden="true" tabindex="-1">Todas as contas</button>
     <button id="ivsBtn" title="Abre ou fecha a calculadora de IV (JustPokédex) em todos os painéis"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M2 12h20" stroke="#8f1408" stroke-width="3"/><circle cx="12" cy="12" r="3.4" fill="#fff" stroke="#8f1408" stroke-width="2.5"/></svg>IV's</button>
     <div id="menuWrap">
-      <button id="menuBtn" aria-haspopup="menu" aria-expanded="false">☰ Opções</button>
-      <div id="menu" popover="auto" role="menu" aria-label="Opções do PokeGrid">
+      <button id="menuBtn" aria-haspopup="dialog" aria-expanded="false">☰ Opções</button>
+      <dialog id="menu" aria-label="Opções do PokeGrid">
+        <div class="menu-head"><strong>Opções do PokeGrid</strong><button id="menuClose" type="button" aria-label="Fechar opções">✕</button></div>
         <button id="hunt" title="Abre o Hunt Analyzer em todos os painéis">🎯 Hunt</button>
         <button id="scriptsBtn" title="Rode userscripts (IV calc e os seus) nos painéis">🧩 Scripts</button>
         <button id="count" title="Quantas contas rodar ao mesmo tempo (1 a 4)">🔢 Painéis: 4</button>
@@ -706,7 +728,8 @@
         <button id="layout">▦ Grade</button>
         <div id="langRow" title="Idioma / Language / Idioma"><span>🌐</span><button data-lang="pt">PT</button><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
         <button id="errlogBtn" title="Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.">🐞 Erros</button>
-      </div>
+        <div class="menu-hint">Opções verdes estão ligadas. Ações que abrem outra tela fecham este painel automaticamente.</div>
+      </dialog>
     </div>
     <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)">🔗</button>
   </div>
@@ -1059,7 +1082,10 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     }
     aplicaCountLayout();
   }
-  countBtn.onclick = () => setCount(count === 4 ? 1 : count + 1); // cicla 4 -> 1 -> 2 -> 3 -> 4
+  countBtn.onclick = () => {
+    setCount(count === 4 ? 1 : count + 1); // cicla 4 -> 1 -> 2 -> 3 -> 4
+    closeMenu();
+  };
 
   function toggleExpand(i) {
     const p = grid.children[i];
@@ -1457,9 +1483,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // ----- Hunt Analyzer: abre em todos os paineis de uma vez -----
   // O botao fica no menu de icones do jogo (game-dock); acha pelo title/alt/src que contem "hunt".
   const huntScript = `(() => {
-    // aberto? fecha no proprio X do analyzer (button.ha-x). fechado? abre pelo icone do game-dock.
+    // O comando do menu significa "abrir". Uma conta que ja esta aberta permanece aberta.
     const x = document.querySelector('button.ha-x');
-    if (x) { x.click(); return 'fechou'; }
+    if (x) return 'ja aberto';
     const btn = [...document.querySelectorAll('nav.game-dock button, .dock-btn')].find(el => {
       const img = el.querySelector ? el.querySelector('img') : null;
       const txt = (el.title || '') + ' ' + (el.getAttribute ? (el.getAttribute('aria-label') || '') : '')
@@ -1471,6 +1497,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   })()`;
   const huntBtn = document.getElementById('hunt');
   huntBtn.onclick = () => {
+    closeMenu();
     webviews.forEach((w, i) => { if (off[i]) return; try { w.executeJavaScript(huntScript).catch(() => {}); } catch {} });
   };
 
@@ -1754,7 +1781,13 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       w.executeJavaScript(`localStorage.setItem('poke_lang', ${JSON.stringify(pl)})`).then(() => w.reload()).catch(() => {});
     });
   }
-  langBtns.forEach(b => b.onclick = () => { if (lang === b.dataset.lang) return; lang = b.dataset.lang; applyLang(); applyGameLang(); });
+  langBtns.forEach(b => b.onclick = () => {
+    if (lang === b.dataset.lang) { closeMenu(); return; }
+    lang = b.dataset.lang;
+    applyLang();
+    closeMenu();
+    applyGameLang();
+  });
 
   // ----- Atalhos vindos do main (Ctrl+1..4 expande, Ctrl+M mudo) -----
   window.pokeAPI?.onHotkey?.((k) => {
@@ -1783,16 +1816,19 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     lb.title = t('layoutTitle');
     localStorage.setItem('layout', layoutMode);
   }
-  document.getElementById('layout').onclick = () => { layoutMode = layoutMode === 'grid' ? 'col' : layoutMode === 'col' ? 'row' : 'grid'; applyLayout(); };
+  document.getElementById('layout').onclick = () => {
+    layoutMode = layoutMode === 'grid' ? 'col' : layoutMode === 'col' ? 'row' : 'grid';
+    applyLayout();
+    closeMenu();
+  };
   applyLayout();
   document.getElementById('loginAll').onclick = loginAll;
 
   // ----- Dropdown "Menu" (Som, Eco, Dormir, Chat, Grade, idioma) -----
-  const menuWrap = document.getElementById('menuWrap');
   const menu = document.getElementById('menu');
   const menuBtn = document.getElementById('menuBtn');
-  const nativePopover = typeof menu.showPopover === 'function';
-  const menuIsOpen = () => nativePopover ? menu.matches(':popover-open') : menu.classList.contains('show');
+  const nativeDialog = typeof menu.showModal === 'function';
+  const menuIsOpen = () => nativeDialog ? menu.open : menu.classList.contains('show');
   const positionMenu = () => {
     const r = menuBtn.getBoundingClientRect();
     const left = Math.max(8, Math.min(innerWidth - menu.offsetWidth - 8, r.right - menu.offsetWidth));
@@ -1800,12 +1836,12 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     menu.style.top = (r.bottom + 8) + 'px';
   };
   const closeMenu = () => {
-    if (nativePopover && menu.matches(':popover-open')) menu.hidePopover();
+    if (nativeDialog && menu.open) menu.close();
     else menu.classList.remove('show');
     menuBtn.setAttribute('aria-expanded', 'false');
   };
   const openMenu = () => {
-    if (nativePopover) menu.showPopover();
+    if (nativeDialog) menu.showModal();
     else menu.classList.add('show');
     menuBtn.setAttribute('aria-expanded', 'true');
     requestAnimationFrame(positionMenu);
@@ -1815,9 +1851,14 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     if (menuIsOpen()) closeMenu();
     else openMenu();
   };
-  menu.addEventListener('toggle', () => {
-    menuBtn.setAttribute('aria-expanded', menuIsOpen() ? 'true' : 'false');
-    if (menuIsOpen()) requestAnimationFrame(positionMenu);
+  document.getElementById('menuClose').onclick = closeMenu;
+  menu.addEventListener('close', () => menuBtn.setAttribute('aria-expanded', 'false'));
+  menu.addEventListener('cancel', () => menuBtn.setAttribute('aria-expanded', 'false'));
+  menu.addEventListener('click', event => {
+    if (event.target !== menu) return;
+    const rect = menu.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right ||
+        event.clientY < rect.top || event.clientY > rect.bottom) closeMenu();
   });
   addEventListener('resize', () => { if (menuIsOpen()) positionMenu(); });
   document.getElementById('errlogBtn').onclick = () => { try { window.pokeAPI.openErrorLog(); } catch {} closeMenu(); };
@@ -1850,9 +1891,6 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     };
     inp.click();
   };
-  document.addEventListener('click', (e) => {
-    if (!menuWrap.contains(e.target) && !menu.contains(e.target)) closeMenu();
-  });
 
   // ===== Painel de resumo: le o coletor window.__poke da conta em foco =====
   const READ_STATE = `(() => {
@@ -2779,7 +2817,11 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     el.querySelectorAll('.sc-del').forEach(b => b.onclick = () => { userScripts = userScripts.filter(u => u.id !== b.dataset.del); delete scriptsOn[b.dataset.del]; saveScripts(); renderScriptsList(); });
   }
   const scOverlay = document.getElementById('scOverlay');
-  document.getElementById('scriptsBtn').onclick = () => { renderScriptsList(); scOverlay.classList.add('show'); };
+  document.getElementById('scriptsBtn').onclick = () => {
+    closeMenu();
+    renderScriptsList();
+    scOverlay.classList.add('show');
+  };
   document.getElementById('scClose').onclick = () => scOverlay.classList.remove('show');
   scOverlay.onclick = (e) => { if (e.target === scOverlay) scOverlay.classList.remove('show'); };
   document.getElementById('scAdd').onclick = () => {
@@ -2941,6 +2983,32 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   }
   ivsBtn.onclick = () => { ivAberto = !ivAberto; ivRender(); };
 
+  // Contrato executável do menu: permite conferir no Electron se cada controle
+  // existe e terminou a inicialização com um handler próprio.
+  const MENU_ACTIONS = [
+    ['hunt', 'comando'], ['scriptsBtn', 'tela'], ['count', 'layout'],
+    ['alerts', 'toggle'], ['sellguard', 'toggle'], ['chat', 'toggle'],
+    ['cleanHud', 'toggle'], ['muteAll', 'toggle'], ['eco', 'toggle'],
+    ['awake', 'toggle'], ['minTray', 'toggle'], ['sndShiny', 'toggle'],
+    ['bkExp', 'arquivo'], ['bkImp', 'arquivo'], ['layout', 'layout'],
+    ['errlogBtn', 'sistema']
+  ];
+  window.__pgMenuAudit = () => {
+    const controls = MENU_ACTIONS.map(([id, kind]) => {
+      const element = document.getElementById(id);
+      return { id, kind, present: !!element, handler: !!element && typeof element.onclick === 'function' };
+    });
+    controls.push({
+      id: 'langRow', kind: 'idioma', present: langBtns.length === 3,
+      handler: langBtns.length === 3 && langBtns.every(button => typeof button.onclick === 'function')
+    });
+    return {
+      shell: menu instanceof HTMLDialogElement && typeof menu.showModal === 'function',
+      controls,
+      ok: controls.every(control => control.present && control.handler)
+    };
+  };
+
   // ----- Init -----
   (async () => {
     try { accounts = normalize(await window.pokeAPI.loadCreds()); }
@@ -2949,6 +3017,10 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     applyLang(); // aplica idioma na interface e ja chama applyMute/Eco/Chat/Awake
     applyStats(); // restaura o painel de resumo se estava aberto
     applyCards(); // restaura o modo cartas se estava ligado
+    const menuAudit = window.__pgMenuAudit();
+    if (!menuAudit.ok) {
+      try { window.pokeAPI.logError('menu-opcoes', JSON.stringify(menuAudit)); } catch {}
+    }
   })();
 </script>
 <script src="src/domain/iv-math.js"></script>

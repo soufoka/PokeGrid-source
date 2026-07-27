@@ -6,7 +6,8 @@
   "author": "soufoka",
   "scripts": {
     "start": "electron .",
-    "test": "node test/iv-math.test.js"
+    "test": "node test/iv-math.test.js && node test/menu-contract.test.js",
+    "test:menu-runtime": "electron test/menu-runtime.electron.js"
   },
   "keywords": [
     "electron",

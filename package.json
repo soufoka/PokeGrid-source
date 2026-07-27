@@ -5,7 +5,8 @@
   "main": "main.js",
   "author": "soufoka",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "node test/iv-math.test.js"
   },
   "keywords": [
     "electron",

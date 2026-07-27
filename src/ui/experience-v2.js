@@ -37,9 +37,9 @@
   const accountSelect = root.querySelector("#pgxAccount");
   const quickAccounts = root.querySelector("#pgxQuickAccounts");
   const liveBadge = root.querySelector("#pgxLive");
-  const statKeys = ["hp", "atk", "def", "spa", "spd", "speed"];
+  const ivMath = window.PokeGridIvMath;
+  const statKeys = ivMath.STAT_KEYS;
   const statLabels = { hp: "HP", atk: "Atk", def: "Def", spa: "SpA", spd: "SpD", speed: "Spd" };
-  const exponents = { hp: .95, atk: .80, def: .80, spa: .80, spd: .80, speed: .95 };
 
   const state = {
     open: false,
@@ -57,6 +57,7 @@
     captureAccount: "all",
     captureMinIv: 0,
     captureMinQuality: 0,
+    captureQualityTier: "all",
     capturePeriod: "all",
     captureKind: "all",
     captureSort: "recent",
@@ -487,51 +488,8 @@
     return Array.from({ length: count }, (_, index) => demoAccount(index));
   }
 
-  function normalizedIvs(pokemon) {
-    const provided = pokemon && pokemon.ivs || {};
-    const exact = statKeys.every(key => provided[key] != null && Number.isFinite(Number(provided[key])));
-    if (exact) {
-      return { values: Object.fromEntries(statKeys.map(key => [key, clamp(provided[key], 0, 32)])), source: "individual" };
-    }
-    const species = pokemon && pokemon.species;
-    const observed = pokemon && pokemon.observedStats || {};
-    const level = number(pokemon && pokemon.level);
-    const quality = number(pokemon && pokemon.quality, 1) || 1;
-    const bases = species && species.baseStats || {};
-    const canEstimate = level > 0 && statKeys.every(key =>
-      observed[key] != null && bases[key] != null &&
-      Number.isFinite(Number(observed[key])) && Number.isFinite(Number(bases[key]))
-    );
-    if (canEstimate) {
-      const values = {};
-      for (const key of statKeys) {
-        const factor = (level / 100) * Math.pow(quality, exponents[key]);
-        values[key] = clamp(((number(observed[key]) / factor) - number(bases[key])) / 2, 0, 32);
-      }
-      return { values, source: "observed" };
-    }
-    const total = clamp(pokemon && pokemon.ivTotal, 0, 192);
-    const base = Math.floor(total / 6);
-    let remainder = Math.round(total - base * 6);
-    const values = {};
-    for (const key of statKeys) {
-      values[key] = clamp(base + (remainder-- > 0 ? 1 : 0), 0, 32);
-    }
-    return { values, source: total > 0 ? "total" : "unknown" };
-  }
-
   function projectPokemon(pokemon, level) {
-    const species = pokemon && pokemon.species;
-    const bases = species && species.baseStats || {};
-    const iv = normalizedIvs(pokemon);
-    const quality = Math.max(.01, number(pokemon && pokemon.quality, 1) || 1);
-    const stats = {};
-    for (const key of statKeys) {
-      const base = number(bases[key]);
-      stats[key] = Math.round((base + 2 * number(iv.values[key])) * (level / 100) * Math.pow(quality, exponents[key]));
-    }
-    const power = Math.round(statKeys.reduce((sum, key) => sum + stats[key], 0) * quality);
-    return { stats, power, ivSource: iv.source, ivs: iv.values };
+    return ivMath.projectPokemon(pokemon, level);
   }
 
   function hpPercent(pokemon) {
@@ -777,6 +735,32 @@
     return "Fraca";
   }
 
+  function qualityTier(value) {
+    const quality = number(value);
+    if (quality >= 4) return "divine";
+    if (quality >= 3) return "ancient";
+    if (quality >= 2) return "mythic";
+    if (quality >= 1.7) return "legendary";
+    if (quality >= 1.5) return "epic";
+    if (quality >= 1.3) return "rare";
+    if (quality >= 1.1) return "uncommon";
+    if (quality >= 1) return "common";
+    return "weak";
+  }
+
+  const qualityTierOptions = [
+    ["all", "Todas as classes"],
+    ["weak", "Fraca (< 1,0)"],
+    ["common", "Comum (1,0–1,1)"],
+    ["uncommon", "Incomum (1,1–1,3)"],
+    ["rare", "Rara (1,3–1,5)"],
+    ["epic", "Épica (1,5–1,7)"],
+    ["legendary", "Lendária (1,7–2,0)"],
+    ["mythic", "Mítica (2,0–3,0)"],
+    ["ancient", "Anciã (3,0–4,0)"],
+    ["divine", "Divina (4,0+)"]
+  ];
+
   function captureDataset() {
     const accounts = displayAccounts();
     const live = accounts.flatMap((account, accountIndex) => (account.catches || []).map(capture => ({
@@ -832,6 +816,7 @@
       if (query && !capture.name.toLowerCase().includes(query)) return false;
       if (state.captureAccount !== "all" && number(capture.accountIndex) !== number(state.captureAccount)) return false;
       if (capture.iv < state.captureMinIv || capture.quality < state.captureMinQuality) return false;
+      if (state.captureQualityTier !== "all" && qualityTier(capture.quality) !== state.captureQualityTier) return false;
       if (threshold && capture.time < threshold) return false;
       if (state.captureKind === "shiny" && !capture.shiny) return false;
       if (state.captureKind === "first" && !capture.first) return false;
@@ -866,6 +851,7 @@
           <label><span>Conta</span><select id="pgxCaptureAccount"><option value="all">Todas</option>${accounts.map((account, index) => `<option value="${index}"${String(state.captureAccount) === String(index) ? " selected" : ""}>${esc(account.character && account.character.name || `Conta ${index + 1}`)}</option>`).join("")}</select></label>
           <label><span>IV mínimo</span><input id="pgxCaptureIv" type="number" min="0" max="192" value="${state.captureMinIv || ""}" placeholder="0"></label>
           <label><span>Qualidade mínima</span><input id="pgxCaptureQuality" type="number" min="0" max="9" step=".01" value="${state.captureMinQuality || ""}" placeholder="0,00"></label>
+          <label><span>Classe</span><select id="pgxCaptureQualityTier">${qualityTierOptions.map(([value, label]) => `<option value="${value}"${state.captureQualityTier === value ? " selected" : ""}>${label}</option>`).join("")}</select></label>
           <label><span>Período</span><select id="pgxCapturePeriod">${[["all", "Todo o histórico"], ["hour", "Última hora"], ["today", "Hoje"], ["week", "7 dias"], ["month", "30 dias"]].map(([value, label]) => `<option value="${value}"${state.capturePeriod === value ? " selected" : ""}>${label}</option>`).join("")}</select></label>
           <label><span>Tipo</span><select id="pgxCaptureKind">${[["all", "Todas"], ["shiny", "Somente shiny"], ["first", "Primeira da espécie"]].map(([value, label]) => `<option value="${value}"${state.captureKind === value ? " selected" : ""}>${label}</option>`).join("")}</select></label>
           <label><span>Ordenar por</span><select id="pgxCaptureSort">${[["recent", "Mais recentes"], ["oldest", "Mais antigas"], ["iv", "Maior IV"], ["quality", "Maior qualidade"], ["potential", "IV × qualidade"]].map(([value, label]) => `<option value="${value}"${state.captureSort === value ? " selected" : ""}>${label}</option>`).join("")}</select></label>
@@ -963,76 +949,116 @@
   }
 
   function sourceLabel(source) {
-    if (source === "individual") return "IV individual confirmado";
-    if (source === "observed") return "IV individual estimado pelos stats";
-    if (source === "total") return "Distribuição estimada pelo IV total";
+    if (source === "individual") return "IV individual informado pelo jogo";
+    if (source === "observed-exact") return "IV individual inferido exatamente pelos stats atuais";
+    if (source === "observed-range") return "IV individual limitado a uma faixa pelos stats atuais";
+    if (source === "total-scenario") return "Cenário de projeção: o IV total não revela a distribuição individual";
     return "IV ainda indisponível";
+  }
+
+  function ivRangeLabel(projected, key) {
+    const range = projected.ivRanges && projected.ivRanges[key];
+    if (!range) return "IV ?";
+    return range[0] === range[1] ? `IV ${formatNumber(range[0])}` : `IV ${formatNumber(range[0])}–${formatNumber(range[1])}`;
   }
 
   function statRows(projected) {
     const max = Math.max(1, ...statKeys.map(key => number(projected.stats[key])));
     return statKeys.map(key => `
-      <div class="pgx-stat-row"><span>${statLabels[key]}</span><span class="pgx-stat-bar"><i style="width:${Math.max(5, number(projected.stats[key]) / max * 100)}%"></i></span><b>${formatNumber(projected.stats[key])}</b></div>
+      <div class="pgx-stat-row">
+        <span>${statLabels[key]}</span>
+        <span class="pgx-stat-bar"><i style="width:${Math.max(5, number(projected.stats[key]) / max * 100)}%"></i></span>
+        <small>${ivRangeLabel(projected, key)}</small>
+        <b>${projected.stats[key] == null ? "—" : formatNumber(projected.stats[key])}</b>
+      </div>
     `).join("");
   }
 
-  function projectionCard(pokemon, level, primary) {
+  function projectionCard(entry, level, primary) {
+    const pokemon = entry && entry.pokemon;
     if (!pokemon) return `<div class="pgx-empty">Selecione um Pokémon para comparar.</div>`;
     const projected = projectPokemon(pokemon, level);
     return `
       <article class="pgx-projection${primary ? " primary" : ""}">
         <div class="pgx-projection-head">
           <img alt="${esc(pokemon.name)}" src="${esc(spriteUrl(spriteIdFor(pokemon), { shiny: pokemon.shiny }))}">
-          <div><strong>${esc(pokemon.name)}</strong><small>Lv. ${formatNumber(level)} · IV ${formatNumber(pokemon.ivTotal)}/192 · ×${number(pokemon.quality, 1).toFixed(2)}</small></div>
-          <div class="pgx-power"><strong>${formatNumber(projected.power)}</strong><small>poder</small></div>
+          <div><strong>${esc(pokemon.name)}</strong><small>${esc(entry.accountName)} · Lv. ${formatNumber(level)} · IV ${formatNumber(pokemon.ivTotal)}/192 · ×${number(pokemon.quality, 1).toFixed(2)}</small></div>
+          <div class="pgx-power"><strong>${projected.power == null ? "—" : formatNumber(projected.power)}</strong><small>poder</small></div>
         </div>
         <div class="pgx-stat-list">${statRows(projected)}</div>
         <div class="pgx-source-note">${sourceLabel(projected.ivSource)}</div>
       </article>`;
   }
 
-  function renderTeam(account) {
-    const team = account.team || [];
-    if (!team.length) return `<div class="pgx-view"><div class="pgx-empty">O time aparecerá aqui assim que a conta terminar o login e enviar a lista de Pokémon.</div></div>`;
+  function combinedTeam() {
+    return displayAccounts().flatMap((account, accountIndex) => {
+      const accountName = account.character && account.character.name || `Conta ${accountIndex + 1}`;
+      return (account.team || []).map((pokemon, pokemonIndex) => ({
+        pokemon,
+        pokemonIndex,
+        accountIndex,
+        accountName,
+        demo: !!account.demo
+      }));
+    });
+  }
+
+  function renderTeam() {
+    const accounts = displayAccounts();
+    const team = combinedTeam();
+    if (!team.length) return `<div class="pgx-view"><div class="pgx-empty">Os times aparecerão aqui assim que as contas terminarem o login e enviarem a lista de Pokémon.</div></div>`;
     if (state.teamIndex >= team.length) state.teamIndex = 0;
     if (state.compareIndex >= team.length || state.compareIndex === state.teamIndex) state.compareIndex = team.length > 1 ? (state.teamIndex + 1) % team.length : 0;
-    const selected = team[state.teamIndex];
-    const compared = team[state.compareIndex];
+    const selectedEntry = team[state.teamIndex];
+    const comparedEntry = team[state.compareIndex];
+    const selected = selectedEntry.pokemon;
     const selectedProjection = projectPokemon(selected, state.projectionLevel);
     const moves = selected && selected.species && selected.species.attacks || [];
+    const accountGroups = accounts.map((account, accountIndex) => ({
+      account,
+      accountIndex,
+      entries: team.map((entry, flatIndex) => ({ ...entry, flatIndex })).filter(entry => entry.accountIndex === accountIndex)
+    }));
     return `
       <div class="pgx-view">
-        ${account.demo ? `<div><span class="pgx-demo-note">● Dados demonstrativos</span></div>` : ""}
+        ${team.every(entry => entry.demo) ? `<div><span class="pgx-demo-note">● Dados demonstrativos</span></div>` : ""}
         <div class="pgx-team-layout">
-          <aside>
-            <div class="pgx-section-head"><div><div class="pgx-eyebrow">Conta selecionada</div><h3>Time atual</h3></div><span>${team.length} / 6</span></div>
-            <div class="pgx-roster">
-              ${team.map((pokemon, index) => `
-                <button type="button" class="pgx-roster-button${index === state.teamIndex ? " on" : ""}" data-pgx-team="${index}">
-                  <img class="pgx-roster-sprite" alt="" src="${esc(spriteUrl(spriteIdFor(pokemon), { shiny: pokemon.shiny }))}">
-                  <span class="pgx-roster-copy"><strong>${esc(pokemon.name)}</strong><small>Lv. ${formatNumber(pokemon.level)} · qualidade ×${number(pokemon.quality, 1).toFixed(2)}</small></span>
-                  <span class="pgx-iv-total"><strong>${formatNumber(pokemon.ivTotal)}</strong>/192</span>
-                </button>
-              `).join("")}
+          <aside class="pgx-team-sidebar">
+            <div class="pgx-section-head"><div><div class="pgx-eyebrow">Visão consolidada</div><h3>Todos os times</h3></div><span>${team.length} Pokémon</span></div>
+            <div class="pgx-roster pgx-roster-all">
+              ${accountGroups.map(group => {
+                const accountName = group.account.character && group.account.character.name || `Conta ${group.accountIndex + 1}`;
+                return `<section class="pgx-roster-account">
+                  <div class="pgx-roster-account-head"><span>${group.accountIndex + 1}</span><strong>${esc(accountName)}</strong><small>${group.entries.length}/6</small></div>
+                  ${group.entries.length ? group.entries.map(entry => {
+                    const pokemon = entry.pokemon;
+                    return `<button type="button" class="pgx-roster-button${entry.flatIndex === state.teamIndex ? " on" : ""}" data-pgx-team="${entry.flatIndex}">
+                      <img class="pgx-roster-sprite" alt="" src="${esc(spriteUrl(spriteIdFor(pokemon), { shiny: pokemon.shiny }))}">
+                      <span class="pgx-roster-copy"><strong>${esc(pokemon.name)}</strong><small>Lv. ${formatNumber(pokemon.level)} · ×${number(pokemon.quality, 1).toFixed(2)} ${qualityName(pokemon.quality)}</small></span>
+                      <span class="pgx-iv-total"><strong>${formatNumber(pokemon.ivTotal)}</strong>/192</span>
+                    </button>`;
+                  }).join("") : `<div class="pgx-roster-empty">Aguardando time desta conta</div>`}
+                </section>`;
+              }).join("")}
             </div>
           </aside>
           <div class="pgx-lab">
             <div class="pgx-lab-head">
-              <div><div class="pgx-eyebrow">Laboratório de evolução</div><h2 class="pgx-title">${esc(selected.name)}</h2><div class="pgx-types">${((selected.types && selected.types.length ? selected.types : selected.species && selected.species.types) || []).map(type => `<span class="pgx-type">${esc(type)}</span>`).join("")}</div></div>
+              <div><div class="pgx-eyebrow">Laboratório · ${esc(selectedEntry.accountName)}</div><h2 class="pgx-title">${esc(selected.name)}</h2><div class="pgx-types">${((selected.types && selected.types.length ? selected.types : selected.species && selected.species.types) || []).map(type => `<span class="pgx-type">${esc(type)}</span>`).join("")}</div></div>
               <div class="pgx-controls">
                 <div class="pgx-control"><label for="pgxLevel">Projetar no nível <output>${formatNumber(state.projectionLevel)}</output></label><input id="pgxLevel" type="range" min="1" max="500" value="${state.projectionLevel}"></div>
-                <div class="pgx-control"><label for="pgxCompare">Comparar com</label><select id="pgxCompare">${team.map((pokemon, index) => `<option value="${index}"${index === state.compareIndex ? " selected" : ""}${index === state.teamIndex ? " disabled" : ""}>${esc(pokemon.name)} · IV ${formatNumber(pokemon.ivTotal)}</option>`).join("")}</select></div>
+                <div class="pgx-control"><label for="pgxCompare">Comparar com qualquer conta</label><select id="pgxCompare">${team.map((entry, index) => `<option value="${index}"${index === state.compareIndex ? " selected" : ""}${index === state.teamIndex ? " disabled" : ""}>${esc(entry.accountName)} · ${esc(entry.pokemon.name)} · IV ${formatNumber(entry.pokemon.ivTotal)}</option>`).join("")}</select></div>
               </div>
             </div>
             <div class="pgx-projections">
-              ${projectionCard(selected, state.projectionLevel, true)}
-              ${projectionCard(compared, state.projectionLevel, false)}
+              ${projectionCard(selectedEntry, state.projectionLevel, true)}
+              ${projectionCard(comparedEntry, state.projectionLevel, false)}
             </div>
             <section class="pgx-section">
               <div class="pgx-section-head"><div><h3>Golpes da espécie</h3><span>Catálogo do Poke Idle World</span></div><span>${moves.length} golpes</span></div>
               ${moves.length ? `<div class="pgx-table-wrap"><table class="pgx-table"><thead><tr><th>Golpe</th><th>Tipo</th><th>Categoria</th><th>Poder</th><th>Nível</th></tr></thead><tbody>${moves.map(move => `<tr><td><strong>${esc(move.name)}</strong></td><td>${esc(move.type)}</td><td>${esc(move.category || "—")}</td><td>${move.power == null ? "—" : formatNumber(move.power)}</td><td>${move.learnLevel == null ? "—" : `Lv. ${formatNumber(move.learnLevel)}`}</td></tr>`).join("")}</tbody></table></div>` : `<div class="pgx-empty">Esta espécie não possui golpes cadastrados no catálogo atual.</div>`}
             </section>
-            <div class="pgx-source-note">Projeção no nível ${formatNumber(state.projectionLevel)}: ${sourceLabel(selectedProjection.ivSource).toLowerCase()}. Espécie e qualidade permanecem fixas.</div>
+            <div class="pgx-source-note">Projeção no nível ${formatNumber(state.projectionLevel)}: ${sourceLabel(selectedProjection.ivSource).toLowerCase()}. Espécie e qualidade permanecem fixas. Quando aparece uma faixa, os stats arredondados não permitem escolher um único growth com segurança.</div>
           </div>
         </div>
       </div>`;
@@ -1118,7 +1144,7 @@
     const account = activeAccount();
     if (state.tab === "all") content.innerHTML = renderAllAccounts();
     else if (state.tab === "captures") content.innerHTML = renderCaptures();
-    else if (state.tab === "team") content.innerHTML = renderTeam(account);
+    else if (state.tab === "team") content.innerHTML = renderTeam();
     else if (state.tab === "inventory") content.innerHTML = renderInventory();
     else content.innerHTML = renderOverview(account);
   }
@@ -1202,6 +1228,7 @@
     const account = root.querySelector("#pgxCaptureAccount");
     const iv = root.querySelector("#pgxCaptureIv");
     const quality = root.querySelector("#pgxCaptureQuality");
+    const qualityTierSelect = root.querySelector("#pgxCaptureQualityTier");
     const period = root.querySelector("#pgxCapturePeriod");
     const kind = root.querySelector("#pgxCaptureKind");
     const sort = root.querySelector("#pgxCaptureSort");
@@ -1209,6 +1236,7 @@
     if (account) state.captureAccount = account.value;
     if (iv) state.captureMinIv = clamp(iv.value, 0, 192);
     if (quality) state.captureMinQuality = clamp(quality.value, 0, 9);
+    if (qualityTierSelect) state.captureQualityTier = qualityTierSelect.value;
     if (period) state.capturePeriod = period.value;
     if (kind) state.captureKind = kind.value;
     if (sort) state.captureSort = sort.value;
@@ -1276,6 +1304,7 @@
       state.captureAccount = "all";
       state.captureMinIv = 0;
       state.captureMinQuality = 0;
+      state.captureQualityTier = "all";
       state.capturePeriod = "all";
       state.captureKind = "all";
       state.captureSort = "recent";
@@ -1304,7 +1333,7 @@
     }
     const team = event.target.closest("[data-pgx-team]");
     if (team) {
-      state.teamIndex = clamp(team.dataset.pgxTeam, 0, 5);
+      state.teamIndex = clamp(team.dataset.pgxTeam, 0, Math.max(0, combinedTeam().length - 1));
       render();
       return;
     }
@@ -1334,9 +1363,9 @@
       state.projectionLevel = clamp(event.target.value, 1, 500);
       render();
     } else if (event.target.id === "pgxCompare") {
-      state.compareIndex = clamp(event.target.value, 0, 5);
+      state.compareIndex = clamp(event.target.value, 0, Math.max(0, combinedTeam().length - 1));
       render();
-    } else if (/^pgxCapture(Account|Iv|Quality|Period|Kind|Sort)$/.test(event.target.id)) {
+    } else if (/^pgxCapture(Account|Iv|Quality|QualityTier|Period|Kind|Sort)$/.test(event.target.id)) {
       applyCaptureControls();
     }
   });

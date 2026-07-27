@@ -71,7 +71,7 @@
 
   .panel { display: flex; flex-direction: column; min-height: 0; container-type: inline-size;
     background: #161b22; border: 1px solid #21262d; border-radius: 8px; overflow: hidden; }
-  .panel.expanded { position: absolute; inset: 6px; z-index: 10; }
+  .panel.expanded { position: fixed; inset: 0; z-index: 300; border: 0; border-radius: 0; }
   .panel.off webview { visibility: hidden; }
   .panel-header { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #161b22; flex-shrink: 0; font-size: 12px; }
   /* a cor vem da conta (inline, igual ao modo Simples); o estado vira opacidade e anel */
@@ -100,7 +100,7 @@
     #topbar button { padding: 5px 8px; font-size: 11px; }
     #refBtn { margin-left: 0; }
     #grid { gap: 4px; padding: 4px; }
-    .panel.expanded { inset: 4px; }
+    .panel.expanded { inset: 0; }
   }
 
   /* Modal Contas */
@@ -904,6 +904,10 @@
       // canal do painel pro card de IV do app: a extensao marca a mensagem, aqui a gente pesca
       wv.addEventListener('console-message', (e) => {
         const m = e && e.message;
+        if (m === '__PGFOCUS__') {
+          if (!panel.classList.contains('expanded')) toggleExpand(i);
+          return;
+        }
         if (typeof m !== 'string' || m.lastIndexOf('__PGIV__', 0) !== 0) return;
         try { ivRecebe(i, JSON.parse(m.slice(8))); } catch {}
       });
@@ -921,6 +925,9 @@
         if (!off[i]) { dot.className = 'dot ok'; status.textContent = t('stOnline'); fails = 0; alertedDown = false; } // carregou: zera o watchdog
         try {
           wv.setAudioMuted(muted); wv.setZoomFactor(zoom);
+          // O clique nasce dentro do renderer convidado e nao borbulha para a grade.
+          // Este marcador permite transformar qualquer clique no jogo em foco da conta.
+          wv.executeJavaScript("(()=>{if(window.__pgFocusClick)return;window.__pgFocusClick=1;document.addEventListener('pointerdown',()=>console.log('__PGFOCUS__'),true);})()").catch(() => {});
           // reload nao zera a sessao: o jogo continua no servidor, entao re-semeia os contadores de antes
           try {
             const sn = sessSnap[i];
@@ -1039,6 +1046,15 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     if (on) p.classList.add('expanded');
   }
 
+  function collapseExpanded() {
+    const expanded = grid.querySelector('.panel.expanded');
+    if (!expanded) return false;
+    [...grid.children].forEach(c => c.classList.remove('expanded'));
+    const index = [...grid.children].indexOf(expanded);
+    try { if (index >= 0) webviews[index].blur(); } catch {}
+    return true;
+  }
+
   // Navegação rápida: Alt+1..4 abre a conta em foco; Esc volta à grade.
   document.addEventListener('keydown', e => {
     if (e.altKey && /^[1-4]$/.test(e.key)) {
@@ -1050,7 +1066,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
         try { webviews[i].focus(); } catch {}
       }
     } else if (e.key === 'Escape' && grid.querySelector('.panel.expanded')) {
-      [...grid.children].forEach(c => c.classList.remove('expanded'));
+      collapseExpanded();
     }
   });
 
@@ -1720,6 +1736,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // ----- Atalhos vindos do main (Ctrl+1..4 expande, Ctrl+M mudo) -----
   window.pokeAPI?.onHotkey?.((k) => {
     if (k === 'mute') muteBtn.click();
+    else if (k === 'collapse') collapseExpanded();
     else if (k.startsWith('expand')) toggleExpand(+k.slice(6));
   });
 
@@ -2895,6 +2912,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     applyCards(); // restaura o modo cartas se estava ligado
   })();
 </script>
+<script src="src/domain/iv-math.js"></script>
 <script src="src/ui/experience-v2.js"></script>
 </body>
 </html>

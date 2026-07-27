@@ -520,12 +520,50 @@
 
 .pgx-team-layout {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
+.pgx-team-sidebar {
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 108px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
 .pgx-roster { display: grid; gap: 5px; }
+.pgx-roster-all { gap: 10px; }
+.pgx-roster-account {
+  display: grid;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid var(--pgx-line-soft);
+  border-radius: 11px;
+  background: rgba(13, 21, 30, .55);
+}
+.pgx-roster-account-head {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0 3px 3px;
+}
+.pgx-roster-account-head > span {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: #1c3145;
+  color: #b8dcff;
+  font-size: 8px;
+  font-weight: 800;
+}
+.pgx-roster-account-head strong { overflow: hidden; color: #cddbea; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.pgx-roster-account-head small { color: var(--pgx-muted); font-size: 8px; }
+.pgx-roster-empty { padding: 9px 7px; color: var(--pgx-muted); font-size: 9px; }
 .pgx-roster-button {
   width: 100%;
   display: grid;
@@ -643,13 +681,14 @@
 .pgx-stat-list { display: grid; gap: 6px; }
 .pgx-stat-row {
   display: grid;
-  grid-template-columns: 32px minmax(60px, 1fr) auto;
+  grid-template-columns: 32px minmax(60px, 1fr) 62px auto;
   align-items: center;
   gap: 7px;
   color: var(--pgx-muted);
   font-size: 9px;
 }
 
+.pgx-stat-row small { color: #79cbbb; text-align: right; font-size: 8px; font-variant-numeric: tabular-nums; }
 .pgx-stat-row b { color: #dbe7f2; font-variant-numeric: tabular-nums; }
 .pgx-stat-bar {
   height: 4px;
@@ -1354,7 +1393,7 @@
 
 .pgx-capture-toolbar {
   display: grid;
-  grid-template-columns: minmax(240px, 1.7fr) repeat(6, minmax(90px, .65fr)) auto;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(7, minmax(86px, .62fr)) auto;
   align-items: end;
   gap: 7px;
   padding: 11px;

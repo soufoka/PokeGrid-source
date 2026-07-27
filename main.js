@@ -186,6 +186,7 @@ app.whenReady().then(() => {
         label: `Expandir painel ${n}`, accelerator: `CmdOrCtrl+${n}`,
         click: () => win.webContents.send('hotkey', 'expand' + (n - 1))
       })),
+      { label: 'Sair do foco', accelerator: 'Esc', visible: false, click: () => win.webContents.send('hotkey', 'collapse') },
       { label: 'Mudo', accelerator: 'CmdOrCtrl+M', click: () => win.webContents.send('hotkey', 'mute') }
     ]
   }]));

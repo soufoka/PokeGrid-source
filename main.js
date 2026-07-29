@@ -185,22 +185,6 @@ ipcMain.handle('webhook:send', (_e, url, text) => {
   } catch { return false; }
 });
 
-// Webhook do Discord (opcional): o usuario cola a URL do proprio servidor. So aceita o dominio
-// oficial de webhooks; o envio sai daqui porque a CSP do renderer bloqueia rede externa.
-ipcMain.handle('webhook:send', (_e, url, text) => {
-  try {
-    const u = new URL(String(url));
-    if (u.protocol !== 'https:' || !/^(discord\.com|discordapp\.com)$/.test(u.hostname) || !u.pathname.startsWith('/api/webhooks/')) return false;
-    // allowed_mentions vazio: nome de conta/pokemon vem do jogo, nao pode virar ping de @everyone
-    const body = JSON.stringify({ content: String(text).slice(0, 1900), allowed_mentions: { parse: [] } });
-    const req = https.request(u, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, (res) => res.resume());
-    req.on('error', () => {});
-    req.setTimeout(8000, () => req.destroy());
-    req.end(body);
-    return true;
-  } catch { return false; }
-});
-
 let tray; // referencia viva para o icone nao sumir (GC)
 
 app.whenReady().then(() => {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.13
+
+- **Atalhos de teclado pros botões principais** (pedido de usuário): `H` abre o Hunt Analyzer, `L` liga/desliga o Limpar jogo, `C` abre as Cartas, `E` liga/desliga o Eco, `A` liga/desliga os Alertas, `R` atualiza todos os painéis, `T` abre Treinadores, `M` mostra/esconde o menu do jogo (igual o F2) e `O` abre/fecha o menu de Opções. Só funcionam com o foco na interface do app: enquanto você digita em qualquer campo (nome de conta, script, webhook etc.) ou o jogo está com o foco, as teclas não fazem nada.
+  *Keyboard shortcuts for the main buttons (user request): `H` opens the Hunt Analyzer, `L` toggles Clean game, `C` opens Cards, `E` toggles Eco, `A` toggles Alerts, `R` reloads all panels, `T` opens Trainers, `M` shows/hides the game menu (same as F2), and `O` opens/closes the Options menu. They only work while the app interface has focus: while you're typing in any field (account name, script, webhook, etc.) or the game has focus, the keys do nothing.*
+
 ## 1.5.12
 
 - Bughunt: o nome de item adicionado ao cadeado de venda agora respeita o teto de 60 caracteres também na hora de adicionar (antes só na carga), e o zoom lido do disco é validado (um valor corrompido mostrava NaN% no visor novo do cabeçalho).

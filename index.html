@@ -3144,6 +3144,32 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   }
   ivsBtn.onclick = () => { ivAberto = !ivAberto; ivRender(); };
 
+  // ----- Atalhos de teclado (letra solta, sem modificador) pros botoes principais -----
+  // So responde com o foco na interface do app: quando o jogo (webview) esta focado, o keydown
+  // nem chega aqui (contexto separado, igual o F2 em dockScript). Mesmo assim, ignora sempre que
+  // o foco estiver num input/textarea/select/contenteditable, pra nao atropelar o que o usuario
+  // esta digitando (nome de conta, script, webhook etc).
+  const TECLAS_ATALHO = {
+    h: () => huntBtn.click(),                                // Hunt Analyzer
+    l: () => cleanBtn.click(),                                // Limpar jogo
+    c: () => cardsBtn.click(),                                // Cartas
+    e: () => ecoBtn.click(),                                  // Eco
+    a: () => alertBtn.click(),                                // Alertas
+    r: () => document.getElementById('reloadAll').click(),    // Atualizar
+    t: () => document.getElementById('accounts').click(),     // Treinadores
+    m: () => dockBtn.click(),                                 // Menu do jogo (igual F2)
+    o: () => menu.classList.toggle('show'),                   // Opções
+  };
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return; // deixa combos (Ctrl+M etc) em paz
+    const ae = document.activeElement;
+    if (ae && (ae.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) return; // digitando
+    const fn = TECLAS_ATALHO[e.key.toLowerCase()];
+    if (!fn) return;
+    e.preventDefault();
+    fn();
+  });
+
   // ----- Init -----
   (async () => {
     try { accounts = normalize(await window.pokeAPI.loadCreds()); }

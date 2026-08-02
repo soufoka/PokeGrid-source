@@ -133,6 +133,57 @@ ipcMain.handle('preset:read', (_e, name) => {
   try { return fs.readFileSync(path.join(__dirname, 'presets', name), 'utf8'); } catch { return ''; }
 });
 
+const USER_SCRIPT_HOSTS = new Set(['github.com', 'raw.githubusercontent.com']);
+function dataUltimoCommitGitHub(rawUrl) {
+  return new Promise((resolve) => {
+    let parts = rawUrl.pathname.split('/').filter(Boolean), owner = parts[0], repo = parts[1], branch, file;
+    if (parts[2] === 'refs' && parts[3] === 'heads') { branch = parts[4]; file = parts.slice(5).join('/'); }
+    else { branch = parts[2]; file = parts.slice(3).join('/'); }
+    if (rawUrl.hostname !== 'raw.githubusercontent.com' || !owner || !repo || !branch || !file) { resolve(null); return; }
+    const apiPath = '/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/commits?path=' + encodeURIComponent(file) + '&sha=' + encodeURIComponent(branch) + '&per_page=1';
+    const req = https.get({ hostname: 'api.github.com', path: apiPath, headers: { 'User-Agent': 'PokeGrid/' + app.getVersion(), Accept: 'application/vnd.github+json' } }, (res) => {
+      if (res.statusCode !== 200) { res.resume(); resolve(null); return; }
+      let body = '', size = 0;
+      res.setEncoding('utf8');
+      res.on('data', chunk => { size += Buffer.byteLength(chunk); if (size <= 256 * 1024) body += chunk; });
+      res.on('end', () => { try { const data = JSON.parse(body); resolve(data[0] && data[0].commit && data[0].commit.committer && data[0].commit.committer.date || null); } catch { resolve(null); } });
+      res.on('error', () => resolve(null));
+    });
+    req.setTimeout(8000, () => req.destroy()); req.on('error', () => resolve(null));
+  });
+}
+function baixaUserScript(url, redirects = 0) {
+  return new Promise((resolve) => {
+    let u;
+    try { u = new URL(String(url)); } catch { resolve({ ok: false, error: 'Link invalido.' }); return; }
+    if (u.protocol !== 'https:' || !USER_SCRIPT_HOSTS.has(u.hostname) || !/\.js$/i.test(u.pathname)) {
+      resolve({ ok: false, error: 'Use um link HTTPS do GitHub para um arquivo .js.' }); return;
+    }
+    const req = https.get(u, { headers: { 'User-Agent': 'PokeGrid/' + app.getVersion(), Accept: 'text/plain' } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume();
+        if (redirects >= 3) { resolve({ ok: false, error: 'Redirecionamentos demais.' }); return; }
+        let next; try { next = new URL(res.headers.location, u).toString(); } catch { resolve({ ok: false, error: 'Redirecionamento invalido.' }); return; }
+        baixaUserScript(next, redirects + 1).then(resolve); return;
+      }
+      if (res.statusCode !== 200) { res.resume(); resolve({ ok: false, error: 'GitHub respondeu com HTTP ' + res.statusCode + '.' }); return; }
+      let size = 0, body = '', done = false;
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { if (done) return; size += Buffer.byteLength(chunk); if (size > 2 * 1024 * 1024) { done = true; req.destroy(); resolve({ ok: false, error: 'O script excede 2 MB.' }); } else body += chunk; });
+      res.on('end', async () => { if (!done) resolve({ ok: true, url: u.toString(), code: body, githubUpdatedAt: await dataUltimoCommitGitHub(u) }); });
+      res.on('error', () => { if (!done) { done = true; resolve({ ok: false, error: 'Falha ao ler o script.' }); } });
+    });
+    req.setTimeout(12000, () => req.destroy(new Error('timeout')));
+    req.on('error', () => resolve({ ok: false, error: 'Nao foi possivel acessar o GitHub.' }));
+  });
+}
+ipcMain.handle('userscript:fetch', (_e, url) => baixaUserScript(url));
+ipcMain.handle('userscript:info', async (_e, url) => {
+  let u; try { u = new URL(String(url)); } catch { return { githubUpdatedAt: null }; }
+  if (u.protocol !== 'https:' || u.hostname !== 'raw.githubusercontent.com' || !/\.js$/i.test(u.pathname)) return { githubUpdatedAt: null };
+  return { githubUpdatedAt: await dataUltimoCommitGitHub(u) };
+});
+
 // Anti-sono: impede o PC de dormir enquanto farma (a tela ainda pode desligar).
 let awakeId = null;
 ipcMain.handle('awake:set', (_e, on) => {

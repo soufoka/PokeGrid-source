@@ -103,7 +103,7 @@
   /* Modal de Scripts / Extras */
   #scOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 100; }
   #scOverlay.show { display: flex; }
-  #scModal { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px 20px; width: 520px; max-width: 94vw; max-height: 88vh; overflow-y: auto; }
+  #scModal { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px 20px; width: 760px; max-width: 96vw; max-height: 88vh; overflow-y: auto; }
   #scModal h2 { font-size: 15px; margin-bottom: 4px; }
   #scModal p.hint { font-size: 11px; color: #8b949e; margin-bottom: 14px; line-height: 1.5; }
   #scList { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -114,6 +114,20 @@
   .sc-tag { font-size: 10px; color: #6e7681; text-transform: uppercase; letter-spacing: .04em; }
   .sc-del { padding: 2px 8px; font-size: 12px; background: #21262d; }
   .sc-del:hover { background: #6e2634; border-color: #f85149; }
+  .sc-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .sc-info .sc-chk { flex: none; }
+  .sc-meta { padding-left: 24px; font-size: 9.5px; color: #6e7681; white-space: nowrap; }
+  .sc-update { padding: 3px 8px; font-size: 11px; background: #21262d; }
+  .sc-auto { display: flex; align-items: center; gap: 9px; color: #b1bac4; font-size: 11px; padding: 9px 11px; background: #0d1117; border: 1px solid #21262d; border-radius: 6px; cursor: pointer; }
+  .sc-add .sc-auto input { accent-color: #e3350d; width: 16px; height: 16px; margin: 0; flex: 0 0 16px; }
+  #scModal.sc-drag { border-color: #e3350d; box-shadow: 0 0 0 3px rgba(227,53,13,.2); }
+  .sc-drop { display: none; padding: 14px; border: 1px dashed #e3350d; border-radius: 7px; text-align: center; color: #ff7a4d; font-size: 12px; font-weight: 600; }
+  #scModal.sc-drag .sc-drop { display: block; }
+  #scDialogOverlay { position: fixed; inset: 0; z-index: 220; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.72); }
+  #scDialogOverlay.show { display: flex; }
+  #scDialog { width: 390px; max-width: 90vw; padding: 18px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; box-shadow: 0 18px 60px rgba(0,0,0,.55); }
+  #scDialog h3 { margin: 0 0 8px; font-size: 14px; color: #e6edf3; }
+  #scDialogMessage { color: #b1bac4; font-size: 12px; line-height: 1.5; white-space: pre-line; }
   .sc-add { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #21262d; }
   .sc-add input, .sc-add textarea { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; padding: 8px 10px; font-size: 12px; width: 100%; font-family: inherit; }
   .sc-add textarea { min-height: 90px; resize: vertical; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
@@ -499,12 +513,28 @@
       <p class="hint">Rode userscripts (estilo Tampermonkey) dentro de cada painel do jogo. O IV calc já vem pronto. Você pode colar os seus. <b>Só adicione scripts em que você confia</b>, eles têm acesso total à página do jogo.</p>
       <div id="scList"></div>
       <div class="sc-add">
+        <div class="sc-drop">Solte o arquivo .user.js para instalar</div>
+        <input id="scUrl" type="url" placeholder="Link do script no GitHub (.user.js)">
+        <button id="scAddUrl" class="primary">Adicionar pelo GitHub</button>
+        <label class="sc-auto"><input id="scAutoUpdate" type="checkbox"> Procurar atualizações automaticamente (a cada 6 horas)</label>
+        <div class="sc-tag">ou adicione o código manualmente</div>
         <input id="scName" placeholder="Nome do script">
         <textarea id="scCode" placeholder="Cole aqui o código do userscript (@grant none)"></textarea>
         <button id="scAdd" class="primary">+ Adicionar script</button>
       </div>
       <div class="modal-actions">
         <button id="scClose">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scDialogOverlay">
+    <div id="scDialog" role="dialog" aria-modal="true" aria-labelledby="scDialogTitle">
+      <h3 id="scDialogTitle">Scripts / Extras</h3>
+      <div id="scDialogMessage"></div>
+      <div class="modal-actions">
+        <button id="scDialogNo">Não</button>
+        <button id="scDialogYes" class="primary">Sim</button>
       </div>
     </div>
   </div>
@@ -2935,10 +2965,17 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const PRESETS = [{ id: 'justpokedex', name: 'JustPokédex — Calculadora de IV', file: 'justpokedex.js', author: 'guilherme-se' }];
   let scriptsOn = {}; try { scriptsOn = lsObj('scriptsOn'); } catch {}
   let userScripts = []; try { userScripts = lsArr('userScripts'); } catch {}
+  let scriptAutoUpdate = lsGet('scriptAutoUpdate') !== '0';
   const saveScripts = () => { try { lsSet('scriptsOn', JSON.stringify(scriptsOn)); lsSet('userScripts', JSON.stringify(userScripts)); } catch {} };
   const escH = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const presetCache = {};
   const allScripts = () => PRESETS.concat(userScripts);
+  const scriptMeta = (code) => {
+    const header = String(code || '').match(/\/\/\s*==UserScript==([\s\S]*?)\/\/\s*==\/UserScript==/i);
+    const field = (key) => { const m = (header ? header[1] : '').match(new RegExp('^\\s*//\\s*@' + key + '\\s+(.+?)\\s*$', 'mi')); return m ? m[1].trim() : ''; };
+    return { name: field('name'), version: field('version'), author: field('author'), updateURL: field('updateURL') || field('downloadURL') };
+  };
+  const scriptDate = (stamp) => stamp ? new Date(stamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).replace(',', '') : 'indisponível';
   async function getScriptCode(s) {
     if (s.file) { if (presetCache[s.file] == null) { try { presetCache[s.file] = (await window.pokeAPI.readPreset(s.file)) || ''; } catch { presetCache[s.file] = ''; } } return presetCache[s.file]; }
     return s.code || '';
@@ -2953,23 +2990,98 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   }
   function renderScriptsList() {
     const el = document.getElementById('scList');
-    el.innerHTML = allScripts().map(s => '<div class="sc-row"><label class="sc-chk"><input type="checkbox" data-sid="' + s.id + '"' + (scriptsOn[s.id] ? ' checked' : '') + '> <b>' + escH(s.name) + '</b></label>'
-      + (s.file ? '<span class="sc-tag">preset · ' + escH(s.author || '') + '</span>' : '<button class="sc-del" data-del="' + s.id + '" title="Remover">✕</button>') + '</div>').join('');
+    el.innerHTML = allScripts().map(s => '<div class="sc-row"><div class="sc-info"><label class="sc-chk"><input type="checkbox" data-sid="' + s.id + '"' + (scriptsOn[s.id] ? ' checked' : '') + '> <b>' + escH(s.name) + ((s.author || (s.code && scriptMeta(s.code).author)) ? ' — ' + escH(s.author || scriptMeta(s.code).author) : '') + '</b></label>'
+      + (s.url ? '<span class="sc-meta">v' + escH(s.version || '?') + ' · Auto: ' + (scriptAutoUpdate && s.autoUpdate !== false ? 'ativadas' : 'desativadas') + ' · Verificado: ' + escH(scriptDate(s.lastChecked)) + ' · GitHub: ' + escH(scriptDate(s.githubUpdatedAt)) + '</span>' : '') + '</div>'
+      + (s.file ? '<span class="sc-tag">preset</span>' : (s.url ? '<button class="sc-update" data-update="' + s.id + '" title="Procurar atualização">Atualizar</button>' : '') + '<button class="sc-del" data-del="' + s.id + '" title="Remover">✕</button>') + '</div>').join('');
     el.querySelectorAll('.sc-chk input').forEach(chk => chk.onchange = () => { scriptsOn[chk.dataset.sid] = chk.checked; saveScripts(); if (chk.checked) applyScriptToAll(chk.dataset.sid); else webviews.forEach((w, wi) => { if (!off[wi]) try { w.reload(); } catch {} }); });
     el.querySelectorAll('.sc-del').forEach(b => b.onclick = () => { const ativo = !!scriptsOn[b.dataset.del]; userScripts = userScripts.filter(u => u.id !== b.dataset.del); delete scriptsOn[b.dataset.del]; if (ativo) webviews.forEach((w, wi) => { if (!off[wi]) try { w.reload(); } catch {} }); saveScripts(); renderScriptsList(); });
+    el.querySelectorAll('.sc-update').forEach(b => b.onclick = async () => { b.disabled = true; b.textContent = 'Verificando…'; await updateRemoteScript(b.dataset.update, true); renderScriptsList(); });
   }
   const scOverlay = document.getElementById('scOverlay');
-  document.getElementById('scriptsBtn').onclick = () => { renderScriptsList(); scOverlay.classList.add('show'); };
+  document.getElementById('scriptsBtn').onclick = () => { renderScriptsList(); scOverlay.classList.add('show'); checkScriptUpdates(); };
   document.getElementById('scClose').onclick = () => scOverlay.classList.remove('show');
   scOverlay.onclick = (e) => { if (e.target === scOverlay) scOverlay.classList.remove('show'); };
-  document.getElementById('scAdd').onclick = () => {
-    const nm = document.getElementById('scName').value.trim(), code = document.getElementById('scCode').value;
-    if (!nm || !code.trim()) return;
-    const id = 'u' + Date.now();
-    userScripts.push({ id, name: nm, code }); scriptsOn[id] = true; saveScripts();
+  function scriptDialog(message, confirmMode) {
+    return new Promise(resolve => {
+      const overlay = document.getElementById('scDialogOverlay'), yes = document.getElementById('scDialogYes'), no = document.getElementById('scDialogNo');
+      document.getElementById('scDialogMessage').textContent = message; no.style.display = confirmMode ? '' : 'none'; yes.textContent = confirmMode ? 'Sim' : 'OK'; overlay.classList.add('show');
+      const finish = value => { overlay.classList.remove('show'); yes.onclick = null; no.onclick = null; resolve(value); };
+      yes.onclick = () => finish(true); no.onclick = () => finish(false); yes.focus();
+    });
+  }
+  const scriptNotice = message => scriptDialog(message, false);
+  async function offerAutoUpdate(meta) {
+    if (!meta.updateURL) return false;
+    const accepted = await scriptDialog('Deseja habilitar as atualizações automáticas do script "' + (meta.name || 'sem nome') + '"?', true);
+    if (accepted) { scriptAutoUpdate = true; scAuto.checked = true; lsSet('scriptAutoUpdate', '1'); }
+    return accepted;
+  }
+  async function installScript(code, opts = {}) {
+    if (!String(code).trim()) return null;
+    const meta = scriptMeta(code), id = 'u' + Date.now();
+    const url = opts.url || meta.updateURL || '', autoUpdate = url ? (opts.autoUpdate !== undefined ? opts.autoUpdate : await offerAutoUpdate(meta)) : false;
+    const now = Date.now(), script = { id, name: opts.name || meta.name || 'Userscript', version: meta.version || '', author: meta.author || '', code };
+    if (url) {
+      let githubUpdatedAt = opts.githubUpdatedAt || null;
+      if (!githubUpdatedAt) { try { const info = await window.pokeAPI.getUserScriptInfo(url); githubUpdatedAt = info && info.githubUpdatedAt || null; } catch {} }
+      script.url = url; script.autoUpdate = autoUpdate; script.lastChecked = opts.lastChecked || now; script.githubUpdatedAt = githubUpdatedAt;
+    }
+    userScripts.push(script); scriptsOn[id] = true; saveScripts(); renderScriptsList(); applyScriptToAll(id);
+    return script;
+  }
+  document.getElementById('scAdd').onclick = async () => {
+    const name = document.getElementById('scName').value.trim(), code = document.getElementById('scCode').value;
+    const meta = scriptMeta(code); if (!code.trim() || (!name && !meta.name)) return;
+    await installScript(code, { name: name || meta.name });
     document.getElementById('scName').value = ''; document.getElementById('scCode').value = '';
-    renderScriptsList(); applyScriptToAll(id);
   };
+  const scAuto = document.getElementById('scAutoUpdate'); scAuto.checked = scriptAutoUpdate;
+  scAuto.onchange = () => { scriptAutoUpdate = scAuto.checked; lsSet('scriptAutoUpdate', scriptAutoUpdate ? '1' : '0'); renderScriptsList(); if (scriptAutoUpdate) checkScriptUpdates(true); };
+  async function updateRemoteScript(id, manual) {
+    const s = userScripts.find(x => x.id === id); if (!s || !s.url) return false;
+    let result; try { result = await window.pokeAPI.fetchUserScript(s.url); } catch { result = { ok: false, error: 'Falha ao verificar.' }; }
+    if (!result || !result.ok) { if (manual) await scriptNotice((result && result.error) || 'Falha ao verificar o script.'); return false; }
+    const meta = scriptMeta(result.code), changed = result.code !== s.code;
+    s.code = result.code; s.url = meta.updateURL || result.url || s.url; s.name = meta.name || s.name; s.version = meta.version || s.version || ''; s.author = meta.author || s.author || ''; s.lastChecked = Date.now(); s.githubUpdatedAt = result.githubUpdatedAt || s.githubUpdatedAt || null; saveScripts();
+    if (manual) await scriptNotice(changed ? 'Script atualizado para ' + (s.version ? 'v' + s.version : 'a versão mais recente') + '.\nA nova versão será usada na próxima recarga dos painéis.' : 'O script já está atualizado.');
+    return changed;
+  }
+  async function checkScriptUpdates(force) {
+    if (!scriptAutoUpdate) return;
+    const now = Date.now(), due = userScripts.filter(s => s.url && s.autoUpdate !== false && (force || !s.lastChecked || now - s.lastChecked >= 6 * 60 * 60 * 1000));
+    for (const s of due) await updateRemoteScript(s.id, false);
+    if (due.length && scOverlay.classList.contains('show')) renderScriptsList();
+  }
+  document.getElementById('scAddUrl').onclick = async () => {
+    const btn = document.getElementById('scAddUrl'), url = document.getElementById('scUrl').value.trim(); if (!url) return;
+    const trusted = await scriptDialog('Adicione somente scripts de fontes e autores em que você confia. Scripts têm acesso total à página do jogo.\n\nDeseja continuar?', true);
+    if (!trusted) return;
+    btn.disabled = true; btn.textContent = 'Baixando…';
+    let result; try { result = await window.pokeAPI.fetchUserScript(url); } catch { result = { ok: false, error: 'Falha ao baixar.' }; }
+    btn.disabled = false; btn.textContent = 'Adicionar pelo GitHub';
+    if (!result || !result.ok) { await scriptNotice((result && result.error) || 'Não foi possível baixar o script.'); return; }
+    const meta = scriptMeta(result.code), id = 'u' + Date.now();
+    await installScript(result.code, { name: meta.name || result.url.split('/').pop().replace(/\.user\.js$|\.js$/i, ''), url: meta.updateURL || result.url, autoUpdate: true, lastChecked: Date.now(), githubUpdatedAt: result.githubUpdatedAt });
+    document.getElementById('scUrl').value = '';
+  };
+  document.getElementById('scCode').addEventListener('paste', (e) => {
+    const pasted = e.clipboardData && e.clipboardData.getData('text'); if (!pasted) return;
+    setTimeout(() => { const meta = scriptMeta(document.getElementById('scCode').value); if (meta.name && !document.getElementById('scName').value.trim()) document.getElementById('scName').value = meta.name; }, 0);
+  });
+  async function installDroppedFile(file) {
+    if (!file || !/\.user\.js$/i.test(file.name)) { await scriptNotice('Solte um arquivo com extensão .user.js.'); return; }
+    if (file.size > 2 * 1024 * 1024) { await scriptNotice('O script excede 2 MB.'); return; }
+    let code; try { code = await file.text(); } catch { await scriptNotice('Não foi possível ler o arquivo.'); return; }
+    const meta = scriptMeta(code); await installScript(code, { name: meta.name || file.name.replace(/\.user\.js$/i, '') });
+    renderScriptsList(); scOverlay.classList.add('show');
+  }
+  let scriptDragDepth = 0;
+  document.addEventListener('dragenter', (e) => { if (![...e.dataTransfer.items].some(i => i.kind === 'file')) return; e.preventDefault(); scriptDragDepth++; scOverlay.classList.add('show'); document.getElementById('scModal').classList.add('sc-drag'); });
+  document.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+  document.addEventListener('dragleave', () => { if (--scriptDragDepth <= 0) { scriptDragDepth = 0; document.getElementById('scModal').classList.remove('sc-drag'); } });
+  document.addEventListener('drop', (e) => { if (![...e.dataTransfer.types].includes('Files')) return; e.preventDefault(); scriptDragDepth = 0; document.getElementById('scModal').classList.remove('sc-drag'); const file = e.dataTransfer.files && e.dataTransfer.files[0]; if (file) installDroppedFile(file); });
+  setTimeout(() => checkScriptUpdates(), 15000);
+  setInterval(() => checkScriptUpdates(), 30 * 60 * 1000);
 
   // ===== Calculadora de IV única, na janela do app =====
   // Uma só, no centro da tela e do tamanho que precisa: qualquer painel alimenta ela ao passar o

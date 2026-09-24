@@ -1359,7 +1359,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     if (!s) { s = document.createElement('style'); s.id = ID; document.head.appendChild(s); }
     // avisos de combate ("Kabutops derrotado! +XP..."): cards da pilha .sn-stack que trazem linhas de XP ou loot; os outros
     // avisos (level up, troca) ficam. :has() vale no Chromium do Electron 43.
-    s.textContent = '.cap-panel,.sn-card:has(.sn-xpline),.sn-card:has(.sn-loot){display:none !important}'
+    s.textContent = '.cap-panel,.kc-stack,.sn-card:has(.sn-xpline),.sn-card:has(.sn-loot){display:none !important}'
       + '.ah-panel,.game-hud-tl,nav.game-dock{opacity:0 !important;transition:opacity .18s ease !important}'
       + '.ah-panel:hover,.game-hud-tl:hover,nav.game-dock:hover{opacity:1 !important}';
   })()`;

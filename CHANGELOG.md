@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.26
+
+- **Código-fonte: o `Abrir PokeGrid.bat` travava em "A instalação não terminou".** O Electron 43 não baixa mais o programa dele durante a instalação, só na primeira vez que alguém pede o caminho, e o `.bat` da 1.5.25 procurava o programa antes disso. Quem instalou do zero ficava preso nessa mensagem. Agora o `.bat` pede o download (uns 100 MB, com a janela avisando pra não fechar), e se a internet cair no meio, abrir de novo continua de onde parou. A instalação também pula a auditoria do npm, que só atrasava.
+  *Source: Abrir PokeGrid.bat got stuck on "installation did not finish": Electron 43 only downloads its binary the first time something asks for its path, and the 1.5.25 launcher checked for it before that. It now triggers the download (about 100 MB) and resumes if the connection drops.*
+- **Limpar jogo esconde o card novo de abate** ("Pokémon derrotado", com TREINADOR, POKÉMON, as partes do XP e o LOOT), que o jogo passou a mostrar no lugar do aviso antigo. Level up, troca e os outros avisos continuam aparecendo.
+  *Clean game hides the new kill card (TRAINER, POKÉMON, XP breakdown and LOOT) the game now shows instead of the old combat notice.*
+
 ## 1.5.25
 
 - **Código-fonte: o `Abrir PokeGrid.vbs` virou `Abrir PokeGrid.bat`.** Desde 22/09 o Windows Defender barra o zip do código-fonte na hora do download como "Trojan:Script/Wacatac.H!ml", um falso positivo. O suspeito é o VBS, que abria o terminal escondido (o mesmo padrão já fez o zip de outros projetos ser barrado), então o lançador agora é um `.bat` que abre o app direto, sem terminal escondido: na primeira vez mostra a instalação, depois a janela só pisca. Quem tinha atalho pro `.vbs` refaz apontando pro `.bat`. O FAQ explica o aviso e como baixar enquanto a Microsoft não libera.

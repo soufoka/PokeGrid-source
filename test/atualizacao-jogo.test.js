@@ -147,6 +147,15 @@ console.log('\n--- coletor le cada golpe do jogo: acertos, salvas em area, alvos
   ok(s.includes("hpk: ema('hpk'), tma: ema('tma'), tsh: ema('tsh'), tpa: ema('tpa')") && s.includes("t('cdHitsKill')"), 'a media por hunt guarda alvos por salva, que o modelo usa como densidade da hunt');
 }
 
+console.log('\n--- Limpar jogo esconde os avisos de combate (build de 23/09/2026: card de abate .kc-card na pilha .kc-stack) ---');
+{
+  const m = s.match(/s\.textContent = '([^']*cap-panel[^']*)'/);
+  const sel = m ? m[1].slice(0, m[1].indexOf('{')).split(',') : [];
+  ok(sel.includes('.kc-stack'), 'o card novo de abate (TREINADOR, POKÉMON, LOOT) some: a pilha .kc-stack so tem esses cards');
+  ok(sel.includes('.sn-card:has(.sn-xpline)') && sel.includes('.sn-card:has(.sn-loot)'), 'o aviso antigo de combate continua escondido');
+  ok(!sel.includes('.sn-stack') && !sel.includes('.sn-card'), 'level up, troca e os outros avisos do mundo continuam aparecendo');
+}
+
 console.log('\n--- 2FA: o preenchimento automatico nao toca no codigo ---');
 ok(s.includes('if (ok && (!tk || tk.value) && !bb.disabled) { clearInterval(w); window.__loginWatch = false; bb.click(); }'), 'so clica com e-mail E senha preenchidos, e para depois do clique (na tela do codigo nao ha esses campos: nao clica)');
 ok(s.includes("inputs.find(i => i.autocomplete === 'username')") && s.includes("inputs.find(i => i.autocomplete === 'current-password')"), 'acha os campos pelo autocomplete, que o login novo ainda usa');

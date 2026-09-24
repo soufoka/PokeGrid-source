@@ -202,6 +202,10 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
     const bat = fs.readFileSync(path.join(RAIZ, 'Abrir PokeGrid.bat'), 'utf8');
     ok(bat.includes('start "" "node_modules\\electron\\dist\\electron.exe" .'), 'Abrir PokeGrid.bat abre o electron.exe direto (app de janela, sem terminal escondido)');
     ok(!/wscript|cscript|powershell|mshta|WindowStyle/i.test(bat), 'Abrir PokeGrid.bat sem wscript/powershell/janela oculta');
+    // Electron 43 nao tem postinstall: o programa so e baixado quando alguem faz require('electron').
+    // A 1.5.25 procurava o electron.exe logo depois do npm install e avisava 'nao terminou' pra sempre.
+    const iPede = bat.indexOf('node -e "require(\'electron\')"'), iConfere = bat.lastIndexOf('if not exist "node_modules\\electron\\dist\\electron.exe"');
+    ok(iPede > 0 && iPede < iConfere, 'Abrir PokeGrid.bat pede o download do Electron antes de conferir o electron.exe');
   } else ok(true, 'sem lancador .bat neste repo (o instalador abre o app)');
 }
 try { fs.rmSync(path.join(RAIZ, '.teste-tmp'), { recursive: true, force: true }); } catch {}

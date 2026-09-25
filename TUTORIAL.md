@@ -44,6 +44,6 @@ Baixe o ZIP de novo (Passo 2) e substitua a pasta antiga. Suas contas continuam 
 
 ## Deu algum problema?
 
-- **"iniciar.bat" abre e fecha na hora:** provavelmente o Node.js não foi instalado. Refaça o Passo 1.
+- **O Abrir PokeGrid abre e fecha e o app não aparece:** costuma ser o Controle inteligente de aplicativos do Windows ou o antivírus barrando o Electron. O [FAQ](FAQ.md) explica o que conferir.
 - **Uma conta não entra sozinha:** abra os **👤 Treinadores** e confira se o e-mail e a senha daquela conta estão certos.
 - **Trava ou fica lento:** ligue o **⚡ Eco** no menu **☰ Opções**, ele segura o uso de CPU.

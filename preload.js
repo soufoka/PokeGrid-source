@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('pokeAPI', {
   setAutoStart: (on) => ipcRenderer.invoke('autostart:set', on),
   onAutoStart: (cb) => ipcRenderer.on('autostart', (_e, on) => cb(on)),
   onHotkey: (cb) => ipcRenderer.on('hotkey', (_e, k) => cb(k)),
+  onJanela: (cb) => ipcRenderer.on('janela', (_e, v) => cb(!!v)), // janela visivel (true) ou minimizada/na bandeja (false)
   notify: (title, body) => ipcRenderer.invoke('notify', title, body),
   readPreset: (name) => ipcRenderer.invoke('preset:read', name),
   logError: (origem, msg) => ipcRenderer.invoke('errlog:write', origem, msg),

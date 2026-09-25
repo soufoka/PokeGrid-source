@@ -245,7 +245,19 @@
             "dragao": "dragon",
             "sombrio": "dark",
             "aco": "steel",
-            "fada": "fairy"
+            "fada": "fairy",
+            // jogo em espanhol (normal, agua, planta, veneno, psiquico, fantasma e dragon ja batem)
+            "fuego": "fire",
+            "electrico": "electric",
+            "hielo": "ice",
+            "lucha": "fighting",
+            "tierra": "ground",
+            "volador": "flying",
+            "bicho": "bug",
+            "roca": "rock",
+            "siniestro": "dark",
+            "acero": "steel",
+            "hada": "fairy"
         }
     };
 
@@ -617,16 +629,16 @@
 
         for (const linha of linhas.slice(1)) {
             if (
-                /^(Ativo|Active|Nv\s|Lv\s|Qualidade|Quality|IV\s|HP\s|Atk\s|Def\s|SpA\s|SpD\s|Vel\s|Spe\s|.*(?:Poder|Power))/i.test(
+                /^(Ativo|Activo|Active|Nv\s|Lv\s|Qualidade|Quality|Calidad|IV\s|HP\s|Atk\s|Def\s|SpA\s|SpD\s|Vel\s|Spe\s|.*(?:Poder|Power))/i.test(
                     linha
                 )
             ) {
                 break;
             }
 
-            // o jogo as vezes cola o status "Ativo"/"Active" (com icone) junto dos tipos;
+            // o jogo as vezes cola o status "Ativo"/"Active"/"Activo" (com icone) junto dos tipos;
             // so aceita a linha se sobrar um tipo real, pra nao criar um chip "Ativo" duplicado
-            const limpa = linha.replace(/ativo|active/ig, "").trim();
+            const limpa = linha.replace(/ativo|activo|active/ig, "").trim();
             if (limpa && obterChaveTipo(limpa)) tipos.push(limpa);
         }
 
@@ -634,7 +646,7 @@
             texto.match(/IV\s*(\d+)\s*\/\s*(\d+)/i);
 
         const qualidadeTexto =
-            texto.match(/(?:Qualidade|Quality)\s+([^\n]+)/i)?.[1]?.trim() ||
+            texto.match(/(?:Qualidade|Quality|Calidad)\s+([^\n]+)/i)?.[1]?.trim() ||
             null;
 
         const multiplicador =
@@ -649,7 +661,7 @@
             tipos,
 
             ativo: linhas.some(linha =>
-                /ativo|active/i.test(linha)
+                /ativo|activo|active/i.test(linha)
             ),
 
             nivel: numero(
@@ -5328,7 +5340,7 @@
         const nome = nomeNivelTexto.replace(/Lv\.?\s*\d+/i, "").trim();
 
         // 2. Qualidade / Multiplicador (Ex: "Lendária ×1.70" ou "Lendária x1.70")
-        const qualidadeTexto = lateral.innerText.match(/(?:Raridade|Rarity)\s+([^\n]+)/i)?.[1]?.trim() || "";
+        const qualidadeTexto = lateral.innerText.match(/(?:Raridade|Rarity|Rareza)\s+([^\n]+)/i)?.[1]?.trim() || "";
         const multiplicador = numeroDecimal(qualidadeTexto?.match(/(?:×|x)\s*([\d.,]+)/i)?.[1]) || 1.0;
 
         // 3. IV Total observado (Ex: "148/182")

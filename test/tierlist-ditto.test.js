@@ -49,7 +49,7 @@ const entre = (a, fim, incl) => { const i = b.indexOf(a); if (i < 0) throw new E
   const seen = {}; const lista = R.h.filter((x) => !seen[x.name + x.level] && (seen[x.name + x.level] = 1));
   const blocoSug = b.slice(b.indexOf('  const CHART = '), b.indexOf('\n  };', b.indexOf('const sugCalc = (A, x) => {')) + 5).replace("let huntPkSel = String(lsGet('cdHuntPk') || '');", '');
   const blocoDitto = entre('  const dittoCache = new Map();', '  let huntsCache = null', false);
-  const blocoTier = entre('  function tierCalc(nivel, comTm) {', '  const tlNameId = ', false);
+  const blocoTier = entre('  function tierCalc(nivel, comTm, obj) {', '  const tlNameId = ', false);
   const api = new Function('window', 'R', 'lista',
     'let basesByName = R.bs, movesByName = R.mv, creaturesById = R.byId, huntsCache = lista, huntsCacheT = 1, tlCache = null, huntStats = {};\n'
     + blocoSug + '\n' + blocoDitto + '\n' + blocoTier + '\nreturn { sugCalc, tierCalc, dittoRegras, dittoAlvo, dittoSweep, dittoHunts, dittoVarre, ritmoDe, golpesDe, tempoKill, calibraTempo, danoRecalc, danoAmostra, calChave, alvosDe, setCat: (mv, bs) => { movesByName = mv; basesByName = bs; }, setHS: (h) => { huntStats = h; }, fator: () => danoFator, tempo: () => tempoCal };')({ PokeGridIvMath: M }, R, lista);
@@ -77,6 +77,14 @@ const entre = (a, fim, incl) => { const i = b.indexOf(a); if (i < 0) throw new E
   ok(cranRock && cranRock.khTm === 0 && cranRock.tm === '' && rampRock.khTm > 0, 'nao-final nao ganha disco elemental mesmo com a lista dizendo (Cranidos), o final ganha (Rampardos)');
   const scyRock = api.sugCalc({ sp: 'scyther', level: 300, q: 1, ivt: 96, tlv: 0, mult: 1, tms: ['BUG'] }, alvo);
   ok(scyRock && scyRock.khTm > 0, 'excecao do jogo: Scyther aprende disco sem ser estagio final');
+  // patch de 25/09/2026: Misdreavus (200) passou a evoluir (Mismagius 429, Lv100) e o jogo a pos no TM_STAGE_EXEMPT
+  const crMis = J.creatures.map((c) => (c.pokeId === 200 ? Object.assign({}, c, { evolvesToId: 429, evolveLevel: 100 }) : c));
+  const Rmis = await new Function('fetch', 'return ' + huntsSrc)((u) => Promise.resolve({ json: async () => (u.indexOf('map-markers') >= 0 ? { hunts: J.hunts } : { creatures: crMis }) }));
+  ok(Rmis.mv.misdreavus.fin === 1 && Rmis.mv.pidgeotto.fin === 0, 'Misdreavus evoluindo continua aprendendo TM (excecao do jogo desde 25/09); Pidgeotto, que evolui, nao');
+  api.setCat(Rmis.mv, Rmis.bs);
+  const mis = api.sugCalc({ sp: 'misdreavus', level: 100, q: 1, ivt: 96, tlv: 0, mult: 1, tms: ['GHOST', 'AOE'] }, lista.find((x) => x.name === 'Scizor')); // Scizor: fantasma neutro (na Pidgey, Normal, nao pega)
+  api.setCat(R.mv, R.bs);
+  ok(mis && mis.khTm > 0 && mis.aoe, 'e o Untold Nightmare e o AoE que ela tem no jogo entram na conta (' + (mis && mis.tm) + ', +' + Math.round((mis && mis.khTm) || 0) + ' kills/h)');
   const rows600 = api.tierCalc(600, true); const vs = rows600.find((r) => r.sp === 'venusaur');
   ok(vs && vs.gerTm && /GRASS|POISON/.test(vs.gerTm) && vs.gerTm.indexOf('+AOE') > 0, 'aba Geral guarda o disco da soma vencedora (Venusaur: ' + vs.gerTm + '), e a linha mostra esse na aba Geral');
   ok(b.includes("(valor != null ? r.gerTm : r.sg.tm)"), 'tlLinha usa gerTm na aba Geral');
@@ -136,8 +144,10 @@ const entre = (a, fim, incl) => { const i = b.indexOf(a); if (i < 0) throw new E
   ok(sweep.every((r) => shiny.pode(r.sp)), 'toda especie recomendada e uma que o Shiny Ditto PODE virar');
   ok(sweep.every((r) => !r.sg.tm), 'nenhuma recomendacao depende de golpe de TM (Ditto nao aprende): ' + sweep.slice(0, 3).map((r) => r.sg.nome).join(', '));
   ok(sweep.every((r) => (+r.x.level || 0) <= 600), 'e so em hunt que a conta alcanca');
-  const alvoD = api.dittoAlvo(dShiny, alvo);
-  ok(alvoD.length > 0 && alvoD.every((r) => shiny.pode(r.sp) && !r.sg.tm), 'hunt-alvo: mesmas regras (' + alvoD.slice(0, 3).map((r) => r.sp + '/' + r.sg.nome).join(', ') + ')');
+  // hunt-alvo que o Shiny Ditto Lv300 mata (a do teste de TM, Lv3000, e inviavel pra ele e fica vazia pelo piso de ritmo)
+  const alvoD = api.dittoAlvo(dShiny, sweep[0].x);
+  ok(alvoD.length > 0 && alvoD.every((r) => shiny.pode(r.sp) && !r.sg.tm && r.sg.ritmo >= 0.15), 'hunt-alvo ' + sweep[0].x.name + ': mesmas regras e o piso do Simples (' + alvoD.slice(0, 3).map((r) => r.sp + '/' + r.sg.nome).join(', ') + ')');
+  ok(api.dittoAlvo(dShiny, alvo).length === 0, 'hunt-alvo inviavel pro Shiny Ditto Lv300 (' + alvo.name + ' Lv' + alvo.level + '): nenhuma forma recomendada');
   ok(alvoD.every((r, k) => k === 0 || alvoD[k - 1].sc > r.sc || alvoD[k - 1].sg.eff > r.sg.eff || (alvoD[k - 1].sg.mg || 0) >= (r.sg.mg || 0)), 'empate no teto ordena pela folga (o mais forte primeiro, nao a ordem da lista)');
   const grama = sweep.find((r) => r.ty === 'GRASS'), fogo = sweep.find((r) => r.ty === 'FIRE');
   ok(grama && grama.sp !== 'bulbasaur' && fogo && fogo.sp !== 'charmander', 'por tipo: recomenda a forma forte, nao o estagio inicial que empatava (GRASS -> ' + (grama && grama.sp) + ', FIRE -> ' + (fogo && fogo.sp) + ')');
@@ -151,7 +161,7 @@ const entre = (a, fim, incl) => { const i = b.indexOf(a); if (i < 0) throw new E
   ok(hs[0].sc === Math.max(...sweep.map((r) => r.sc)), 'a melhor hunt do ranking e a mesma do melhor tipo (e uma varredura so)');
   ok(api.dittoHunts(dShiny, lista) === hs && api.dittoVarre(dShiny, lista).hunts === hs && api.dittoSweep(dShiny, lista) === api.dittoVarre(dShiny, lista).rows, 'mesmos parametros: vem do cache (por tipo e por hunt na mesma varredura)');
   ok(new Set(hs.map((r) => r.x.name + '@' + r.x.level)).size === hs.length, 'cada hunt aparece uma vez');
-  const todas = api.dittoHunts({ sp: 'shiny ditto', level: 300, q: 2.0, ivt: 119, tlv: 0 }, lista);
+  const todas = api.dittoHunts({ sp: 'shiny ditto', level: 3000, q: 2.0, ivt: 119, tlv: 0 }, lista); // Lv3000: com o piso de ritmo, o Lv300 nao tem hunt viavel acima do 600
   ok(todas.length > hs.length && todas.some((r) => (+r.x.level || 0) > 600), 'nivel da conta 0 = todas as hunts, inclusive as acima do 600');
   const baixo = api.dittoHunts({ sp: 'shiny ditto', level: 40, q: 2.0, ivt: 119, tlv: 60 }, lista);
   ok(baixo.length > 0 && baixo.every((r) => (+r.x.level || 0) <= 60) && baixo[0].sc <= hs[0].sc, 'Ditto Lv40 numa conta Lv60: so hunts ate 60, e rende menos que o Lv300');
@@ -240,7 +250,7 @@ const entre = (a, fim, incl) => { const i = b.indexOf(a); if (i < 0) throw new E
   const g2 = api.sugCalc({ sp: 'typhlosion', level: 100, q: 1, ivt: 96, tlv: 0, mult: 1 }, lista.find((x) => x.name === 'Scizor'));
   ok(Math.abs(g2.mg / g1.mg - 0.4) < 0.01 && g2.golpes > g1.golpes && g2.xph < g1.xph, 'o fator entra no dano: folga cai pra 40%, mais golpes por kill, menos XP/h');
   ok(api.calChave() !== '2.1/3.1/1' && b.includes("+ ':' + calChave()") && b.includes("+ ':' + calChave() + ':'"), 'a calibracao entra nas chaves de cache da tierlist e do Ditto');
-  ok(b.includes("danoAmostra(r.cid + '|' + hk, (hitHp / 100) / (sg.mg / danoFator), att.level, x.level);") && b.includes("const hitHp = hitHpDe(r.mvs); if (!hitHp) return;") && b.includes("mvs: Array.isArray(a.mvs) ? a.mvs : [], hpk: +a.hpk || 0,"), 'cada conta com 5 min na hunt e lider conhecido vira uma amostra de dano real / folga do modelo, pelo golpe NORMAL (os de TM ficam fora)');
+  ok(b.includes("danoAmostra(d.cid + '|' + hk, (hitHp / 100) / (sg.mg / danoFator), att.level, x.level);") && b.includes("const hitHp = hitHpDe((a.mvs || []).filter(e => e && dele.has(String(e.m).toLowerCase()))); if (!hitHp) return;") && b.includes("mvs: Array.isArray(a.mvs) ? a.mvs : [], hpk: +a.hpk || 0,"), 'cada conta com 5 min na hunt e lider conhecido vira uma amostra de dano real / folga do modelo, pelo golpe NORMAL (os de TM ficam fora)');
   ok(!b.includes('const calibraK') && b.includes("x.est = { kh: x.sug.kh, xph: x.sug.xph }"), 'a estimativa de kills/h da lista vem do modelo de tempo');
   ok(s.split("tlCal:'").length - 1 === 3 && s.split("tlCal0:'").length - 1 === 3 && s.split("tlCalT:'").length - 1 === 3, 'a dica da tierlist e do Ditto mostra a calibracao (3 idiomas)');
   console.log(fail ? '\nFALHOU' : '\nTODOS PASSARAM');

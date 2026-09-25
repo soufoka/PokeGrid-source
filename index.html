@@ -47,9 +47,10 @@
   }
   #menu.show { display: flex; }
   #menu button { width: 100%; text-align: left; }
-  #langRow { display: flex; gap: 4px; align-items: center; }
-  #langRow span { padding: 0 4px; }
-  #menu #langRow button { width: auto; flex: 1; text-align: center; }
+  #langRow, #countRow { display: flex; gap: 4px; align-items: center; }
+  #langRow span, #countRow span { padding: 0 4px; white-space: nowrap; }
+  #menu #langRow button, #menu #countRow button { width: auto; flex: 1; text-align: center; }
+  #menu #countRow button { padding-left: 0; padding-right: 0; min-width: 24px; }
 
   #grid {
     flex: 1; display: grid; gap: 6px; padding: 6px;
@@ -80,6 +81,7 @@
   .dot.err { opacity: 1; box-shadow: 0 0 0 2px #f85149; }
   .dot.off { opacity: .18; }
   .name { font-weight: 600; cursor: pointer; }
+  .name input { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #e6edf3; font: inherit; padding: 0 5px; width: 150px; }
   .status { color: #8b949e; font-size: 11px; margin-right: auto; }
   .panel-header button { padding: 2px 8px; font-size: 11px; }
   .zpct { color: #8b949e; font-size: 11px; min-width: 32px; text-align: center; cursor: pointer; }
@@ -301,7 +303,7 @@
   #shinyParty { position: fixed; top: 58px; left: 50%; /* abaixo da barra: nao cobre os botoes do app */ transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
   #shinyParty .sp { pointer-events: auto; display: flex; align-items: center; gap: 14px; min-width: 380px; max-width: 92vw;
     padding: 14px 18px; border-radius: 14px; border: 2px solid #f2c665; background: linear-gradient(135deg, #2a1033, #17202b 55%, #101820);
-    box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(247,120,186,.35), 0 0 26px rgba(247,120,186,.28); animation: spIn .32s ease-out, spGlow 1.9s ease-in-out infinite alternate; }
+    box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(247,120,186,.35), 0 0 26px rgba(247,120,186,.28); animation: spIn .32s ease-out, spGlow 1.9s ease-in-out 8 alternate; }
   @keyframes spIn { from { opacity: 0; transform: translateY(-14px) scale(.94); } to { opacity: 1; transform: none; } }
   @keyframes spGlow { from { box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(247,120,186,.35), 0 0 18px rgba(247,120,186,.22); }
     to { box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(242,198,101,.55), 0 0 34px rgba(242,198,101,.42); } }
@@ -494,7 +496,7 @@
         <button id="tierBtn">🏆 Tierlist</button>
         <button id="dittoBtn" title="Onde caçar com o Ditto (comum ou shiny) e em que pokémon virar, no seu nível">✨ Ditto</button>
         <button id="scriptsBtn" title="Rode userscripts (IV calc e os seus) nos painéis">🧩 Scripts</button>
-        <button id="count" title="Quantas contas rodar ao mesmo tempo (1 a 4)">🔢 Painéis: 4</button>
+        <div id="countRow" title="Quantas contas rodar ao mesmo tempo. Tirar painéis fecha só os do fim, e as outras contas seguem farmando."><span>🔢 Painéis</span><button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button></div>
         <button id="alerts" title="Avisa quando uma conta cai ou fica sem pokébola">🔔 Alertas</button>
         <button id="sellguard" title="Pede confirmação antes de vender shiny, Lendária+ ou item raro">🛡 Venda protegida</button>
         <button id="chat" title="Mostra ou esconde o chat do jogo em todos os painéis">💬 Chat</button>
@@ -561,9 +563,11 @@
         <div id="tlChips" style="flex:1"></div>
         <span id="tlLevelLbl" style="flex:0 0 auto;align-self:center;font-size:11px;color:#8b949e"></span>
         <input id="tlLevel" type="number" min="1" max="3000" style="flex:0 0 54px;width:54px;align-self:center;background:#0d1117;border:1px solid #30363d;border-radius:5px;color:#e6edf3;font-size:12px;padding:3px 5px;text-align:center">
+        <select id="tlObj" style="flex:0 0 auto;align-self:center;background:#0d1117;border:1px solid #30363d;border-radius:5px;color:#e6edf3;font-size:11px;padding:3px 4px"><option value="xp">XP/h</option><option value="gold">Gold/h</option></select>
         <label id="tlTmWrap" style="flex:0 0 auto;align-self:center;font-size:11px;color:#8b949e;display:flex;gap:3px;align-items:center;cursor:pointer"><input id="tlTm" type="checkbox"> <span id="tlTmLbl">TM</span></label>
         <button id="tlClose" style="flex:0 0 auto">✕</button>
       </div>
+      <div id="tlPkCtl" style="display:none;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:8px;font-size:11px;color:#8b949e"></div>
       <div id="tlBody"></div>
     </div>
   </div>
@@ -640,6 +644,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
   const webviews = [];
   const off = [false, false, false, false];
   const lastLogin = [0, 0, 0, 0]; // cooldown do auto-login por painel (evita ressubmeter em loop)
+  const trocou = [false, false, false, false]; // e-mail ou senha editados em Treinadores e ainda nao usados: o Logar equipe reloga esse painel mesmo com a conta viva
   const deadT = [0, 0, 0, 0]; // ticks seguidos sem sessao viva: o jogo nao navega sozinho pro login
   const alertedBalls = [false, false, false, false]; // ja avisou "sem pokebola" nesta falta?
   let count = Math.min(4, Math.max(1, +lsGet('count') || 4)); // quantos paineis rodar (1 a 4)
@@ -657,8 +662,8 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       dtHint:'Escolha shiny ou comum, o nível do Ditto e o nível da conta (só entram hunts que ela alcança). Cada hunt mostra a melhor transformação pra ela. Regras do jogo: IV e qualidade do Ditto são fixos; Shiny Ditto tem -20% de Ataque e Sp. Atk (e -25% de HP e defesas), o comum -25% de Ataque e defesas; nenhum usa TM. Comum dura 12 h, shiny é permanente.',
       dtShiny:'Shiny', dtComum:'Comum', dtLevel:'Nível do Ditto', dtFixos:'IV {iv} · qualidade {q} (fixos no jogo)', dtReach:'Nível da conta', dtReachTip:'Só hunts até este nível (0 = todas)',
       dtByHunt:'Por hunt', dtByType:'Por tipo', dtMine:'Meu Ditto…', dtNoMine:'Nenhum Ditto no time das contas ligadas', dtVira:'vira', dtFolga:'folga', dtHidden:'{n} hunts acima do nível da conta ficaram de fora',
-      hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', tier:'\u{1F3C6} Tierlist', tierTitle:'Ranking de eficácia por elemento, calculado contra as hunts disponíveis', tlCal:'Calibrado com suas medições: dano real {d}% do modelo ({n} amostras); {a} s por golpe + {b} s por kill.', tlCal0:'Ainda sem medição sua de dano (farme com o Simples aberto): dano do modelo padrão; {a} s por golpe + {b} s por kill.', tlCalT:'Tempos ajustados com {n} hunts suas.', tlTitle:'Tierlist por elemento', tlLevelLbl:'Seu nível', tlTm:'com TM', tlTmTip:'Considerar TMs como o jogo faz: o elemental é um golpe extra em área a cada 10 s (só do próprio tipo, poder 300) e o AoE faz o golpe normal acertar todos os selvagens do quadro; os dois juntos. Desligado, só golpes naturais. TM é item: só estágio final aprende, e o Ditto não.', tlHint:'Escolha seu nível ao lado: só entram as hunts que você alcança, e cada pokémon é avaliado no nível de cada hunt. Golpe físico bate na defesa física da hunt; especial, na especial; a vida do defensor segura o ritmo. XP de Orre já multiplicado.', tlAll:'Resumo', tlGeral:'Geral', scAddUrl:'+ Adicionar pelo GitHub', scBaixando:'Baixando…', scReloadAviso:'Isso recarrega os painéis ligados, e o jogo larga as contas na cidade: elas param de farmar até você voltar pra hunt. Continuar?', scRemover:'Remover este script?', scTrust:'Adicione só scripts de autores em que você confia: eles têm acesso total à página do jogo.\\n\\nContinuar?', scFalhou:'Não deu pra baixar o script.', scAtualizar:'Atualizar', scAtualizarTip:'Busca a versão mais recente no GitHub (só quando você clica)', scAtualizado:'Script atualizado!', scValeNoReload:'A versão nova só entra quando os painéis recarregarem (⟳ Atualizar tudo).', scJaAtual:'O script já está na versão mais recente.', scSoUser:'Solte um arquivo .user.js', scGrande:'Script grande demais: passa de 2 MB, ou os scripts somados passam de 4 MB.', tlFis:'FÍS', tlEsp:'ESP', tlFisTip:'Golpe físico: enfrenta a defesa física da hunt', tlEspTip:'Golpe especial: enfrenta a defesa especial da hunt', tlGeralHint:'Nota geral = rendimento somado em todas as hunts; o melhor do jogo é 100.', tlWait:'Aguardando os dados do jogo. Deixe uma conta logada e tente de novo.', tlBest:'melhor em', tlOut:'Melhor hunt em Outland (fora de Orre), pra quem ainda não alcança a região; o número é a nota nela', accClear:'Limpar os campos deste formulário', accWipe:'Limpar os dados do jogo desta conta (cookies e cache). Use se a conta bugou. A senha salva fica.', accWipeConfirm:'Limpar os dados do jogo da conta {n}?\\nResolve conta bugada (mapa, filtros, pokémon sumidos). A senha salva não é apagada; a conta desloga e loga de novo.', accWipeOk:'Dados limpos. A conta vai recarregar do zero.', accWipeErr:'Não deu pra limpar. Tente fechar e abrir o app.', whMention:'ID do usuário do Discord pra mencionar no alerta de shiny (opcional)', ivsTitle:'Abre a calculadora de IV do app: uma só, no centro da tela, alimentada por qualquer painel', ivcTitle:"Calculadora de IV", ivcHint:'Passe o mouse sobre um pokémon em qualquer painel.<br>Os dados aparecem aqui, e você pode ajustar nível e atributos pra recalcular.', ivcLevel:'Nível', ivcQuality:'Qualidade', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'atual', ivcBase:'base', ivcPowerGame:'Poder no jogo', ivcFooter:'edite qualquer campo pra recalcular', ivcOpenPanel:'Abrir a calculadora dentro do painel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder do golpe', ivcMoveLast:'último dano observado em batalha',
-      alerts:'🔔 Alertas', alertsTitle:'Liga e desliga todos os avisos do Windows: shiny, conta caiu, parou de farmar, suprimento baixo e pokémon derrubado', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
+      hunt:'🎯 Hunt', huntTitle:'Abre o Hunt Analyzer em todos os painéis', tier:'\u{1F3C6} Tierlist', tierTitle:'Ranking de eficácia por elemento, calculado contra as hunts disponíveis', tlCal:'Calibrado com suas medições: dano real {d}% do modelo ({n} amostras); {a} s por golpe + {b} s por kill.', tlCal0:'Ainda sem medição sua de dano (farme uns minutos com o app aberto): dano do modelo padrão; {a} s por golpe + {b} s por kill.', tlCalT:'Tempos ajustados com {n} hunts suas.', tlTitle:'Tierlist por elemento', tlLevelLbl:'Seu nível', tlTm:'com TM', tlObjXp:'XP/h', tlObjGold:'Gold/h', tlObjTip:'O que a nota mede: XP por hora ou gold por hora (loot esperado a preço de NPC)', tlPoke:'🎯 Pokémon', tlPkMine:'do meu time…', tlPkSp:'Pokémon', tlPkLv:'Nível', tlPkQ:'Qualidade', tlPkIv:'IV', tlPkPick:'Escolha um Pokémon do seu time ou digite o nome de qualquer um: a lista mostra as melhores hunts pra ele até o seu nível.', tlGoldTip:'Estimativa: kills/h do modelo × loot esperado por kill a preço de NPC. Não conta captura, supply nem bônus de loot; onde o valor vem de drop raro, a média demora a aparecer.', tlGoldNone:'Os preços dos itens ainda não chegaram do jogo. O app tenta de novo sozinho, com uma conta aberta.', tlGoldFail:'Não deu pra ler os preços dos itens do jogo. Feche e abra o app pra tentar de novo.', tlTmTip:'Considerar TMs como o jogo faz: o elemental é um golpe extra em área a cada 10 s (só do próprio tipo, poder 300) e o AoE faz o golpe normal acertar todos os selvagens do quadro; os dois juntos. Desligado, só golpes naturais. TM é item: só estágio final aprende, e o Ditto não.', tlHint:'Escolha seu nível ao lado: só entram as hunts que você alcança, e cada pokémon é avaliado no nível de cada hunt. Golpe físico bate na defesa física da hunt; especial, na especial; a vida do defensor segura o ritmo. XP de Orre já multiplicado.', tlAll:'Resumo', tlGeral:'Geral', scAddUrl:'+ Adicionar pelo GitHub', scBaixando:'Baixando…', scReloadAviso:'Isso recarrega os painéis ligados, e o jogo larga as contas na cidade: elas param de farmar até você voltar pra hunt. Continuar?', scRemover:'Remover este script?', scTrust:'Adicione só scripts de autores em que você confia: eles têm acesso total à página do jogo.\\n\\nContinuar?', scFalhou:'Não deu pra baixar o script.', scAtualizar:'Atualizar', scAtualizarTip:'Busca a versão mais recente no GitHub (só quando você clica)', scAtualizado:'Script atualizado!', scValeNoReload:'A versão nova só entra quando os painéis recarregarem (⟳ Atualizar tudo).', scJaAtual:'O script já está na versão mais recente.', scSoUser:'Solte um arquivo .user.js', scGrande:'Script grande demais: passa de 2 MB, ou os scripts somados passam de 4 MB.', tlFis:'FÍS', tlEsp:'ESP', tlFisTip:'Golpe físico: enfrenta a defesa física da hunt', tlEspTip:'Golpe especial: enfrenta a defesa especial da hunt', tlGeralHint:'Nota geral = rendimento somado em todas as hunts; o melhor do jogo é 100.', tlWait:'Aguardando os dados do jogo. Deixe uma conta logada e tente de novo.', tlBest:'melhor em', tlOut:'Melhor hunt em Outland (fora de Orre), pra quem ainda não alcança a região; o número é a nota nela', accClear:'Limpar os campos deste formulário', accWipe:'Limpar os dados do jogo desta conta (cookies e cache). Use se a conta bugou. A senha salva fica.', accWipeConfirm:'Limpar os dados do jogo da conta {n}?\\nResolve conta bugada (mapa, filtros, pokémon sumidos). A senha salva não é apagada; a conta desloga e loga de novo.', accWipeOk:'Dados limpos. A conta vai recarregar do zero.', accWipeErr:'Não deu pra limpar. Tente fechar e abrir o app.', whMention:'ID do usuário do Discord pra mencionar no alerta de shiny (opcional)', ivsTitle:'Abre a calculadora de IV do app: uma só, no centro da tela, alimentada por qualquer painel', ivcTitle:"Calculadora de IV", ivcHint:'Passe o mouse sobre um pokémon em qualquer painel.<br>Os dados aparecem aqui, e você pode ajustar nível e atributos pra recalcular.', ivcLevel:'Nível', ivcQuality:'Qualidade', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'atual', ivcBase:'base', ivcPowerGame:'Poder no jogo', ivcFooter:'edite qualquer campo pra recalcular', ivcOpenPanel:'Abrir a calculadora dentro do painel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder do golpe', ivcMoveLast:'último dano observado em batalha',
+      alerts:'🔔 Alertas', alertsTitle:'Liga e desliga todos os avisos do Windows: shiny, conta caiu, parou de farmar, suprimento baixo e pokémon derrubado', msgDown:'caiu', msgBalls:'está sem pokébolas', count:'🔢 Painéis', countTitle:'Quantas contas rodar ao mesmo tempo. Tirar painéis fecha só os do fim, e as outras contas seguem farmando.', stats:'📊 Painel', statsTitle:'Resumo da conta em foco (gold/h, XP/h, bag, drops)', statsResumo:'Resumo', statsWaiting:'Aguardando dados do jogo…', statsWaiting2:'Deixe o painel logado e farmando alguns segundos.', statsOff:'Painel desligado.',
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Suprimentos gastos', stBalls:'bolas', stPots:'cura', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time', donTitle:'Ajude o projeto', donText:'O PokeGrid é gratuito e feito nas horas vagas. Se ele facilita o seu farm, um apoio de qualquer valor ajuda a manter o projeto vivo.', donBtn:'Apoiar via Pix / Mercado Pago \u2197', stTeamPick:'Clique pra colocar na frente (vira o líder que caça)', stTeamLead:'Líder atual',
       cards:'🍃 Simples', cardsShort:'Simples', cardsTitle:'Modo simples e ultra leve: esconde o jogo e mostra só os números, gastando o mínimo do PC (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'aguardando…', cdOff:'desligado', cdHunting:'caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
       cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdSortMeasured:'Medido: gold/h ↓', cdMeasured:'sua média', cdHitsKill:'golpes/kill', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
@@ -676,7 +681,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       stTargetLabel:'🎯 Alvo shiny', stTargetHow:'Escolha uma espécie na engrenagem ⚙ acima, em "Alvo shiny". O painel passa a mostrar se ele já apareceu, se foi capturado e quantas bolas você gastou nele.', stPinnedHow:'Nada fixado ainda. Na engrenagem ⚙ acima, busque um item ou pokébola em "Itens fixados" pra ver a quantidade dele aqui, em todas as contas.', stTargetStatus:'Status', stCaught:'capturado!', stFoundNotCaught:'apareceu, não capturado', stNotAppeared:'ainda não apareceu', stTargetShinyTries:'Tentativas no shiny', stTargetFarm:'Farm na espécie', stTries:'tent.', cfgTarget:'Alvo shiny (acompanhar a caça)', cfgBalls:'\u{1F9FA} Comprar pokébolas', cfgBallsHint:'Compra na conta exibida no painel, direto na loja do jogo. Sempre pede confirmação com o custo.', cfgBallsConfirm:'Comprar {q} × {b} por {c} gold na conta {a}?\\nVocê tem {g} gold.', cfgBallsOk:'{q} bolas compradas!', cfgBallsErr:'A compra falhou', cfgBallsOff:'Nenhuma conta ligada.', cfgLock:'\u{1F512} Cadeado de venda', cfgLockHint:'Estes itens pedem confirmação antes de vender. Shiny e qualidade alta já vêm protegidos.', cfgLockSearch:'Buscar item pra proteger…', cfgLockRemove:'Destravar', cfgTargetSearch:'Buscar espécie pra caçar…',
       refTitle:'Referral do criador, copie se quiser ajudar :)', refCopied:'✓ Copiado!',
       stLoading:'carregando…', stOnline:'online', stError:'erro', stOff:'desligada', trainer:'Treinador',
-      tZoomOut:'Diminuir zoom', tZoomIn:'Aumentar zoom', tReload:'Recarregar', tExpand:'Expandir (Ctrl+número)', tZoomPct:'Zoom atual (clique volta pra 100%)', faq:'❓ FAQ', faqTitle:'Perguntas frequentes: abre o FAQ no navegador', manual:'📖 Manual', manualTitle:'Manual: o que cada botão e cada seção do app faz', verNova:'Nova versão disponível. Clique pra abrir a página de download.', goalEta:'no ritmo atual, meta às', tRename:'Clique duplo para renomear', promptRename:'Nome do treinador:', accSaveErr:'Não foi possível salvar as senhas no disco. O motivo está no relatório de erros (☰ Opções). Costuma ser espaço livre, antivírus bloqueando a pasta do app, ou o sistema sem cripto.',
+      tZoomOut:'Diminuir zoom', tZoomIn:'Aumentar zoom', tReload:'Recarregar', tExpand:'Expandir (Ctrl+número)', tZoomPct:'Zoom atual (clique volta pra 100%)', faq:'❓ FAQ', faqTitle:'Perguntas frequentes: abre o FAQ no navegador', manual:'📖 Manual', manualTitle:'Manual: o que cada botão e cada seção do app faz', verNova:'Nova versão disponível. Clique pra abrir a página de download.', goalEta:'no ritmo atual, meta às', tRename:'Clique duplo para renomear', accSaveErr:'Não foi possível salvar as senhas no disco. O motivo está no relatório de erros (☰ Opções). Costuma ser espaço livre, antivírus bloqueando a pasta do app, ou o sistema sem cripto.',
       mH2:'Treinadores salvos', mHint:'Preencha e-mail/usuário e senha de cada painel. As senhas ficam criptografadas neste PC. "Logar equipe" entra automaticamente onde houver dados, e se a sessão cair o painel loga sozinho.',
       mName:'Nome', mEmail:'E-mail ou usuário', mPass:'Senha', mCancel:'Cancelar', mSave:'Salvar',
       awakeTitle:'Impede o PC de dormir enquanto farma (a tela ainda pode desligar)', chatTitle:'Mostra ou esconde o chat do jogo em todos os painéis',
@@ -687,8 +692,11 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       msgStalled:'parece ter parado de farmar (10 min sem kills)',
       cdToday:'Hoje', cdWeek:'7 dias', cdAllTime:'Total', goalG:'Meta gold/dia', goalC:'Meta capturas/dia', csvTitle:'Baixa o resumo por dia em CSV (planilha)', csvDia:'Dia', csvHunts:'Hunts', csvHuntsTitle:'Baixa duas planilhas: uma linha por hunt (tempo, kills/h, XP/h, capturas, gold) e uma linha por item dropado, com drop por kill pra calcular a porcentagem. O registro é automático: cada vez que você troca de hunt, a anterior entra no log.', cdLifeHint:'contadores: sessão · lista: histórico',
       cdTargets:'Alvos', cdCritIvQ:'IV × qual.', cdCritIv:'IV', cdCritQ:'Qualidade', cdBestCritTitle:'Critério do melhor catch. A qualidade multiplica os stats e o poder, então IV × qualidade reflete melhor a força real.', cdTargetsHint:'Sem alvos ainda: no modo Total, passe o mouse num card e clique na ★ para marcar', cdTargetsMark:'Marcar/desmarcar como alvo',
-      whTitle:'Webhook do Discord: cole a URL do seu servidor pra receber avisos', whTest:'Testar', whTestOk:'✅ Chegou!', whTestErr:'❌ Falhou', sgAviso:'PokeGrid: voce esta vendendo coisas valiosas:', sgConfirma:'Confirmar a venda?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas no Windows (por tipo)', alLocalHint:'O botão \u{1F514} no topo liga/desliga tudo. Aqui você escolhe quais tipos avisam na sua máquina (o Discord tem as opções próprias abaixo).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Conta caiu', alLocal_stalled:'\u{1F7E0} Parou de farmar', alLocal_balls:'\u{1F535} Suprimento baixo (pokébola, potion, revive)', alLocal_faint:'\u{1F480} Pokémon derrubado', whProb:'Avisar problema (conta caiu, parou de farmar, sem bola)', whSum:'Resumo diário', whDay:'📊 Resumo de', whCaught:'CAPTURADO ✅', whLost:'perdido ✕', whTestMsg:'✅ PokeGrid conectado! Os avisos vão chegar aqui.',
-      bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Salva um arquivo com todas as configurações e o histórico (senhas ficam fora)', bkImpTitle:'Restaura configurações e histórico de um arquivo exportado', bkConfirm:'Substituir as configurações e o histórico (hunts, shinies, gráficos) pelos do arquivo? Uma cópia do estado atual é salva antes. O app vai recarregar. (Senhas não são afetadas.)', bkBad:'Arquivo inválido.', bkNoCopy:'Não foi possível salvar a cópia do estado atual (pasta de backups inacessível, disco cheio ou histórico acima de 2 MB). Importar mesmo assim? O histórico atual será perdido.'
+      whTitle:'Webhook do Discord: cole a URL do seu servidor pra receber avisos', whTest:'Testar', whTestOk:'✅ Chegou!', whTestErr:'❌ Falhou', sgAviso:'PokeGrid: voce esta vendendo coisas valiosas:', sgConfirma:'Confirmar a venda?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas no Windows (por tipo)', alLocalHint:'O botão \u{1F514} no topo liga/desliga tudo. Aqui você escolhe quais tipos avisam na sua máquina (o Discord tem as opções próprias abaixo).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Conta caiu', alLocal_stalled:'\u{1F7E0} Parou de farmar', alLocal_balls:'\u{1F535} Suprimento baixo (pokébola, potion, revive)', alLocal_faint:'\u{1F480} Pokémon derrubado', whProb:'Avisar problema (conta caiu, parou de farmar, sem bola)', whSum:'Resumo diário', whDay:'📊 Resumo de', whCaught:'CAPTURADO ✅', whSeen:'apareceu 👀', whTestMsg:'✅ PokeGrid conectado! Os avisos vão chegar aqui.',
+      bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Salva um arquivo com todas as configurações e o histórico (senhas ficam fora)', bkImpTitle:'Restaura configurações e histórico de um arquivo exportado', bkConfirm:'Substituir as configurações e o histórico (hunts, shinies, gráficos) pelos do arquivo? Uma cópia do estado atual é salva antes. O app vai recarregar. (Senhas não são afetadas.)', bkBad:'Arquivo inválido.', bkNoCopy:'Não foi possível salvar a cópia do estado atual (pasta de backups inacessível, disco cheio ou histórico acima de 2 MB). Importar mesmo assim? O histórico atual será perdido.',
+      tlNotaTip:'{p} de 100 (o melhor da aba é a base 100)', acLife:'vida', closeT:'Fechar', rmTitle:'Remover', shCapT:'capturado', shDefT:'derrotado',
+      scHint:'Rode userscripts (estilo Tampermonkey) dentro de cada painel do jogo. O IV calc já vem pronto. Você pode colar os seus. <b>Só adicione scripts em que você confia</b>, eles têm acesso total à página do jogo.',
+      scDrop:'Solte o arquivo .user.js aqui', scUrlPh:'Link do script no GitHub (.user.js)', scOuCole:'ou cole o código', scNamePh:'Nome do script', scCodePh:'Cole aqui o código do userscript (@grant none)', scAddBtn:'+ Adicionar script'
     },
     en: {
       loginAll:'▶ Log in all', accounts:'👤 Accounts', reloadAll:'⟳ Reload all', layout:'▦ Grid', layoutCol:'▤ Single column', propOn:'🖼 Original aspect', asOn:'🚀 Opens with Windows', asOff:'🚀 Open with Windows', asTitle:'Creates a PokeGrid shortcut in the Windows Startup folder, the same place you would put one by hand. It does not touch the registry and you can remove it via Win+R > shell:startup.', propOff:'🖼 Stretch to fill', propTitle:'Keeps the game original aspect ratio instead of stretching the image. Dark bars appear when the panel does not match the ratio; turned off, the image fills everything but gets distorted.', layoutRow:'▥ Single row', layoutTitle:'How the panels are arranged. Click to cycle: grid, single column (stacked) or single row (side by side).',
@@ -700,8 +708,8 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       dtHint:'Pick shiny or regular, the Ditto level and your account level (only hunts you can reach count). Each hunt shows its best transformation. Game rules: Ditto IV and quality are fixed; Shiny Ditto has -20% Atk and Sp. Atk (and -25% HP and defenses), regular -25% Atk and defenses; neither uses TMs. Regular lasts 12 h, shiny is permanent.',
       dtShiny:'Shiny', dtComum:'Regular', dtLevel:'Ditto level', dtFixos:'IV {iv} · quality {q} (fixed in the game)', dtReach:'Account level', dtReachTip:'Only hunts up to this level (0 = all)',
       dtByHunt:'By hunt', dtByType:'By type', dtMine:'My Ditto…', dtNoMine:'No Ditto in the team of the online accounts', dtVira:'becomes', dtFolga:'margin', dtHidden:'{n} hunts above the account level were left out',
-      hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', tier:'\u{1F3C6} Tierlist', tierTitle:'Effectiveness ranking per element, computed against the available hunts', tlCal:'Calibrated with your measurements: real damage {d}% of the model ({n} samples); {a} s per hit + {b} s per kill.', tlCal0:'No damage measurement of yours yet (farm with the Simple view open): default model damage; {a} s per hit + {b} s per kill.', tlCalT:'Timings fitted on {n} of your hunts.', tlTitle:'Tierlist by element', tlLevelLbl:'Your level', tlTm:'with TM', tlTmTip:'Count TMs the way the game does: the elemental one is an extra area hit every 10 s (own type only, power 300) and the AoE one makes the normal move hit every wild in the box; both together. Off, natural moves only. A TM is an item: only final stages learn it, and Ditto cannot.', tlHint:'Pick your level on the side: only hunts you can reach count, and each pokemon is rated at each hunt\'s level. Physical moves hit physical defense; special hit special; defender HP holds the pace. Orre XP already multiplied.', tlAll:'Summary', tlGeral:'Overall', scAddUrl:'+ Add from GitHub', scBaixando:'Downloading…', scReloadAviso:'This reloads the active panels, and the game drops the accounts in town: they stop farming until you re-enter the hunt. Continue?', scRemover:'Remove this script?', scTrust:'Only add scripts from authors you trust: they get full access to the game page.\\n\\nContinue?', scFalhou:'Could not download the script.', scAtualizar:'Update', scAtualizarTip:'Fetches the latest version from GitHub (only when you click)', scAtualizado:'Script updated!', scValeNoReload:'The new version only runs after the panels reload (⟳ Reload all).', scJaAtual:'The script is already up to date.', scSoUser:'Drop a .user.js file', scGrande:'Script too large: over 2 MB, or all scripts together exceed 4 MB.', tlFis:'PHY', tlEsp:'SPE', tlFisTip:'Physical move: faces the hunts physical defense', tlEspTip:'Special move: faces the hunts special defense', tlGeralHint:'Overall = yield summed across all hunts; the games best is 100.', tlWait:'Waiting for game data. Keep an account logged in and try again.', tlBest:'best at', tlOut:'Best Outland hunt (outside Orre) for those who cannot reach the region yet; the number is its score', accClear:'Clear this form', accWipe:'Clear this accounts game data (cookies and cache). Use it if the account glitched. Saved password stays.', accWipeConfirm:'Clear game data for account {n}?\\nFixes a glitched account (map, filters, missing Pokémon). The saved password is kept; the account logs out and back in.', accWipeOk:'Data cleared. The account will reload from scratch.', accWipeErr:'Could not clear. Try restarting the app.', whMention:'Discord user ID to mention in the shiny alert (optional)', ivsTitle:'Opens the app IV calculator: a single one, centered, fed by any panel', ivcTitle:"IV calculator", ivcHint:'Hover a Pokémon in any panel.<br>The data shows up here, and you can adjust level and stats to recalculate.', ivcLevel:'Level', ivcQuality:'Quality', ivcIvTotal:'Total IV', ivcPower:'Estimated power', ivcStats:'Stats and IV per stat', ivcCurrent:'current', ivcBase:'base', ivcPowerGame:'Power in game', ivcFooter:'edit any field to recalculate', ivcOpenPanel:'Open the calculator inside the panel (compare)', ivcMoves:'Moves', ivcMovePower:'move power', ivcMoveLast:'last damage seen in battle',
-      alerts:'🔔 Alerts', alertsTitle:'Turns every Windows alert on or off: shiny, dropped account, stopped farming, low supplies and fainted Pokémon', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
+      hunt:'🎯 Hunt', huntTitle:'Opens the Hunt Analyzer in all panels', tier:'\u{1F3C6} Tierlist', tierTitle:'Effectiveness ranking per element, computed against the available hunts', tlCal:'Calibrated with your measurements: real damage {d}% of the model ({n} samples); {a} s per hit + {b} s per kill.', tlCal0:'No damage measurement of yours yet (farm a few minutes with the app open): default model damage; {a} s per hit + {b} s per kill.', tlCalT:'Timings fitted on {n} of your hunts.', tlTitle:'Tierlist by element', tlLevelLbl:'Your level', tlTm:'with TM', tlObjXp:'XP/h', tlObjGold:'Gold/h', tlObjTip:'What the score measures: XP per hour or gold per hour (expected loot at NPC price)', tlPoke:'🎯 Pokémon', tlPkMine:'from my team…', tlPkSp:'Pokémon', tlPkLv:'Level', tlPkQ:'Quality', tlPkIv:'IV', tlPkPick:'Pick a Pokémon from your team or type any name: the list shows the best hunts for it up to your level.', tlGoldTip:'Estimate: model kills/h × expected loot per kill at NPC price. Captures, supplies and loot bonuses are not counted; where the value comes from a rare drop, the average takes a while to show.', tlGoldNone:'Item prices have not arrived from the game yet. The app retries on its own while an account is open.', tlGoldFail:'Could not read the item prices from the game. Close and reopen the app to try again.', tlTmTip:'Count TMs the way the game does: the elemental one is an extra area hit every 10 s (own type only, power 300) and the AoE one makes the normal move hit every wild in the box; both together. Off, natural moves only. A TM is an item: only final stages learn it, and Ditto cannot.', tlHint:'Pick your level on the side: only hunts you can reach count, and each pokemon is rated at each hunt\'s level. Physical moves hit physical defense; special hit special; defender HP holds the pace. Orre XP already multiplied.', tlAll:'Summary', tlGeral:'Overall', scAddUrl:'+ Add from GitHub', scBaixando:'Downloading…', scReloadAviso:'This reloads the active panels, and the game drops the accounts in town: they stop farming until you re-enter the hunt. Continue?', scRemover:'Remove this script?', scTrust:'Only add scripts from authors you trust: they get full access to the game page.\\n\\nContinue?', scFalhou:'Could not download the script.', scAtualizar:'Update', scAtualizarTip:'Fetches the latest version from GitHub (only when you click)', scAtualizado:'Script updated!', scValeNoReload:'The new version only runs after the panels reload (⟳ Reload all).', scJaAtual:'The script is already up to date.', scSoUser:'Drop a .user.js file', scGrande:'Script too large: over 2 MB, or all scripts together exceed 4 MB.', tlFis:'PHY', tlEsp:'SPE', tlFisTip:'Physical move: faces the hunts physical defense', tlEspTip:'Special move: faces the hunts special defense', tlGeralHint:'Overall = yield summed across all hunts; the games best is 100.', tlWait:'Waiting for game data. Keep an account logged in and try again.', tlBest:'best at', tlOut:'Best Outland hunt (outside Orre) for those who cannot reach the region yet; the number is its score', accClear:'Clear this form', accWipe:'Clear this accounts game data (cookies and cache). Use it if the account glitched. Saved password stays.', accWipeConfirm:'Clear game data for account {n}?\\nFixes a glitched account (map, filters, missing Pokémon). The saved password is kept; the account logs out and back in.', accWipeOk:'Data cleared. The account will reload from scratch.', accWipeErr:'Could not clear. Try restarting the app.', whMention:'Discord user ID to mention in the shiny alert (optional)', ivsTitle:'Opens the app IV calculator: a single one, centered, fed by any panel', ivcTitle:"IV calculator", ivcHint:'Hover a Pokémon in any panel.<br>The data shows up here, and you can adjust level and stats to recalculate.', ivcLevel:'Level', ivcQuality:'Quality', ivcIvTotal:'Total IV', ivcPower:'Estimated power', ivcStats:'Stats and IV per stat', ivcCurrent:'current', ivcBase:'base', ivcPowerGame:'Power in game', ivcFooter:'edit any field to recalculate', ivcOpenPanel:'Open the calculator inside the panel (compare)', ivcMoves:'Moves', ivcMovePower:'move power', ivcMoveLast:'last damage seen in battle',
+      alerts:'🔔 Alerts', alertsTitle:'Turns every Windows alert on or off: shiny, dropped account, stopped farming, low supplies and fainted Pokémon', msgDown:'disconnected', msgBalls:'is out of Pokéballs', count:'🔢 Panels', countTitle:'How many accounts to run at once. Removing panels closes only the last ones, and the other accounts keep farming.', stats:'📊 Panel', statsTitle:'Summary of the focused account (gold/h, XP/h, bag, drops)', statsResumo:'Summary', statsWaiting:'Waiting for game data…', statsWaiting2:'Keep the panel logged in and farming for a few seconds.', statsOff:'Panel is off.',
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Supplies used', stBalls:'balls', stPots:'heals', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team', donTitle:'Support the project', donText:'PokeGrid is free and built in spare time. If it makes your farming easier, a contribution of any size helps keep the project alive.', donBtn:'Support via Pix / Mercado Pago \u2197', stTeamPick:'Click to put it in front (becomes the hunting leader)', stTeamLead:'Current leader',
       cards:'🍃 Simple', cardsShort:'Simple', cardsTitle:'Simple, ultra-light mode: hides the game and shows only the numbers, using the least PC possible (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'waiting…', cdOff:'off', cdHunting:'hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
       cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdSortMeasured:'Measured: gold/h ↓', cdMeasured:'your average', cdHitsKill:'hits/kill', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
@@ -720,7 +728,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       refTitle:'Creator referral, copy it if you want to help :)',
       refTitle:"Creator's referral, copy it if you want to help :)", refCopied:'✓ Copied!',
       stLoading:'loading…', stOnline:'online', stError:'error', stOff:'off', trainer:'Trainer',
-      tZoomOut:'Zoom out', tZoomIn:'Zoom in', tReload:'Reload', tExpand:'Expand (Ctrl+number)', tZoomPct:'Current zoom (click resets to 100%)', faq:'❓ FAQ', faqTitle:'Frequently asked questions: opens the FAQ in your browser', manual:'📖 Manual', manualTitle:'Manual: what every button and section does', verNova:'New version available. Click to open the download page.', goalEta:'at this pace, goal at', tRename:'Double-click to rename', promptRename:'Trainer name:', accSaveErr:'Could not save the passwords to disk. The reason is in the error report (☰ Options). Usually free space, antivirus blocking the app folder, or the OS without encryption.',
+      tZoomOut:'Zoom out', tZoomIn:'Zoom in', tReload:'Reload', tExpand:'Expand (Ctrl+number)', tZoomPct:'Current zoom (click resets to 100%)', faq:'❓ FAQ', faqTitle:'Frequently asked questions: opens the FAQ in your browser', manual:'📖 Manual', manualTitle:'Manual: what every button and section does', verNova:'New version available. Click to open the download page.', goalEta:'at this pace, goal at', tRename:'Double-click to rename', accSaveErr:'Could not save the passwords to disk. The reason is in the error report (☰ Options). Usually free space, antivirus blocking the app folder, or the OS without encryption.',
       mH2:'Saved accounts', mHint:'Fill in the e-mail/username and password for each panel. Passwords are encrypted on this PC. "Log in all" signs in automatically where data exists, and if the session drops the panel logs in by itself.',
       mName:'Name', mEmail:'E-mail or username', mPass:'Password', mCancel:'Cancel', mSave:'Save',
       awakeTitle:'Keeps the PC awake while farming (the screen can still turn off)', chatTitle:'Shows or hides the game chat in all panels',
@@ -731,8 +739,11 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       msgStalled:'seems to have stopped farming (10 min without kills)',
       cdToday:'Today', cdWeek:'7 days', cdAllTime:'All time', goalG:'Gold goal/day', goalC:'Catch goal/day', csvTitle:'Downloads the daily summary as a CSV (spreadsheet)', csvDia:'Day', csvHunts:'Hunts', csvHuntsTitle:'Downloads two spreadsheets: one row per hunt (time, kills/h, XP/h, captures, gold) and one row per dropped item, with drop per kill so you can work out the percentage. Logging is automatic: every time you switch hunts, the previous one is recorded.', cdLifeHint:'counters: session · list: all-time',
       cdTargets:'Targets', cdCritIvQ:'IV × qual.', cdCritIv:'IV', cdCritQ:'Quality', cdBestCritTitle:'Best-catch criterion. Quality multiplies stats and power, so IV × quality reflects real strength better.', cdTargetsHint:'No targets yet: in Total mode, hover a card and click the ★ to mark it', cdTargetsMark:'Mark/unmark as target',
-      whTitle:'Discord webhook: paste your server URL to receive alerts', whTest:'Test', whTestOk:'✅ Delivered!', whTestErr:'❌ Failed', sgAviso:'PokeGrid: you are selling valuable things:', sgConfirma:'Confirm the sale?', whShiny:'Shiny alerts', alLocalTitle:'\u{1F514} Windows alerts (by type)', alLocalHint:'The \u{1F514} button at the top turns everything on/off. Here you pick which types notify on this machine (Discord has its own options below).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Account dropped', alLocal_stalled:'\u{1F7E0} Stopped farming', alLocal_balls:'\u{1F535} Low supplies (balls, potions, revives)', alLocal_faint:'\u{1F480} Pokémon fainted', whProb:'Problem alerts (dropped, stopped farming, out of balls)', whSum:'Daily summary', whDay:'📊 Summary of', whCaught:'CAUGHT ✅', whLost:'lost ✕', whTestMsg:'✅ PokeGrid connected! Alerts will arrive here.',
-      bkExp:'💾 Export config', bkImp:'📂 Import config', bkExpTitle:'Saves a file with all settings and history (passwords stay out)', bkImpTitle:'Restores settings and history from an exported file', bkConfirm:'Replace the current settings and history (hunts, shinies, charts) with the file? A copy of the current state is saved first. The app will reload. (Passwords are not affected.)', bkBad:'Invalid file.', bkNoCopy:'Could not save a copy of the current state (backup folder unavailable, disk full or history above 2 MB). Import anyway? The current history will be lost.'
+      whTitle:'Discord webhook: paste your server URL to receive alerts', whTest:'Test', whTestOk:'✅ Delivered!', whTestErr:'❌ Failed', sgAviso:'PokeGrid: you are selling valuable things:', sgConfirma:'Confirm the sale?', whShiny:'Shiny alerts', alLocalTitle:'\u{1F514} Windows alerts (by type)', alLocalHint:'The \u{1F514} button at the top turns everything on/off. Here you pick which types notify on this machine (Discord has its own options below).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Account dropped', alLocal_stalled:'\u{1F7E0} Stopped farming', alLocal_balls:'\u{1F535} Low supplies (balls, potions, revives)', alLocal_faint:'\u{1F480} Pokémon fainted', whProb:'Problem alerts (dropped, stopped farming, out of balls)', whSum:'Daily summary', whDay:'📊 Summary of', whCaught:'CAUGHT ✅', whSeen:'appeared 👀', whTestMsg:'✅ PokeGrid connected! Alerts will arrive here.',
+      bkExp:'💾 Export config', bkImp:'📂 Import config', bkExpTitle:'Saves a file with all settings and history (passwords stay out)', bkImpTitle:'Restores settings and history from an exported file', bkConfirm:'Replace the current settings and history (hunts, shinies, charts) with the file? A copy of the current state is saved first. The app will reload. (Passwords are not affected.)', bkBad:'Invalid file.', bkNoCopy:'Could not save a copy of the current state (backup folder unavailable, disk full or history above 2 MB). Import anyway? The current history will be lost.',
+      tlNotaTip:'{p} out of 100 (the best in the tab is the 100 baseline)', acLife:'lifetime', closeT:'Close', rmTitle:'Remove', shCapT:'caught', shDefT:'defeated',
+      scHint:'Run userscripts (Tampermonkey style) inside each game panel. The IV calc comes built in. You can paste your own. <b>Only add scripts you trust</b>, they get full access to the game page.',
+      scDrop:'Drop the .user.js file here', scUrlPh:'Script link on GitHub (.user.js)', scOuCole:'or paste the code', scNamePh:'Script name', scCodePh:'Paste the userscript code here (@grant none)', scAddBtn:'+ Add script'
     },
     es: {
       loginAll:'▶ Iniciar equipo', accounts:'👤 Entrenadores', reloadAll:'⟳ Recargar todo', layout:'▦ Cuadrícula', layoutCol:'▤ Una columna', propOn:'🖼 Proporción original', asOn:'🚀 Abre con Windows', asOff:'🚀 Abrir con Windows', asTitle:'Crea un acceso directo de PokeGrid en la carpeta Inicio de Windows, el mismo lugar donde lo pondrías a mano. No toca el registro y puedes quitarlo con Win+R > shell:startup.', propOff:'🖼 Estirar en pantalla', propTitle:'Mantiene la proporción original del juego, sin estirar la imagen. Queda fondo oscuro cuando el panel no coincide con la proporción; apagado, la imagen llena todo pero se distorsiona.', layoutRow:'▥ Una fila', layoutTitle:'Cómo se organizan los paneles. Clic para alternar: cuadrícula, una columna (apilado) o una fila (lado a lado).',
@@ -744,8 +755,8 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       dtHint:'Elige shiny o común, el nivel del Ditto y el nivel de la cuenta (solo entran hunts que alcanza). Cada hunt muestra su mejor transformación. Reglas del juego: IV y calidad del Ditto son fijos; Shiny Ditto tiene -20% de Ataque y Sp. Atk (y -25% de HP y defensas), el común -25% de Ataque y defensas; ninguno usa TM. El común dura 12 h, el shiny es permanente.',
       dtShiny:'Shiny', dtComum:'Común', dtLevel:'Nivel del Ditto', dtFixos:'IV {iv} · calidad {q} (fijos en el juego)', dtReach:'Nivel de la cuenta', dtReachTip:'Solo hunts hasta este nivel (0 = todas)',
       dtByHunt:'Por hunt', dtByType:'Por tipo', dtMine:'Mi Ditto…', dtNoMine:'Ningún Ditto en el equipo de las cuentas conectadas', dtVira:'se vuelve', dtFolga:'margen', dtHidden:'{n} hunts por encima del nivel de la cuenta quedaron fuera',
-      hunt:'🎯 Hunt', huntTitle:'Abre el Hunt Analyzer en todos los paneles', tier:'\u{1F3C6} Tierlist', tierTitle:'Ranking de eficacia por elemento, calculado contra las hunts disponibles', tlCal:'Calibrado con tus mediciones: daño real {d}% del modelo ({n} muestras); {a} s por golpe + {b} s por kill.', tlCal0:'Aún sin medición tuya de daño (farmea con el Simple abierto): daño del modelo estándar; {a} s por golpe + {b} s por kill.', tlCalT:'Tiempos ajustados con {n} hunts tuyas.', tlTitle:'Tierlist por elemento', tlLevelLbl:'Tu nivel', tlTm:'con TM', tlTmTip:'Contar TMs como hace el juego: el elemental es un golpe extra en área cada 10 s (solo del propio tipo, poder 300) y el AoE hace que el golpe normal alcance a todos los salvajes del cuadro; los dos juntos. Apagado, solo golpes naturales. El TM es un ítem: solo la etapa final lo aprende, y Ditto no.', tlHint:'Elige tu nivel al lado: solo entran las hunts que alcanzas, y cada pokémon se evalúa al nivel de cada hunt. Golpe físico golpea la defensa física; especial, la especial; la vida del defensor frena el ritmo. XP de Orre ya multiplicado.', tlAll:'Resumen', tlGeral:'General', scAddUrl:'+ Añadir desde GitHub', scBaixando:'Descargando…', scReloadAviso:'Esto recarga los paneles activos, y el juego deja las cuentas en la ciudad: dejan de farmear hasta que vuelvas a la hunt. ¿Continuar?', scRemover:'¿Quitar este script?', scTrust:'Añade solo scripts de autores en los que confías: tienen acceso total a la página del juego.\\n\\n¿Continuar?', scFalhou:'No se pudo descargar el script.', scAtualizar:'Actualizar', scAtualizarTip:'Busca la versión más reciente en GitHub (solo cuando haces clic)', scAtualizado:'¡Script actualizado!', scValeNoReload:'La versión nueva solo entra cuando los paneles se recarguen (⟳ Actualizar todo).', scJaAtual:'El script ya está en la versión más reciente.', scSoUser:'Suelta un archivo .user.js', scGrande:'Script demasiado grande: supera 2 MB, o los scripts sumados superan 4 MB.', tlFis:'FÍS', tlEsp:'ESP', tlFisTip:'Golpe físico: enfrenta la defensa física de la hunt', tlEspTip:'Golpe especial: enfrenta la defensa especial de la hunt', tlGeralHint:'Nota general = rendimiento sumado en todas las hunts; el mejor del juego es 100.', tlWait:'Esperando los datos del juego. Deja una cuenta conectada e intenta de nuevo.', tlBest:'mejor en', tlOut:'Mejor hunt en Outland (fuera de Orre) para quien aún no alcanza la región; el número es su nota', accClear:'Limpiar los campos de este formulario', accWipe:'Limpia los datos del juego de esta cuenta (cookies y caché). Úsalo si la cuenta se bugueó. La contraseña guardada queda.', accWipeConfirm:'\u00bfLimpiar los datos del juego de la cuenta {n}?\\nArregla una cuenta bugueada. La contraseña guardada no se borra; la cuenta sale y vuelve a entrar.', accWipeOk:'Datos limpios. La cuenta recargará desde cero.', accWipeErr:'No se pudo limpiar. Prueba reiniciar la app.', whMention:'ID del usuario de Discord para mencionar en la alerta de shiny (opcional)', ivsTitle:'Abre la calculadora de IV del app: una sola, en el centro, alimentada por cualquier panel', ivcTitle:"Calculadora de IV", ivcHint:'Pasa el mouse sobre un pokémon en cualquier panel.<br>Los datos aparecen aquí, y puedes ajustar nivel y atributos para recalcular.', ivcLevel:'Nivel', ivcQuality:'Calidad', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'actual', ivcBase:'base', ivcPowerGame:'Poder en el juego', ivcFooter:'edita cualquier campo para recalcular', ivcOpenPanel:'Abrir la calculadora dentro del panel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder del golpe', ivcMoveLast:'último daño observado en batalla',
-      alerts:'🔔 Alertas', alertsTitle:'Enciende y apaga todos los avisos de Windows: shiny, cuenta caída, dejó de farmear, suministro bajo y Pokémon debilitado', msgDown:'se desconectó', msgBalls:'se quedó sin Pokéballs', count:'🔢 Paneles', stats:'📊 Panel', statsTitle:'Resumen de la cuenta enfocada (oro/h, XP/h, bolsa, drops)', statsResumo:'Resumen', statsWaiting:'Esperando datos del juego…', statsWaiting2:'Deja el panel conectado y farmeando unos segundos.', statsOff:'Panel apagado.',
+      hunt:'🎯 Hunt', huntTitle:'Abre el Hunt Analyzer en todos los paneles', tier:'\u{1F3C6} Tierlist', tierTitle:'Ranking de eficacia por elemento, calculado contra las hunts disponibles', tlCal:'Calibrado con tus mediciones: daño real {d}% del modelo ({n} muestras); {a} s por golpe + {b} s por kill.', tlCal0:'Aún sin medición tuya de daño (farmea unos minutos con la app abierta): daño del modelo estándar; {a} s por golpe + {b} s por kill.', tlCalT:'Tiempos ajustados con {n} hunts tuyas.', tlTitle:'Tierlist por elemento', tlLevelLbl:'Tu nivel', tlTm:'con TM', tlObjXp:'XP/h', tlObjGold:'Oro/h', tlObjTip:'Qué mide la nota: XP por hora u oro por hora (botín esperado a precio de NPC)', tlPoke:'🎯 Pokémon', tlPkMine:'de mi equipo…', tlPkSp:'Pokémon', tlPkLv:'Nivel', tlPkQ:'Calidad', tlPkIv:'IV', tlPkPick:'Elige un Pokémon de tu equipo o escribe cualquier nombre: la lista muestra las mejores hunts para él hasta tu nivel.', tlGoldTip:'Estimación: kills/h del modelo × botín esperado por kill a precio de NPC. No cuenta capturas, supply ni bonos de botín; donde el valor viene de un drop raro, el promedio tarda en aparecer.', tlGoldNone:'Los precios de los ítems aún no llegaron del juego. La app lo intenta de nuevo sola, con una cuenta abierta.', tlGoldFail:'No se pudieron leer los precios de los ítems del juego. Cierra y abre la app para intentarlo de nuevo.', tlTmTip:'Contar TMs como hace el juego: el elemental es un golpe extra en área cada 10 s (solo del propio tipo, poder 300) y el AoE hace que el golpe normal alcance a todos los salvajes del cuadro; los dos juntos. Apagado, solo golpes naturales. El TM es un ítem: solo la etapa final lo aprende, y Ditto no.', tlHint:'Elige tu nivel al lado: solo entran las hunts que alcanzas, y cada pokémon se evalúa al nivel de cada hunt. Golpe físico golpea la defensa física; especial, la especial; la vida del defensor frena el ritmo. XP de Orre ya multiplicado.', tlAll:'Resumen', tlGeral:'General', scAddUrl:'+ Añadir desde GitHub', scBaixando:'Descargando…', scReloadAviso:'Esto recarga los paneles activos, y el juego deja las cuentas en la ciudad: dejan de farmear hasta que vuelvas a la hunt. ¿Continuar?', scRemover:'¿Quitar este script?', scTrust:'Añade solo scripts de autores en los que confías: tienen acceso total a la página del juego.\\n\\n¿Continuar?', scFalhou:'No se pudo descargar el script.', scAtualizar:'Actualizar', scAtualizarTip:'Busca la versión más reciente en GitHub (solo cuando haces clic)', scAtualizado:'¡Script actualizado!', scValeNoReload:'La versión nueva solo entra cuando los paneles se recarguen (⟳ Actualizar todo).', scJaAtual:'El script ya está en la versión más reciente.', scSoUser:'Suelta un archivo .user.js', scGrande:'Script demasiado grande: supera 2 MB, o los scripts sumados superan 4 MB.', tlFis:'FÍS', tlEsp:'ESP', tlFisTip:'Golpe físico: enfrenta la defensa física de la hunt', tlEspTip:'Golpe especial: enfrenta la defensa especial de la hunt', tlGeralHint:'Nota general = rendimiento sumado en todas las hunts; el mejor del juego es 100.', tlWait:'Esperando los datos del juego. Deja una cuenta conectada e intenta de nuevo.', tlBest:'mejor en', tlOut:'Mejor hunt en Outland (fuera de Orre) para quien aún no alcanza la región; el número es su nota', accClear:'Limpiar los campos de este formulario', accWipe:'Limpia los datos del juego de esta cuenta (cookies y caché). Úsalo si la cuenta se bugueó. La contraseña guardada queda.', accWipeConfirm:'\u00bfLimpiar los datos del juego de la cuenta {n}?\\nArregla una cuenta bugueada. La contraseña guardada no se borra; la cuenta sale y vuelve a entrar.', accWipeOk:'Datos limpios. La cuenta recargará desde cero.', accWipeErr:'No se pudo limpiar. Prueba reiniciar la app.', whMention:'ID del usuario de Discord para mencionar en la alerta de shiny (opcional)', ivsTitle:'Abre la calculadora de IV del app: una sola, en el centro, alimentada por cualquier panel', ivcTitle:"Calculadora de IV", ivcHint:'Pasa el mouse sobre un pokémon en cualquier panel.<br>Los datos aparecen aquí, y puedes ajustar nivel y atributos para recalcular.', ivcLevel:'Nivel', ivcQuality:'Calidad', ivcIvTotal:'IV total', ivcPower:'Poder estimado', ivcStats:'Atributos e IV por stat', ivcCurrent:'actual', ivcBase:'base', ivcPowerGame:'Poder en el juego', ivcFooter:'edita cualquier campo para recalcular', ivcOpenPanel:'Abrir la calculadora dentro del panel (comparar)', ivcMoves:'Golpes', ivcMovePower:'poder del golpe', ivcMoveLast:'último daño observado en batalla',
+      alerts:'🔔 Alertas', alertsTitle:'Enciende y apaga todos los avisos de Windows: shiny, cuenta caída, dejó de farmear, suministro bajo y Pokémon debilitado', msgDown:'se desconectó', msgBalls:'se quedó sin Pokéballs', count:'🔢 Paneles', countTitle:'Cuántas cuentas ejecutar a la vez. Quitar paneles cierra solo los del final, y las otras cuentas siguen farmeando.', stats:'📊 Panel', statsTitle:'Resumen de la cuenta enfocada (oro/h, XP/h, bolsa, drops)', statsResumo:'Resumen', statsWaiting:'Esperando datos del juego…', statsWaiting2:'Deja el panel conectado y farmeando unos segundos.', statsOff:'Panel apagado.',
       stLevel:'Nivel', stSession:'Sesión', stDefeated:'Derrotados', stXpGain:'XP ganada', stCaptures:'Capturas', stGold:'Oro de la sesión', stLoot:'Loot (venta)', stCapSell:'Capturas (venta)', stSupply:'Suministros gastados', stBalls:'bolas', stPots:'curas', stBalance:'Balance de la sesión', stDrops:'Drops de la sesión', stAccount:'Cuenta', stProfession:'Profesión', stMail:'Regalos en el correo', stCatchTotal:'Capturas totales', stTeam:'Equipo', donTitle:'Apoya el proyecto', donText:'PokeGrid es gratuito y hecho en el tiempo libre. Si te facilita el farmeo, un aporte de cualquier valor ayuda a mantener el proyecto vivo.', donBtn:'Apoyar vía Pix / Mercado Pago \u2197', stTeamPick:'Clic para ponerlo al frente (será el líder que caza)', stTeamLead:'Líder actual',
       cards:'🍃 Simple', cardsShort:'Simple', cardsTitle:'Modo simple y ultraligero: oculta el juego y muestra solo los números, gastando lo mínimo del PC (el farmeo sigue)', cdGold:'oro/h neto', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sesión)', cdShiny:'shiny enc/cap', cdActive:'cuentas activas', cdByAcc:'Por cuenta · clic en el encabezado para ordenar, en la fila para abrir el juego', cdTrend:'Tendencia · última hora', cdCatches:'Últimas capturas · todas las cuentas', cdShinies:'Apariciones de shiny ✨', cdConta:'Cuenta', cdHunt:'Hunt', cdStatus:'Estado', cdBest:'Mejor catch', cdLast:'Último catch', cdWaiting:'esperando…', cdOff:'apagado', cdHunting:'cazando', cdTotal:'Total', cdSeen:'aparecieron', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada todavía',
       cdHunts:'Ranking de hunts', cdShared:'Compartidos en el chat', cdFirst:'1ª captura de la especie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efectividad ↓', cdSortMeasured:'Medido: oro/h ↓', cdMeasured:'tu promedio', cdHitsKill:'golpes/kill', cdEffOf:'efectividad vs líder de', cdLoading:'cargando datos del juego…', stLastCatch:'Último catch', stSince:'balls desde entonces',
@@ -763,7 +774,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       stTargetLabel:'🎯 Objetivo shiny', stTargetHow:'Elige una especie en el engranaje ⚙ de arriba, en "Objetivo shiny". El panel pasa a mostrar si ya apareció, si fue capturado y cuántas bolas gastaste en él.', stPinnedHow:'Nada fijado aún. En el engranaje ⚙ de arriba, busca un objeto o poké ball en "Objetos fijados" para ver la cantidad aquí, en todas las cuentas.', stTargetStatus:'Estado', stCaught:'¡capturado!', stFoundNotCaught:'apareció, no capturado', stNotAppeared:'aún no apareció', stTargetShinyTries:'Intentos en el shiny', stTargetFarm:'Farmeo en la especie', stTries:'intentos', cfgTarget:'Objetivo shiny (seguir la caza)', cfgBalls:'\u{1F9FA} Comprar pokébolas', cfgBallsHint:'Compra en la cuenta mostrada en el panel, directo en la tienda del juego. Siempre pide confirmación con el costo.', cfgBallsConfirm:'\u00bfComprar {q} × {b} por {c} gold en la cuenta {a}?\\nTienes {g} gold.', cfgBallsOk:'\u00a1{q} bolas compradas!', cfgBallsErr:'La compra falló', cfgBallsOff:'Ninguna cuenta encendida.', cfgLock:'\u{1F512} Candado de venta', cfgLockHint:'Estos objetos piden confirmación antes de vender. Shiny y calidad alta ya están protegidos.', cfgLockSearch:'Buscar objeto para proteger…', cfgLockRemove:'Desbloquear', cfgTargetSearch:'Buscar especie para cazar…',
       refTitle:'Referral del creador, cópialo si quieres ayudar :)', refCopied:'✓ ¡Copiado!',
       stLoading:'cargando…', stOnline:'online', stError:'error', stOff:'apagada', trainer:'Entrenador',
-      tZoomOut:'Alejar zoom', tZoomIn:'Acercar zoom', tReload:'Recargar', tExpand:'Expandir (Ctrl+número)', tZoomPct:'Zoom actual (clic vuelve a 100%)', faq:'❓ FAQ', faqTitle:'Preguntas frecuentes: abre el FAQ en el navegador', manual:'📖 Manual', manualTitle:'Manual: qué hace cada botón y cada sección', verNova:'Nueva versión disponible. Clic para abrir la página de descarga.', goalEta:'a este ritmo, meta a las', tRename:'Doble clic para renombrar', promptRename:'Nombre del entrenador:', accSaveErr:'No se pudieron guardar las contraseñas en el disco. El motivo está en el informe de errores (☰ Opciones). Suele ser espacio libre, antivirus bloqueando la carpeta, o el sistema sin cifrado.',
+      tZoomOut:'Alejar zoom', tZoomIn:'Acercar zoom', tReload:'Recargar', tExpand:'Expandir (Ctrl+número)', tZoomPct:'Zoom actual (clic vuelve a 100%)', faq:'❓ FAQ', faqTitle:'Preguntas frecuentes: abre el FAQ en el navegador', manual:'📖 Manual', manualTitle:'Manual: qué hace cada botón y cada sección', verNova:'Nueva versión disponible. Clic para abrir la página de descarga.', goalEta:'a este ritmo, meta a las', tRename:'Doble clic para renombrar', accSaveErr:'No se pudieron guardar las contraseñas en el disco. El motivo está en el informe de errores (☰ Opciones). Suele ser espacio libre, antivirus bloqueando la carpeta, o el sistema sin cifrado.',
       mH2:'Entrenadores guardados', mHint:'Completa el e-mail/usuario y la contraseña de cada panel. Las contraseñas quedan cifradas en este PC. "Iniciar equipo" entra automáticamente donde haya datos, y si la sesión se cae el panel entra solo.',
       mName:'Nombre', mEmail:'E-mail o usuario', mPass:'Contraseña', mCancel:'Cancelar', mSave:'Guardar',
       awakeTitle:'Evita que el PC se duerma mientras farmea (la pantalla aún puede apagarse)', chatTitle:'Muestra u oculta el chat del juego en todos los paneles',
@@ -774,8 +785,11 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       msgStalled:'parece haber dejado de farmear (10 min sin kills)',
       cdToday:'Hoy', cdWeek:'7 días', cdAllTime:'Total', goalG:'Meta oro/día', goalC:'Meta capturas/día', csvTitle:'Descarga el resumen por día en CSV (planilla)', csvDia:'Día', csvHunts:'Hunts', csvHuntsTitle:'Descarga dos planillas: una fila por hunt (tiempo, kills/h, XP/h, capturas, oro) y una fila por ítem dropeado, con drop por kill para calcular el porcentaje. El registro es automático: cada vez que cambias de hunt, la anterior queda guardada.', cdLifeHint:'contadores: sesión · lista: histórico',
       cdTargets:'Objetivos', cdCritIvQ:'IV × cal.', cdCritIv:'IV', cdCritQ:'Calidad', cdBestCritTitle:'Criterio del mejor catch. La calidad multiplica los stats y el poder, así que IV × calidad refleja mejor la fuerza real.', cdTargetsHint:'Sin objetivos aún: en modo Total, pasa el mouse por un card y haz clic en la ★ para marcarlo', cdTargetsMark:'Marcar/desmarcar como objetivo',
-      whTitle:'Webhook de Discord: pega la URL de tu servidor para recibir avisos', whTest:'Probar', whTestOk:'✅ ¡Llegó!', whTestErr:'❌ Falló', sgAviso:'PokeGrid: estas vendiendo cosas valiosas:', sgConfirma:'¿Confirmar la venta?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas en Windows (por tipo)', alLocalHint:'El botón \u{1F514} de arriba enciende/apaga todo. Aquí eliges qué tipos avisan en tu máquina (Discord tiene sus propias opciones abajo).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Cuenta caída', alLocal_stalled:'\u{1F7E0} Dejó de farmear', alLocal_balls:'\u{1F535} Suministro bajo (bolas, pociones, revivires)', alLocal_faint:'\u{1F480} Pokémon debilitado', whProb:'Avisar problema (cuenta caída, dejó de farmear, sin bolas)', whSum:'Resumen diario', whDay:'📊 Resumen de', whCaught:'CAPTURADO ✅', whLost:'perdido ✕', whTestMsg:'✅ ¡PokeGrid conectado! Los avisos llegarán aquí.',
-      bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Guarda un archivo con todas las configuraciones y el historial (las contraseñas quedan fuera)', bkImpTitle:'Restaura configuraciones e historial desde un archivo exportado', bkConfirm:'¿Reemplazar las configuraciones y el historial (hunts, shinies, gráficos) por los del archivo? Antes se guarda una copia del estado actual. La app se recargará. (Las contraseñas no se ven afectadas.)', bkBad:'Archivo inválido.', bkNoCopy:'No se pudo guardar la copia del estado actual (carpeta de backups inaccesible, disco lleno o historial de más de 2 MB). ¿Importar igual? El historial actual se perderá.'
+      whTitle:'Webhook de Discord: pega la URL de tu servidor para recibir avisos', whTest:'Probar', whTestOk:'✅ ¡Llegó!', whTestErr:'❌ Falló', sgAviso:'PokeGrid: estas vendiendo cosas valiosas:', sgConfirma:'¿Confirmar la venta?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas en Windows (por tipo)', alLocalHint:'El botón \u{1F514} de arriba enciende/apaga todo. Aquí eliges qué tipos avisan en tu máquina (Discord tiene sus propias opciones abajo).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Cuenta caída', alLocal_stalled:'\u{1F7E0} Dejó de farmear', alLocal_balls:'\u{1F535} Suministro bajo (bolas, pociones, revivires)', alLocal_faint:'\u{1F480} Pokémon debilitado', whProb:'Avisar problema (cuenta caída, dejó de farmear, sin bolas)', whSum:'Resumen diario', whDay:'📊 Resumen de', whCaught:'CAPTURADO ✅', whSeen:'apareció 👀', whTestMsg:'✅ ¡PokeGrid conectado! Los avisos llegarán aquí.',
+      bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Guarda un archivo con todas las configuraciones y el historial (las contraseñas quedan fuera)', bkImpTitle:'Restaura configuraciones e historial desde un archivo exportado', bkConfirm:'¿Reemplazar las configuraciones y el historial (hunts, shinies, gráficos) por los del archivo? Antes se guarda una copia del estado actual. La app se recargará. (Las contraseñas no se ven afectadas.)', bkBad:'Archivo inválido.', bkNoCopy:'No se pudo guardar la copia del estado actual (carpeta de backups inaccesible, disco lleno o historial de más de 2 MB). ¿Importar igual? El historial actual se perderá.',
+      tlNotaTip:'{p} de 100 (el mejor de la pestaña es la base 100)', acLife:'total', closeT:'Cerrar', rmTitle:'Quitar', shCapT:'capturado', shDefT:'derrotado',
+      scHint:'Ejecuta userscripts (estilo Tampermonkey) dentro de cada panel del juego. La calculadora de IV ya viene lista. Puedes pegar los tuyos. <b>Añade solo scripts en los que confías</b>, tienen acceso total a la página del juego.',
+      scDrop:'Suelta el archivo .user.js aquí', scUrlPh:'Enlace del script en GitHub (.user.js)', scOuCole:'o pega el código', scNamePh:'Nombre del script', scCodePh:'Pega aquí el código del userscript (@grant none)', scAddBtn:'+ Añadir script'
     }
   };
   let lang = ['en', 'es'].includes(lsGet('lang')) ? lsGet('lang') : 'pt';
@@ -831,6 +845,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       wv.addEventListener('console-message', (e) => {
         const m = e && e.message;
         if (typeof m !== 'string') return;
+        if (m === '__PGDLG__1' || m === '__PGDLG__0') { dlgT[i] = m === '__PGDLG__1' ? Date.now() : 0; return; } // alert/confirm/prompt aberto no painel (SELLGUARD): o vigia de 60s espera
         if (m.lastIndexOf('__PGST__', 0) === 0 && m.length < 300000) {
           try { const d = stSane(JSON.parse(m.slice(8))); if (d) { stCache[i] = { t: Date.now(), d }; dtPush(); } } catch {}
           return;
@@ -854,6 +869,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
 
       wv.addEventListener('dom-ready', () => {
         if (!off[i] && !falhou) { dot.className = 'dot ok'; status.textContent = t('stOnline'); fails = 0; alertedDown = false; } // carregou DE VERDADE: zera o watchdog (a pagina de erro tambem emite dom-ready)
+        dlgT[i] = 0; // pagina nova: um dialogo da anterior nao ficou aberto
         try {
           wv.setAudioMuted(muted || cardsOn); wv.setZoomFactor(zoom);
           // reload nao zera a sessao: o jogo continua no servidor, entao re-semeia os contadores de antes
@@ -864,12 +880,12 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
               wv.executeJavaScript('window.__pokeSeed=' + j).catch(() => {});
             }
           } catch {}
-          wv.executeJavaScript(`(()=>{if(window.__poke)return;const nL=v=>{const m=String(v==null?'':v).match(/[0-9]+([.,][0-9]+)?/);return m?+m[0].replace(',','.'):0};const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,supGold:0,supN:0,slug:'',hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;try{const sd=window.__pokeSeed;delete window.__pokeSeed;if(sd&&sd.s&&sd.s.start&&Date.now()-(sd.t||0)<600e3){P.sess=sd.s;if(sd.slug)P.lastSlug=sd.slug;if(sd.cl&&sd.cl.length)P.catchLog=sd.cl;if(sd.sl&&sd.sl.length)P.shinyLog=sd.sl;if(sd.ab&&typeof sd.ab==='object')P.anBase=sd.ab;}}catch(x){}let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);P.sock=s;s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){const sl=m.slug||'';P.fiT=Date.now();if(P.lastSlug!==sl){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();P.sess.slug=sl;P.lastSlug=sl;}}else if(m.type==='field-kill'){S.kills++;S.lastKillT=Date.now();S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});if(m.shiny){S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:m.speciesName||m.name||'',sid:m.speciesId||m.pokeId||0,def:1,t:Date.now()});if(SL.length>30)SL.shift();}}else if(m.type==='catch-result'){S.balls++;S.sinceCatch=(S.sinceCatch||0)+1;const bbc=((P.ws.balls&&P.ws.balls.catalog)||[]).find(x=>x.id===m.ballId);if(bbc&&!bbc.infinite)S.supGold=(S.supGold||0)+(+bbc.priceGold||0);if(m.success){S.captures++;S.lastCatchT=Date.now();S.sinceCatch=0;}}else if(m.type==='field'){/* golpes do seu pokemon (hits[].slot>=0) por nome de golpe: n = acertos, s = salvas (mesmo golpe em 2+ alvos no tick: TM elemental ou splash do AoE), a = alvos somados nas salvas, p/pn = dano em % da vida do alvo (sem crit/bloqueio) */if(m.mobs&&m.mobs.length){for(const mb of m.mobs){if(mb&&+mb.maxHp>0)(S.slotHp=S.slotHp||{})[mb.slot]=+mb.maxHp;}}if(m.hits&&m.hits.length){const bm={};for(const h of m.hits){if(!(h&&h.slot>=0&&+h.amount>0))continue;const k=String(h.move||'?').slice(0,24);const c=bm[k]||(bm[k]={n:0,sl:{},p:0,pn:0});c.n++;c.sl[h.slot]=1;const mh=S.slotHp&&S.slotHp[h.slot];if(mh>0&&!h.crit&&!h.blocked){c.p+=(+h.amount)/mh;c.pn++;}}S.mv=S.mv||{};const ag=Date.now();for(const k in bm){const c=bm[k],ns=Object.keys(c.sl).length;let T=S.mv[k];if(!T){const ks=Object.keys(S.mv);if(ks.length>=12){const v=ks.sort((p,q)=>(S.mv[p].t||0)-(S.mv[q].t||0))[0],X=S.mvX=S.mvX||{n:0,s:0,a:0};X.n+=S.mv[v].n;X.s+=S.mv[v].s;X.a+=S.mv[v].a;delete S.mv[v];}T=S.mv[k]={n:0,s:0,a:0,p:0,pn:0,t:ag};}T.t=ag;T.n+=c.n;T.p+=c.p;T.pn+=c.pn;if(ns>=2){T.s++;T.a+=ns;}}}}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const LP=P.ws.pokes&&P.ws.pokes.list;if(LP){const ix=LP.findIndex(x=>x.id===pk.id);if(ix>=0)Object.assign(LP[ix],pk);else LP.push(pk);}const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}else if(m.type==='inventory'){const S=P.sess;let now=0;const doc0=P.api['/game/items.json'];const cat0={};if(doc0&&doc0.items)doc0.items.forEach(it=>cat0[it.id]=it);const cur={};(m.items||[]).forEach(it=>{if(it.itemId===59195)now=it.quantity||0;const c=(cat0[it.itemId]||{}).category;if(c==='heal'||c==='potion'||c==='revive')cur[it.itemId]=it.quantity||0;});
+          wv.executeJavaScript(`(()=>{if(window.__poke)return;const nL=v=>{const m=String(v==null?'':v).match(/[0-9]+([.,][0-9]+)?/);return m?+m[0].replace(',','.'):0};const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,supGold:0,supN:0,slug:'',hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false};window.__poke=P;try{const sd=window.__pokeSeed;delete window.__pokeSeed;if(sd&&sd.s&&sd.s.start&&Date.now()-(sd.t||0)<600e3){P.sess=sd.s;if(sd.slug)P.lastSlug=sd.slug;if(sd.cl&&sd.cl.length)P.catchLog=sd.cl;if(sd.sl&&sd.sl.length)P.shinyLog=sd.sl;if(sd.ab&&typeof sd.ab==='object')P.anBase=sd.ab;}}catch(x){}let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);P.sock=s;s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;const S=P.sess;if(m.type==='field-init'){const sl=m.slug||'';P.fiT=Date.now();if(P.lastSlug!==sl){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();P.sess.slug=sl;P.lastSlug=sl;/* o analyzer guardado e da hunt anterior (o servidor zera ao trocar): descarta e pede o da hunt nova */P.ws.analyzer=null;P.anBase=null;try{if(P.sock&&P.sock.readyState===1)P.sock.send(JSON.stringify({type:'analyzer-get'}))}catch(x){}}}else if(m.type==='field-none'||m.type==='field-teleport-city'){P.ws['field-init']=null;}else if(m.type==='field-kill'){S.kills++;S.lastKillT=Date.now();S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});if(m.shiny){S.shinyN=(S.shinyN||0)+1;S.shOpen=(S.shOpen||0)+1;S.shOpenT=Date.now();const SL=P.shinyLog=P.shinyLog||[];SL.push({n:m.speciesName||m.name||'',sid:m.speciesId||m.pokeId||0,def:1,t:Date.now()});if(SL.length>30)SL.shift();}}else if(m.type==='catch-result'){S.balls++;S.sinceCatch=(S.sinceCatch||0)+1;const bbc=((P.ws.balls&&P.ws.balls.catalog)||[]).find(x=>x.id===m.ballId);if(bbc&&!bbc.infinite)S.supGold=(S.supGold||0)+(+bbc.priceGold||0);if(m.success){S.captures++;S.lastCatchT=Date.now();S.sinceCatch=0;}}else if(m.type==='field'){/* golpes do seu pokemon (hits[].slot>=0) por nome de golpe: n = acertos, s = salvas (mesmo golpe em 2+ alvos no tick: TM elemental ou splash do AoE), a = alvos somados nas salvas, p/pn = dano em % da vida do alvo (sem crit/bloqueio) */if(m.mobs&&m.mobs.length){for(const mb of m.mobs){if(mb&&+mb.maxHp>0)(S.slotHp=S.slotHp||{})[mb.slot]=+mb.maxHp;}}if(m.hits&&m.hits.length){const bm={};for(const h of m.hits){if(!(h&&h.slot>=0&&+h.amount>0))continue;const k=String(h.move||'?').slice(0,24);const c=bm[k]||(bm[k]={n:0,sl:{},p:0,pn:0});c.n++;c.sl[h.slot]=1;const mh=S.slotHp&&S.slotHp[h.slot];if(mh>0&&!h.crit&&!h.blocked){c.p+=(+h.amount)/mh;c.pn++;}}S.mv=S.mv||{};const ag=Date.now();for(const k in bm){const c=bm[k],ns=Object.keys(c.sl).length;let T=S.mv[k];if(!T){const ks=Object.keys(S.mv);if(ks.length>=12){const v=ks.sort((p,q)=>(S.mv[p].t||0)-(S.mv[q].t||0))[0],X=S.mvX=S.mvX||{n:0,s:0,a:0};X.n+=S.mv[v].n;X.s+=S.mv[v].s;X.a+=S.mv[v].a;delete S.mv[v];}T=S.mv[k]={n:0,s:0,a:0,p:0,pn:0,t:ag};}T.t=ag;T.n+=c.n;T.p+=c.p;T.pn+=c.pn;if(ns>=2){T.s++;T.a+=ns;}}}}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const LP=P.ws.pokes&&P.ws.pokes.list;if(LP){const ix=LP.findIndex(x=>x.id===pk.id);if(ix>=0)Object.assign(LP[ix],pk);else LP.push(pk);}const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;if(pk.team)S.hp[pk.id]=pk.hp;else delete S.hp[pk.id];if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;if(S.shOpen>0&&Date.now()-S.shOpenT<60e3)S.shOpen--;else S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){const H2={};(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;if(pk.team)H2[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;if(S.shOpen>0&&Date.now()-S.shOpenT<60e3)S.shOpen--;else S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});S.hp=H2;/* so o time: o hp serve pra ver desmaio, e o resto (caixa, vendidos) crescia sem limite e ia no READ_ALERTS */if(!P.pokesBaselined)P.pokesBaselined=true;}else if(m.type==='inventory'){const S=P.sess;let now=0;const doc0=P.api['/game/items.json'];const cat0={};if(doc0&&doc0.items)doc0.items.forEach(it=>cat0[it.id]=it);const cur={};(m.items||[]).forEach(it=>{if(it.itemId===59195)now=it.quantity||0;const c=(cat0[it.itemId]||{}).category;if(c==='heal'||c==='potion'||c==='revive')cur[it.itemId]=it.quantity||0;});
 /* consumo de cura vira gasto: queda na quantidade x preco em gold. ponytail: o inventario e lido a cada 30s,
    entao item usado e reposto no intervalo passa batido, e vender potion no mercado conta como consumo.
    E estimativa, nao extrato. Upgrade: rastrear pelo evento de uso do item, se o jogo expor um. */
 if(S.supBase){for(const id in S.supBase){const antes=S.supBase[id]||0,agora=(cur[id]!=null?cur[id]:0),d=antes-agora;if(d>0){const it=cat0[id]||{};S.supGold=(S.supGold||0)+d*(it.priceGold||it.npcPrice||0);S.supN=(S.supN||0)+d;}}}
-S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const doc=P.api['/game/items.json'];const it=doc&&doc.items&&doc.items.find(x=>x.id===59195);const d=S.drops[59195]||(S.drops[59195]={name:(it&&it.name)||'Rare Pokémon Picture',qty:0});d.qty+=(now-S.picBase);}S.picBase=now;}}else if(m.type==='chat'||m.type==='history'){const chS=(mm)=>{try{if(!mm||!mm.body)return;const re=/\\[poke!([A-Za-z0-9_-]+)\\]/g;let mt;while((mt=re.exec(mm.body))){try{const j=JSON.parse(atob(mt[1].replace(/-/g,'+').replace(/_/g,'/')));if(j&&j.k==='poke'){const CS=P.chatShares=P.chatShares||[];const N=(v)=>{v=Number(v);return isFinite(v)?v:0;};const cn=String(j.n||'?').slice(0,40),cf=String(mm.fromName||'').slice(0,40);if(!CS.some(c=>c.n===cn&&c.iv===N(j.iv)&&c.lv===N(j.lv)&&c.fr===cf)){CS.push({fr:cf,n:cn,sh:!!j.sh,lv:N(j.lv),q:N(j.q),iv:N(j.iv),pw:N(j.pw),t:Date.now()});if(CS.length>15)CS.shift();}}}catch(x){}}}catch(x){}};if(m.type==='chat')chS(m.msg);else['world','trade','help'].forEach(c2=>(m[c2]||[]).forEach(chS));}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au){auth=au;P.auth=au;}}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(p.attempts||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught}));}return;}if(key==='/api/characters/me'){if(!j||!j.character){P.meMiss=(P.meMiss||0)+1;return;}P.meMiss=0;}P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{while(P.catchLog&&P.catchLog.length>400)P.catchLog.shift();while(P.shinyLog&&P.shinyLog.length>300)P.shinyLog.shift();const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});try{if(P.sock&&P.sock.readyState===1){P.sock.send(JSON.stringify({type:'inv-get'}));P.sock.send(JSON.stringify({type:'analyzer-get'}));}}catch(x){}}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
+S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const doc=P.api['/game/items.json'];const it=doc&&doc.items&&doc.items.find(x=>x.id===59195);const d=S.drops[59195]||(S.drops[59195]={name:(it&&it.name)||'Rare Pokémon Picture',qty:0});d.qty+=(now-S.picBase);}S.picBase=now;}}else if(m.type==='chat'||m.type==='history'){const chS=(mm)=>{try{if(!mm||!mm.body)return;const re=/\\[poke!([A-Za-z0-9_-]+)\\]/g;let mt;while((mt=re.exec(mm.body))){try{const j=JSON.parse(atob(mt[1].replace(/-/g,'+').replace(/_/g,'/')));if(j&&j.k==='poke'){const CS=P.chatShares=P.chatShares||[];const N=(v)=>{v=Number(v);return isFinite(v)?v:0;};const cn=String(j.n||'?').slice(0,40),cf=String(mm.fromName||'').slice(0,40);if(!CS.some(c=>c.n===cn&&c.iv===N(j.iv)&&c.lv===N(j.lv)&&c.fr===cf)){CS.push({fr:cf,n:cn,sh:!!j.sh,lv:N(j.lv),q:N(j.q),iv:N(j.iv),pw:N(j.pw),t:Date.now()});if(CS.length>15)CS.shift();}}}catch(x){}}}catch(x){}};if(m.type==='chat')chS(m.msg);else['world','trade','help'].forEach(c2=>(m[c2]||[]).forEach(chS));}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au){auth=au;P.auth=au;}}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];if(typeof u==='string'&&/\\/api\\/|items\\.json/.test(u)){p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/used-balls'){if(j&&j.pokemons){/* attempts zera ao capturar (bolas desde a ultima captura), total nunca zera. Capturado: o jogo manda a lista caught (dexId) no topo e so usa na forma normal; no shiny, total > attempts = ja capturou */const cs=new Set(Array.isArray(j.caught)?j.caught:[]);P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(+p.total||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId||p.dexId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught||(p.shiny?(+p.total||0)>(+p.attempts||0):cs.has(p.dexId!=null?p.dexId:p.speciesId))}));}return;}if(key==='/api/characters/me'){if(!j||!j.character){P.meMiss=(P.meMiss||0)+1;return;}P.meMiss=0;const o0=P.api[key];if(o0&&o0.character&&o0.character.id!==j.character.id){P.knownPokes={};P.pokesBaselined=false;}/* trocou de conta sem recarregar (Sair do jogo): a caixa da conta nova vira base, nao captura */}P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{while(P.catchLog&&P.catchLog.length>400)P.catchLog.shift();while(P.shinyLog&&P.shinyLog.length>300)P.shinyLog.shift();const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});try{if(P.sock&&P.sock.readyState===1){P.sock.send(JSON.stringify({type:'inv-get'}));P.sock.send(JSON.stringify({type:'analyzer-get'}));}}catch(x){}}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);/* chip de boosts do jogo: so pede boosts-refresh ao montar e no focus da janela, e o boost do Discord (live) tem until curto. Com 4 paineis so um tem foco e o chip 'na call' sumia nos outros (o buff em si segue no servidor). Pede pelo socket do jogo: 25 s com boost live, ~2 min sem (pega quem entrou na call depois) */let bT=0;setInterval(()=>{try{const B=P.ws.boosts,lv=!!(B&&Array.isArray(B.boosts)&&B.boosts.some(b=>b&&b.live));if((lv||++bT%5===0)&&P.sock&&P.sock.readyState===1)P.sock.send(JSON.stringify({type:'boosts-refresh'}));}catch(x){}},25000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
           // volta pra hunt (experimental): so se a conta estava farmando ha pouco (kill nos ultimos 10 min),
           // senao quem estacionou na cidade de proposito seria mandado de volta
           try {
@@ -882,7 +898,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
           wv.executeJavaScript(PUSH_STATE()).catch(() => {}); // painel Simples le daqui sem perguntar
           // jogo congelado com pagina viva: WebGL perdeu o contexto e nao restaurou em 4s -> recarrega
           wv.executeJavaScript("(()=>{if(window.__pgGlWd)return;window.__pgGlWd=1;let tm;document.addEventListener('webglcontextlost',()=>{clearTimeout(tm);tm=setTimeout(()=>location.reload(),4000);},true);document.addEventListener('webglcontextrestored',()=>clearTimeout(tm),true);})()").catch(() => {});
-          if (cardsOn) wv.executeJavaScript(ultraScript(true)).catch(() => {}); // reaplica o ultra apos reload/relogin
+          if (leve()) wv.executeJavaScript(ultraScript(true)).catch(() => {}); // reaplica o ultra apos reload/relogin (Simples ou janela escondida)
           wv.executeJavaScript(POPUP_SCRIPT).catch(() => {});
           wv.executeJavaScript(cleanScript(cleanOn)).catch(() => {});
           wv.executeJavaScript(SELLGUARD).catch(() => {});
@@ -892,7 +908,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
           wv.executeJavaScript(dockScript(dockHidden)).catch(() => {});
           // so na tela de login, pra nao rodar a toa dentro do jogo
           if ((wv.getURL() || '').startsWith(LOGIN_URL)) wv.executeJavaScript(scrollLoginScript).catch(() => {});
-          wv.executeJavaScript(`localStorage.setItem('poke_lang', ${JSON.stringify(lang === 'pt' ? 'pt' : 'en')})`).catch(() => {}); // mantem o jogo no idioma escolhido (es usa en, o jogo so tem pt/en)
+          wv.executeJavaScript(`localStorage.setItem('poke_lang', ${JSON.stringify(lang)})`).catch(() => {}); // mantem o jogo no idioma escolhido (o jogo tem en, pt e es, os mesmos do app)
           injectScripts(wv); // userscripts habilitados (IV calc e os do usuário)
         } catch {}
       });
@@ -909,7 +925,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
         if (off[i] || !c || !c.email || !c.senha) return;
         if (!String(e.url || '').startsWith(LOGIN_URL)) return;
         if (Date.now() - lastLogin[i] < 15000) return; // ja tentou ha pouco: nao ressubmete em loop
-        lastLogin[i] = Date.now();
+        lastLogin[i] = Date.now(); trocou[i] = false;
         loginPanel(wv, c);
       };
       wv.addEventListener('did-navigate', autoLogin);
@@ -919,18 +935,32 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
 
       panel.querySelector('.reload').onclick = () => { if (!off[i]) { try { wv.reloadIgnoringCache(); } catch { wv.reload(); } } };
       panel.querySelector('.expand').onclick = () => toggleExpand(i);
+      // prompt() nao abre nada no Electron (volta null): edita no proprio rotulo. Enter ou sair do campo grava, Esc cancela
       nameEl.ondblclick = () => {
-        const novo = prompt(t('promptRename'), accounts[i].name || defName(i));
-        if (novo != null) { accounts[i].name = novo; nameEl.textContent = novo || defName(i); save(); }
+        const inp = document.createElement('input');
+        inp.maxLength = 40; inp.value = accounts[i].name || ''; inp.placeholder = defName(i);
+        let feito = false;
+        const fim = (grava) => {
+          if (feito) return; feito = true;
+          if (grava) { accounts[i].name = inp.value.trim().slice(0, 40); save(); }
+          nameEl.textContent = accounts[i].name || defName(i); // textContent: o nome nunca vira HTML
+        };
+        inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') fim(true); else if (e.key === 'Escape') fim(false); }; // Esc nao desexpande o painel
+        inp.onblur = () => fim(true);
+        inp.ondblclick = (e) => e.stopPropagation();
+        nameEl.textContent = ''; nameEl.appendChild(inp); inp.focus(); inp.select();
       };
   }
 
-  // ----- Numero de paineis (2 a 4), escolhido no menu -----
-  const countBtn = document.getElementById('count');
+  // ----- Numero de paineis (1 a 4), escolhido direto no menu -----
+  const countRow = document.getElementById('countRow');
+  const countBtns = Array.from(countRow.querySelectorAll('button'));
   function aplicaCountLayout() {
     grid.classList.remove('count-1', 'count-2', 'count-3', 'count-4');
     grid.classList.add('count-' + count);
-    countBtn.textContent = t('count') + ': ' + count;
+    countRow.querySelector('span').textContent = t('count');
+    countRow.title = t('countTitle');
+    countBtns.forEach(b => b.classList.toggle('on', +b.dataset.n === count));
     lsSet('count', count);
   }
   function build() { for (let i = 0; i < count; i++) criarPainel(i); aplicaCountLayout(); }
@@ -949,7 +979,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     aplicaCountLayout();
     ajustaProporcao(); // painel novo/removido muda o espaco de cada um
   }
-  countBtn.onclick = () => setCount(count === 4 ? 1 : count + 1); // cicla 4 -> 1 -> 2 -> 3 -> 4
+  // um botao por numero: vai direto pro escolhido, sem passar pelos do meio (cada painel fechado e reaberto no caminho
+  // relogava a conta, que ia pra cidade). De 4 pra 3 fecha so o 4; de 2 pra 3 so abre o 3
+  countBtns.forEach(b => b.onclick = () => setCount(+b.dataset.n));
 
   function toggleExpand(i) {
     const p = grid.children[i];
@@ -1024,6 +1056,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       if (!c || !c.email || !c.senha) return;
       lastLogin[i] = 0; // clique manual sempre loga, ignora o cooldown
       if (off[i]) { togglePower(i); return; } // ao ligar, cai no login e o did-navigate loga
+      // conta viva (foto de ate 15s, com o socket do jogo aberto) e a mesma credencial: relogar a mandaria pra cidade. Socket
+      // fechado com o /play na tela (Conta em uso, WS 4001 sem refresh) nao e viva: o jogo nao reconecta sozinho
+      if (sessSnap[i] && sessSnap[i].sk && Date.now() - sessSnap[i].t < 15000 && !trocou[i]) return;
       try { wv.loadURL(LOGIN_URL); } catch {} // o did-navigate cuida do preenchimento
     });
   }
@@ -1062,7 +1097,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove('show'); };
   document.getElementById('accSave').onclick = async () => {
     document.querySelectorAll('#accRows input').forEach(inp => {
-      accounts[+inp.dataset.i][inp.dataset.f] = inp.value;
+      const a = accounts[+inp.dataset.i], f = inp.dataset.f;
+      if (f !== 'name' && (a[f] || '') !== inp.value) trocou[+inp.dataset.i] = true; // o Logar equipe tem que relogar este painel
+      a[f] = inp.value;
     });
     grid.querySelectorAll('.name').forEach((el, i) => el.textContent = accounts[i].name || defName(i));
     if (!(await save())) { window.alert(t('accSaveErr')); return; } // nao fecha o modal: a senha nao foi gravada no disco
@@ -1083,13 +1120,13 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // Push de estado: no Simples o app nao pergunta pras 4 contas de N em N segundos; cada jogo
   // publica a propria leitura (a mesma do READ_STATE) a cada 10s e o app so escuta (__PGST__).
   // funcao, nao constante: o READ_STATE so e declarado mais abaixo; no dom-ready ja existe
-  const PUSH_STATE = () => '(()=>{if(window.__pgPush)return;window.__pgPush=1;setInterval(()=>{try{const d=' + READ_STATE + ';if(d&&d.ok)console.log("__PGST__"+JSON.stringify(d))}catch(x){}},10000)})()';
+  const PUSH_STATE = () => '(()=>{if(window.__pgPush)return;window.__pgPush=1;setInterval(()=>{try{const d=' + READ_STATE + ';if(d&&d.ok){console.clear();console.log("__PGST__"+JSON.stringify(d))}}catch(x){}},10000)})()'; // clear: o console do painel guardava cada push (ate 10 MB)
   const stCache = {};
   // Depot por conta (pedido do Semai: "aparece o depot da familia?"). Busca preguicosa: so com o
   // Simples aberto e a secao de inventario visivel, no maximo a cada 2 min por conta. A resposta
   // vem de codigo injetado, entao e saneada: so chaves simples, quantidade > 0, teto de 500 itens.
   const depCache = {};
-  const DEP_JS = "(async()=>{try{const r=await fetch('/api/game/depot',{headers:(window.__poke&&window.__poke.auth)?{Authorization:window.__poke.auth}:{}});if(!r.ok)return null;const j=await r.json();const m={};(((j&&j.depot)||[])).slice(0,500).forEach(it=>{if(it&&it.itemId!=null){const q=+it.quantity||0;if(q>0){const k=String(it.itemId).slice(0,12);m[k]=(m[k]||0)+q}}});return m}catch(e){return null}})()";
+  const DEP_JS = "(async()=>{try{const r=await fetch('/api/game/depot',{headers:(window.__poke&&window.__poke.auth)?{Authorization:window.__poke.auth}:{}});if(!r.ok)return null;const j=await r.json();const m={};(((j&&j.depot)||[])).slice(0,500).forEach(it=>{const id=it&&(it.itemId!=null?it.itemId:it.id);if(id!=null){const q=+it.quantity||0;if(q>0){const k=String(id).slice(0,12);m[k]=(m[k]||0)+q}}});return m}catch(e){return null}})()";
   const depColeta = () => {
     if (!cardsOn || (cardsCfg.hide || {}).inv) return;
     for (let i2 = 0; i2 < count; i2++) {
@@ -1113,7 +1150,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     a.mvs = (Array.isArray(a0.mvs) ? a0.mvs : []).slice(0, 8).filter(e => e && typeof e === 'object').map(e => ({ m: String(e.m || '').slice(0, 24), n: num(e.n), s: num(e.s), a: num(e.a), hp: num(e.hp) }));
     d.a = a;
     d.name = String(d.name || '').slice(0, 40); d.cid = String(d.cid || '').slice(0, 60); d.hunt = String(d.hunt || '').slice(0, 60);
-    ['catchLog', 'usedList', 'team', 'chatShares'].forEach(k => d[k] = (Array.isArray(d[k]) ? d[k] : []).slice(0, 120)
+    ['catchLog', 'usedList', 'team', 'chatShares'].forEach(k => d[k] = (Array.isArray(d[k]) ? d[k] : []).slice(0, k === 'usedList' ? 3000 : 120) // usedList: uma linha por especie/variante ja tentada, passa de 120 facil
       .map(e => { if (e && typeof e === 'object') { for (const p2 in e) if (typeof e[p2] === 'string') e[p2] = e[p2].slice(0, 80); } return e; }));
     ['gold', 'diamonds', 'balls', 'potions', 'revives', 'shinyEnc', 'level'].forEach(k => d[k] = num(d[k]));
     const im = d.invMap && typeof d.invMap === 'object' && !Array.isArray(d.invMap) ? d.invMap : {};
@@ -1124,27 +1161,34 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   }
   const ecoBtn = document.getElementById('eco');
   let eco = lsGet('eco') !== '0'; // ligado por padrao
-  // ponytail: nao intercepta cancelAnimationFrame; suficiente para game-loops comuns
+  // Limita o requestAnimationFrame do jogo. Troca TAMBEM o cancelAnimationFrame, com ids proprios (acima de 1e9, nunca
+  // colidem com os nativos): o jogo encerra varios loops so com cancelAnimationFrame (barra da onda na pesca, etiquetas
+  // da cidade), e sem isso cada loop "cancelado" seguia vivo pra sempre, um a mais por onda. Teste: test/eco-raf.test.js
   const ecoScript = (fps) => `(() => {
     if (!window.__eco) {
-      window.__eco = { native: window.requestAnimationFrame.bind(window), fps: 0, last: 0 };
+      const s = window.__eco = { native: window.requestAnimationFrame.bind(window), cancel: window.cancelAnimationFrame.bind(window), fps: 0, last: 0, seq: 1e9, map: new Map() };
       window.requestAnimationFrame = (cb) => {
-        const s = window.__eco;
-        if (!s.fps) return s.native(cb);
-        const wait = Math.max(0, (1000 / s.fps) - (performance.now() - s.last));
-        return setTimeout(() => { s.last = performance.now(); s.native(cb); }, wait);
+        const id = ++s.seq, run = (ts) => { s.map.delete(id); cb(ts); };
+        if (!s.fps) s.map.set(id, { r: s.native(run) });
+        else s.map.set(id, { t: setTimeout(() => { if (s.map.has(id)) { s.last = performance.now(); s.map.set(id, { r: s.native(run) }); } }, Math.max(0, 1000 / s.fps - (performance.now() - s.last))) });
+        return id;
       };
+      window.cancelAnimationFrame = (id) => { const h = s.map.get(id); if (!h) return id < 1e9 ? s.cancel(id) : undefined; s.map.delete(id); if (h.t) clearTimeout(h.t); else s.cancel(h.r); };
     }
     window.__eco.fps = ${fps};
   })()`;
   // Modo Cartas: no ultra leve o canvas do jogo some e o rAF cai pra 1fps (o farm e do servidor)
   let cardsOn = false, cdHtmlAnt = ''; // sempre comeca desligado: com o jogo escondido nao dava pra logar/resolver captcha
+  // janela minimizada ou na bandeja: os jogos vao pro mesmo modo leve do Simples (1 fps, canvas escondido). O main.js avisa:
+  // com backgroundThrottling desligado (o que segura o farm) a pagina nunca fica 'hidden' e o jogo desenhava pra ninguem
+  let janelaOculta = false;
+  const leve = () => cardsOn || janelaOculta;
   // ultra leve: esconde o que pinta (canvas/vídeo) e mata animações/transições CSS (corta paint/GPU).
   // NÃO mexe em WebSocket/timers do jogo, então o farm (que é do servidor) continua igual.
   const ultraScript = (on) => on
     ? `(()=>{let s=document.getElementById('pg-ultra');if(!s){s=document.createElement('style');s.id='pg-ultra';document.head.appendChild(s);}s.textContent='canvas,video{display:none !important} *{animation:none !important;transition:none !important;will-change:auto !important}';})()`
     : `(()=>{const s=document.getElementById('pg-ultra');if(s)s.remove();})()`;
-  const ecoFps = () => cardsOn ? 1 : (eco ? 15 : 0);
+  const ecoFps = () => leve() ? 1 : (eco ? 15 : 0);
   function applyEco() {
     ecoBtn.textContent = eco ? t('eco') : t('ecoOff');
     ecoBtn.classList.toggle('on', eco);
@@ -1160,6 +1204,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // Protege sem agir no jogo: shiny e qualidade Lendaria+ (>=1.7), e itens raros nomeados.
   const SELLGUARD = `(() => {
     if (window.__pgSellGuard) return; window.__pgSellGuard = true;
+    // dialogo nativo aberto (a confirmacao abaixo e o 'Sair da familia'; o prompt, no Electron, volta null na hora) trava a pagina: o READ_ALERTS
+    // nao volta e o vigia de 60s do app recarregava a conta, que ia pra cidade. Avisa o app enquanto ele estiver aberto
+    ['alert', 'confirm', 'prompt'].forEach(k => { const o = window[k]; if (typeof o !== 'function') return; window[k] = function (...a) { console.log('__PGDLG__1'); try { return o.apply(window, a); } finally { console.log('__PGDLG__0'); } }; });
     // base sempre protegida + o que o usuario travou na engrenagem (window.__pgSellLock)
     const BASE = ['strange pheromone', 'rare pokémon picture', 'rare pokemon picture'];
     const listaProt = () => { const u = Array.isArray(window.__pgSellLock) ? window.__pgSellLock : []; return BASE.concat(u); };
@@ -1272,7 +1319,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     kill();
   })()`;
 
-  // ----- Chat do jogo: esconde/mostra em todos os painéis (acha o campo de mensagem, em pt ou en) -----
+  // ----- Chat do jogo: esconde/mostra em todos os painéis (acha o campo de mensagem, em pt, en ou es) -----
   const chatScript = (esconder) => `(() => {
     const achaChat = () => {
       // marca de execucoes anteriores acha o chat mesmo escondido (tamanho zero)
@@ -1280,7 +1327,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       if (marc) return marc;
       // acha o campo de mensagem: por placeholder (pt) ou, idioma-independente,
       // um campo de texto na metade de baixo que nao seja o de login
-      let inp = [...document.querySelectorAll('input, textarea')].find(i => /Falar em|Talk|Message|Chat/i.test(i.placeholder || ''));
+      let inp = [...document.querySelectorAll('input, textarea')].find(i => /Falar em|Hablar en|Talk|Message|Chat/i.test(i.placeholder || ''));
       if (!inp) inp = [...document.querySelectorAll('input[type=text], input:not([type]), textarea')]
         .find(i => i.autocomplete !== 'username' && !/password/.test(i.autocomplete || '')
           && i.getBoundingClientRect().width > 0 && i.getBoundingClientRect().top > innerHeight * 0.5);
@@ -1294,7 +1341,19 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       }
       return null; // nada seguro para esconder
     };
-    const aplica = () => { const c = achaChat(); if (c) { c.dataset.pgchat = '1'; c.style.display = ${esconder} ? 'none' : ''; } };
+    // Clique no botao 💬 Chat do proprio jogo (.chat-fab) e o jogador pedindo o chat: naquele painel o app para de esconder
+    // ate o app mandar de novo (botao 💬, Simples, recarga). Antes o app fechava o chat no mesmo instante em que o jogo abria.
+    if (!window.__pgChatFab) {
+      window.__pgChatFab = 1;
+      addEventListener('click', (e) => {
+        if (!(e.target && e.target.closest && e.target.closest('.chat-fab'))) return;
+        window.__pgChatLivre = true;
+        if (window.__chatObs) { window.__chatObs.disconnect(); window.__chatObs = null; }
+        const m = document.querySelector('[data-pgchat]'); if (m) m.style.display = '';
+      }, true);
+    }
+    window.__pgChatLivre = false;
+    const aplica = () => { if (window.__pgChatLivre) return; const c = achaChat(); if (c) { c.dataset.pgchat = '1'; c.style.display = ${esconder} ? 'none' : ''; } };
     if (window.__chatObs) { window.__chatObs.disconnect(); window.__chatObs = null; }
     aplica();
     if (${esconder}) { window.__chatObs = new MutationObserver(aplica); window.__chatObs.observe(document.documentElement, { childList: true, subtree: true }); }
@@ -1536,7 +1595,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
 /* resumo de uma hunt encerrada: o app grava isso no log e usa pra exportar (drop por kill etc) */
 const resumo=(X)=>{if(!X||!X.start||!X.kills)return null;let lg=0;const dr=[];for(const id in (X.drops||{})){const dd=X.drops[id];const g=(dd.qty||0)*((cat[id]||{}).npcPrice||0);lg+=g;dr.push({id:+id||0,n:dd.name||'',q:dd.qty||0,g});}
 return {start:X.start,end:X.end||Date.now(),slug:X.slug||'',kills:X.kills||0,xp:X.xp||0,caps:X.captures||0,sf:X.shinyN||0,sc:X.shinyCapN||0,balls:X.balls||0,pots:X.supN||0,loot:lg,sell:X.sellG||0,sup:(X.supGold||0),drops:dr};};
-return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shinyN:S.shinyN||0,faintN:S.faintN||0,cid:ch.id||'',kills:S.kills||0,xp:S.xp||0,caps:S.captures||0,shinyCapN:S.shinyCapN||0,saldo:(()=>{const A=ws.analyzer;if(A&&typeof A==='object'&&+A.seconds>0&&Number.isFinite(+A.balance)){const B=P.anBase;return (+A.balance||0)-((B&&+B.balance)||0);}return lootGold+(S.sellG||0)-(S.supGold||0);})(),shinyLog:P.shinyLog||[],catchLog:P.catchLog||[],sess:S,slug:P.lastSlug||'',anBase:(P.anBase&&typeof P.anBase==='object')?P.anBase:null};})()`;
+/* saldo pro historico diario (so entra em delta): com o Hunt Analyzer e o BRUTO do servidor, balance + fotos (Rare Pokemon Picture vem fora do balance), sem a base do Zerar; srv diz a fonte e anS mostra quando o analyzer zerou (Limpar sessao do jogo, Zerar, troca de hunt) */
+const A=ws.analyzer,srv=!!(A&&typeof A==='object'&&+A.seconds>0&&Number.isFinite(+A.balance));
+return {live,sk:!!(P.sock&&P.sock.readyState===1),hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shinyN:S.shinyN||0,faintN:S.faintN||0,cid:ch.id||'',kills:S.kills||0,xp:S.xp||0,caps:S.captures||0,shinyCapN:S.shinyCapN||0,saldo:srv?(+A.balance||0)+(+A.photos||0)*(+A.photoNpcGold||0):lootGold+(S.sellG||0)-(S.supGold||0),srv:srv?1:(doc&&doc.items?0:2),anS:srv?+A.seconds:0,shinyLog:P.shinyLog||[],catchLog:P.catchLog||[],sess:S,slug:P.lastSlug||'',anBase:(P.anBase&&typeof P.anBase==='object')?P.anBase:null};})()`;
   const BALL_MIN = 100, POTION_MIN = 15, REVIVE_MIN = 5; // limites do "está com poucos ..."
   const lastShiny = [], lastFaint = [], lowOn = [{}, {}, {}, {}];
   function checkLow(i, key, val, min, msgKey) {
@@ -1643,13 +1704,16 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   function accumHist(i, r) {
     const k = dayKey(0);
     if (k !== curDay) { const fecha = curDay; curDay = k; try { lsSet('curDay', k); } catch {} viraODia(fecha); }
-    const cur = { k: r.kills || 0, x: r.xp || 0, c: r.caps || 0, g: r.saldo || 0, sf: r.shinyN || 0, sc: r.shinyCapN || 0 };
+    const cur = { k: r.kills || 0, x: r.xp || 0, c: r.caps || 0, g: r.saldo || 0, sf: r.shinyN || 0, sc: r.shinyCapN || 0, s: +r.srv || 0, an: +r.anS || 0 };
     const last = lastH[i]; lastH[i] = cur;
     if (!last) return; // 1a amostra apos abrir o app: sem delta (senao contaria a sessao inteira de novo)
     const reset = cur.k < last.k || cur.x < last.x; // sessao zerou (trocou de hunt / recarregou)
     const dv = (a2, b2) => reset ? a2 : Math.max(0, a2 - b2);
     const b = (histDay[k] = histDay[k] || {})[i] = (histDay[k][i] || { g: 0, x: 0, kl: 0, c: 0, sf: 0, sc: 0 });
-    b.g += reset ? cur.g : (cur.g - last.g); // saldo tem sinal (gastar bola desconta)
+    // saldo tem sinal (gastar bola desconta). Trocou a fonte (conta local <-> Hunt Analyzer, que traz a hunt inteira, ao abrir
+    // o app ou apos reload): a amostra so vira base. A conta local sem o catalogo de itens (srv 2: logo apos o reload, antes do jogo
+    // buscar o items.json) e fonte propria: o loot da sessao re-semeada vale 0 e so vira gold quando o catalogo chega (2 -> 0 = base). Com o analyzer quem zera e ele (Limpar sessao do jogo, Zerar, troca de hunt).
+    b.g += cur.s !== last.s ? 0 : cur.s === 1 ? (cur.an < last.an ? cur.g : cur.g - last.g) : (reset ? cur.g : cur.g - last.g);
     b.x += dv(cur.x, last.x); b.kl += dv(cur.k, last.k); b.c += dv(cur.c, last.c); b.sf += dv(cur.sf, last.sf); b.sc += dv(cur.sc, last.sc);
     Object.keys(histDay).forEach(dk => { if (dk < dayKey(90)) delete histDay[dk]; }); // ponytail: poda 90 dias; se pesar, debounce no save
     try { lsSet('histDay', JSON.stringify(histDay)); } catch {}
@@ -1791,7 +1855,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       const key = kSh(i, x);
       if (seenLog[key]) return; seenLog[key] = 1; dirty = true;
       lifeShiny.push({ n: String(x.n || '').slice(0, 40), sid: +x.sid || 0, t: +x.t || 0, cap: x.cap ? 1 : 0, def: x.def ? 1 : 0, p: i, acc, dot });
-      if (avisa && whCfg.shiny) webhookSend((whCfg.mention ? '<@' + whCfg.mention + '> ' : '') + '✨ ' + acc + ': shiny ' + (x.n || ('#' + (+x.sid || '?'))) + ' ' + (x.cap ? t('whCaught') : t('whLost')));
+      if (avisa && whCfg.shiny) webhookSend((whCfg.mention ? '<@' + whCfg.mention + '> ' : '') + '✨ ' + acc + ': shiny ' + (x.n || ('#' + (+x.sid || '?'))) + ' ' + (x.cap ? t('whCaught') : t('whSeen'))); // o shiny e derrotado ANTES de ficar capturavel: na hora nao da pra dizer que foi perdido; se pegar, vem o CAPTURADO
       if (avisa && x.cap) { // CAPTUROU: aviso grande na tela, som de festa e notificacao propria
         const c = (r.catchLog || []).filter(y => y.sh).sort((p, q2) => Math.abs((+p.t || 0) - (+x.t || 0)) - Math.abs((+q2.t || 0) - (+x.t || 0)))[0]; // pega IV/qualidade da captura correspondente
         festaShiny({ n: x.n || (c && c.n), sid: x.sid, acc, dot, iv: c && c.iv, q: c && c.q, t: x.t });
@@ -1815,10 +1879,12 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   }
 
   const pendA = [0, 0, 0, 0]; // ticks seguidos sem resposta (renderer travado deixa a promise pendente pra sempre)
+  const dlgT = [0, 0, 0, 0]; // desde quando o painel esta num alert/confirm/prompt (0 = nenhum): a pagina para ali sem estar travada
   const sessSnap = []; // fotografia da sessao por conta: re-semeia o coletor apos reload (o jogo segue no servidor)
   setInterval(() => {
     webviews.forEach((w, i) => {
       if (off[i]) { pendA[i] = 0; return; }
+      if (dlgT[i] && Date.now() - dlgT[i] < 600e3) { pendA[i] = 0; return; } // esperando o usuario responder (teto de 10 min: marca perdida nao desliga o vigia pra sempre)
       if (++pendA[i] >= 10) { // 60s sem nenhuma resposta: painel travado, recarrega sozinho
         pendA[i] = 0;
         try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ' sem responder ha 60s, recarregando'); } catch {}
@@ -1830,8 +1896,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         if (!r) return;
         if (r.live && r.sess && r.sess.start) { // so de conta VIVA: foto tirada no login/erro nunca vencia os 10 min
           const o = sessSnap[i];
-          if (r.cid && o && o.cid && o.cid !== r.cid) { delete sessSnap[i]; w.executeJavaScript(RESET_SESS).catch(() => {}); return; } // trocou de conta no painel: nao herda sessao nem hunt da anterior
-          sessSnap[i] = { s: r.sess, slug: r.slug || '', cl: r.catchLog || [], sl: r.shinyLog || [], ab: r.anBase || null, cid: r.cid || (o && o.cid) || '', t: Date.now() };
+          if (r.cid && o && o.cid && o.cid !== r.cid) { delete sessSnap[i]; w.executeJavaScript(RESET_SESS + ';window.__poke&&window.__poke.ws&&(window.__poke.ws.analyzer=null)').catch(() => {}); return; } // trocou de conta no painel: nao herda sessao nem hunt da anterior, nem o analyzer dela (o proximo tique ve srv 0 e a chegada do da conta nova vira base)
+          sessSnap[i] = { s: r.sess, slug: r.slug || '', cl: r.catchLog || [], sl: r.shinyLog || [], ab: r.anBase || null, cid: r.cid || (o && o.cid) || '', sk: !!r.sk, t: Date.now() };
         }
         // shiny encontrado: acumula na vida da conta (sempre), toca o som e avisa (se ligados)
         if (lastShiny[i] === undefined || r.shinyN < lastShiny[i]) lastShiny[i] = r.shinyN;
@@ -1847,7 +1913,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
           // o fluxo de sempre preenche. O guard do login e obrigatorio: recarregar ali apagaria o
           // captcha que o usuario esta resolvendo a mao.
           const cr = accounts[i];
-          if ((w.getURL() || '').startsWith(LOGIN_URL)) deadT[i] = 0; // no login o contador nao anda: os 60s so contam FORA dele
+          const u = w.getURL() || '';
+          // so conta onde a sessao viva e esperada: /play (WS 4001, pagina de erro) e a manutencao. No login (captcha a mao),
+          // na landing do Modo Soneca (Zzz: relogar em 5 min cancela o farm offline), em criar personagem e verificar e-mail o contador nao anda
+          if (!u.startsWith('https://poke.idleworld.online/play') && !u.includes('maintenance=1')) deadT[i] = 0;
           else if (cr && cr.email && cr.senha && ++deadT[i] >= ((w.getURL() || '').includes('maintenance=1') ? 100 : 10)) { deadT[i] = 0; try { Promise.resolve(w.loadURL(LOGIN_URL)).catch(() => {}); } catch {} } // em manutencao tenta a cada 10 min, nao a cada 60s
           return; }
         deadT[i] = 0;
@@ -1894,6 +1963,19 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     document.querySelector('#modal .hint').textContent = t('mHint');
     document.getElementById('accCancel').textContent = t('mCancel');
     document.getElementById('accSave').textContent = t('mSave');
+    const sth = statsEl.querySelector('.st-head'); // titulos do cabecalho do Resumo
+    sth.querySelector('.st-reset').title = t('resetTitle'); sth.querySelector('.st-gear').title = t('cdConfig'); sth.querySelector('.st-x').title = t('closeT');
+    statsEl.querySelector('.st-resize').title = t('cdResize');
+    const scM = document.getElementById('scModal'); // modal de Scripts: o HTML fixo e o portugues
+    scM.querySelector('.hint').innerHTML = t('scHint'); // texto nosso com <b>, nada de fora
+    scM.querySelector('.sc-drop').textContent = t('scDrop');
+    scM.querySelector('.sc-add .sc-tag').textContent = t('scOuCole');
+    document.getElementById('scUrl').placeholder = t('scUrlPh');
+    const sau = document.getElementById('scAddUrl'); if (!sau.disabled) sau.textContent = t('scAddUrl'); // baixando: fica o 'Baixando…'
+    document.getElementById('scName').placeholder = t('scNamePh');
+    document.getElementById('scCode').placeholder = t('scCodePh');
+    document.getElementById('scAdd').textContent = t('scAddBtn');
+    document.getElementById('scClose').textContent = t('closeT');
     grid.querySelectorAll('.panel').forEach((p, i) => {
       const nameEl = p.querySelector('.name');
       if (!accounts[i].name) nameEl.textContent = defName(i);
@@ -1908,11 +1990,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     lsSet('lang', lang);
   }
   function applyGameLang() {
-    const pl = lang === 'pt' ? 'pt' : 'en'; // es usa en no jogo (so tem pt/en)
     webviews.forEach((w, i) => {
       if (off[i]) return;
       lastLogin[i] = 0; // o reload pode cair no login; nao deixa o cooldown bloquear
-      w.executeJavaScript(`localStorage.setItem('poke_lang', ${JSON.stringify(pl)})`).then(() => w.reload()).catch(() => {});
+      w.executeJavaScript(`localStorage.setItem('poke_lang', ${JSON.stringify(lang)})`).then(() => w.reload()).catch(() => {});
     });
   }
   langBtns.forEach(b => b.onclick = () => { if (lang === b.dataset.lang) return; lang = b.dataset.lang; applyLang(); applyGameLang(); });
@@ -2077,11 +2158,13 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         const sb = (f) => Math.max(0, nS(AN[f]) - (AB ? nS(AB[f]) : 0));
         const segs = Math.max(1, nS(AN.seconds) - (AB ? nS(AB.seconds) : 0));
         const pha = (v) => Math.round(v / segs * 3600);
+        // Rare Pokemon Picture (profissao fotografo): o analyzer manda a contagem a parte, fora do balance e dos drops, e o jogo soma fotos x preco
+        const fq = Math.max(0, nS(AN.photos) - (AB ? nS(AB.photos) : 0)), fg = Math.round(fq * nS(AN.photoNpcGold));
         const bd = {}; if (AB && Array.isArray(AB.drops)) AB.drops.forEach(x => { if (x && x.name) bd[String(x.name)] = nS(x.qty); });
-        const drA = Array.isArray(AN.drops) ? AN.drops.slice(0, 60).map(x => { const nm = String((x && x.name) || ''), qT = nS(x && x.qty), q = Math.max(0, qT - (bd[nm] || 0)); return { name: nm, qty: q, gold: qT > 0 ? Math.round(nS(x && x.gold) / qT * q) : 0 }; }).filter(x => x.qty > 0).sort((x, y) => y.gold - x.gold) : dr;
-        const bal = nS(AN.balance) - (AB ? nS(AB.balance) : 0);
+        const drA = Array.isArray(AN.drops) ? AN.drops.slice(0, 60).map(x => { const nm = String((x && x.name) || ''), qT = nS(x && x.qty), q = Math.max(0, qT - (bd[nm] || 0)); return { name: nm, qty: q, gold: qT > 0 ? Math.round(nS(x && x.gold) / qT * q) : 0 }; }).filter(x => x.qty > 0).concat(fq > 0 ? [{ name: (cat[59195] && cat[59195].name) || 'Rare Pokémon Picture', qty: fq, gold: fg }] : []).sort((x, y) => y.gold - x.gold) : dr;
+        const bal = nS(AN.balance) - (AB ? nS(AB.balance) : 0) + fg;
         return { kills: sb('kills'), seconds: segs, captures: sb('captures'), shinyFound: S.shinyN || 0,
-          shinyCap: sb('shinyCaptures') || S.shinyCapN || 0, xpg: sb('xpGained'), lootGold: sb('lootGold'),
+          shinyCap: sb('shinyCaptures') || S.shinyCapN || 0, xpg: sb('xpGained'), lootGold: sb('lootGold') + fg,
           capturesGold: sb('capturesGold'), supplyGold: sb('supplyGold'), ballsUsed: sb('ballsUsed'),
           potsUsed: sb('potionsUsed'), balance: bal, gph: pha(bal), xph: pha(sb('xpGained')), kph: pha(sb('kills')), hpk, tma, mvs,
           lastCatchT: S.lastCatchT || 0, sinceCatch: S.sinceCatch || 0, drops: drA, srv: 1 };
@@ -2109,7 +2192,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const pushGrp = c => { const items = groups[c].sort((x,y)=>y.qty-x.qty); bag.push({ label: LABELS[c]||'Outros', total: items.reduce((s,x)=>s+x.qty,0), items }); done[c]=1; };
     ORDER.forEach(c => { if (groups[c]) pushGrp(c); });
     Object.keys(groups).forEach(c => { if (!done[c]) pushGrp(c); });
-    const team = ((ws.pokes && ws.pokes.list)||[]).filter(p=>p.team).sort((x,y)=>(x.slot||0)-(y.slot||0)).map(p=>({name:p.name,level:p.level,shiny:!!p.shiny,t1:p.type1||'',t2:p.type2||'',ld:!!p.leader,q:nL(p.quality),ivt:p.ivTotal!=null?nL(p.ivTotal):null,dt:!!p.isDitto,tms:(Array.isArray(p.tms)?p.tms:[]).slice(0,24).map(x=>String(x).toUpperCase().slice(0,12)),sid:+p.speciesId||+p.pokeId||0,hp:+p.hp||0,hm:+p.maxHp||+p.hpMax||+p.totalHp||0,xpp:(+p.xp>0&&+p.level>0?(X=>{const a=X(+p.level),b=X(+p.level+1);return b>a?Math.round((+p.xp-a)/(b-a)*100):null})(n=>n<=1?0:Math.round(50/3*(n**3-6*n**2+17*n-12))):null)}));
+    // XP total pra chegar ao nivel: a totalXpForLevel do jogo (29x3d9sblzixv.js), cubica ate o 150, outro polinomio ate o 250 e depois C(250) + 2x
+    const xpC = n => n<=1?0:Math.round(50/3*(n**3-6*n**2+17*n-12));
+    const xpNv = n => { n = Math.floor(n); if (n <= 150) return xpC(n); const t = n - 150; if (t <= 100) return Math.round(xpC(150) + .5*(t*(t+1)/2)**2 + t*(t+1)*(2*t+1)/6*197.5 + t*(t+1)/2*25629 + 1087900*t); return Math.round(xpNv(250) + 2*(xpC(n) - xpC(250))); };
+    const team = ((ws.pokes && ws.pokes.list)||[]).filter(p=>p.team).sort((x,y)=>(x.slot||0)-(y.slot||0)).map(p=>({id:p.id!=null?String(p.id).slice(0,40):'',name:p.name,level:p.level,shiny:!!p.shiny,t1:p.type1||'',t2:p.type2||'',ld:!!p.leader,q:nL(p.quality),ivt:p.ivTotal!=null?nL(p.ivTotal):null,dt:!!p.isDitto,tms:(Array.isArray(p.tms)?p.tms:[]).slice(0,24).map(x=>String(x).toUpperCase().slice(0,12)),sid:+p.speciesId||+p.pokeId||0,hp:+p.hp||0,hm:+p.maxHp||+p.hpMax||+p.totalHp||0,xpp:(+p.xp>0&&+p.level>0?(X=>{const a=X(+p.level),b=X(+p.level+1);return b>a?Math.round((+p.xp-a)/(b-a)*100):null})(xpNv):null)}));
     let hunt = (ws['field-init'] && ws['field-init'].slug) || '';
     hunt = hunt.replace(/[_-]+/g,' ').replace(/\\b\\w/g, m=>m.toUpperCase());
     const mail = ws['mail-badge'] || {};
@@ -2124,7 +2210,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
 
   const statsEl = document.createElement('div');
   statsEl.id = 'stats';
-  statsEl.innerHTML = '<div class="sb-top"></div><div class="st-head"><span>📊 Resumo</span><button class="st-reset" title="Zerar a sessão (todas as contas)">⟲</button><button class="st-gear" title="Configurar o painel">⚙</button><button class="st-x" title="Fechar">✕</button></div><div class="st-tabs"></div><div class="st-body"></div><div class="st-cfg"></div><div class="st-resize" title="Arraste para ajustar a largura"></div>';
+  statsEl.innerHTML = '<div class="sb-top"></div><div class="st-head"><span>📊 Resumo</span><button class="st-reset">⟲</button><button class="st-gear">⚙</button><button class="st-x">✕</button></div><div class="st-tabs"></div><div class="st-body"></div><div class="st-cfg"></div><div class="st-resize"></div>';
   document.body.appendChild(statsEl);
   statsEl.style.top = document.getElementById('topbar').offsetHeight + 'px';
   statsEl.style.bottom = '0';
@@ -2298,7 +2384,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       let s = sec('#f778ba', '🎯 ' + esc(tg.name));
       if (shiny) {
         s += row(t('stTargetStatus'), shiny.caught ? '✓ ' + t('stCaught') : t('stFoundNotCaught'), shiny.caught ? '#3fb950' : '#f0883e');
-        s += row(t('stTargetShinyTries'), nf(shiny.attempts), '#f778ba');
+        s += row(t('stTargetShinyTries'), nf(shiny.total || shiny.attempts), '#f778ba'); // attempts zera na captura; total nao
       } else s += row(t('stTargetStatus'), t('stNotAppeared'), '#8b949e');
       if (norm) s += row(t('stTargetFarm'), nf(norm.total) + ' ' + ballIco + ' · ' + nf(norm.attempts) + ' ' + t('stTries'), '#adbac7');
       return s;
@@ -2388,16 +2474,16 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const dia = d ? (d.diamonds || 0) : 0;
     const life = d ? (d.shinyEnc || 0) : 0;
     const stats = a
-      ? '<span style="color:' + gc + '">' + ncs(a.gph) + '/h</span><span style="color:#79c0ff">' + nc(a.xph) + ' xp</span><span>' + nf(a.kph) + ' k/h</span><span>' + nf(a.captures) + ' cap</span><span style="color:' + (a.shinyFound > 0 ? '#f778ba' : '#8b949e') + '">✨' + nf(a.shinyFound) + ' enc</span><span style="color:' + (a.shinyCap > 0 ? '#f778ba' : '#8b949e') + '">✨' + nf(a.shinyCap) + ' cap</span><span style="color:#f2c665">✨' + nf(life) + ' vida</span>'
+      ? '<span style="color:' + gc + '">' + ncs(a.gph) + '/h</span><span style="color:#79c0ff">' + nc(a.xph) + ' xp</span><span>' + nf(a.kph) + ' k/h</span><span>' + nf(a.captures) + ' cap</span><span style="color:' + (a.shinyFound > 0 ? '#f778ba' : '#8b949e') + '">✨' + nf(a.shinyFound) + ' enc</span><span style="color:' + (a.shinyCap > 0 ? '#f778ba' : '#8b949e') + '">✨' + nf(a.shinyCap) + ' cap</span><span style="color:#f2c665">✨' + nf(life) + ' ' + t('acLife') + '</span>'
       : '<span style="color:#6e7681">' + (d ? t('statsWaiting') : t('statsOff')) + '</span>';
     // suprimentos por conta (pedido de usuario); mesmo esquema de cores da secao de totais
-    const sup = d ? '<div class="ac2"><span style="color:#e3350d">' + nc(d.balls || 0) + ' bolas</span><span style="color:#f778ba">' + nc(d.potions || 0) + ' potions</span><span style="color:#58a6ff">' + nc(d.revives || 0) + ' revives</span></div>' : '';
+    const sup = d ? '<div class="ac2"><span style="color:#e3350d">' + ((d.balls || 0) >= 999999 ? '∞' : nc(d.balls || 0)) + ' ' + t('stBalls') + '</span><span style="color:#f778ba">' + nc(d.potions || 0) + ' potions</span><span style="color:#58a6ff">' + nc(d.revives || 0) + ' revives</span></div>' : '';
     return '<div class="acard"><div class="ac1"><span class="acd" style="background:' + dot + ';color:' + dot + '"></span><span class="acn">' + esc(name) + '</span><span class="acm">' + money + ' · 💎' + nf(dia) + '</span></div><div class="ac2">' + stats + '</div>' + sup + '</div>';
   }
   const a4c = (l, v, c) => '<div class="a4"><div class="a4v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div><div class="a4l">' + l + '</div></div>';
   const sgrid = (n, inner) => '<div class="agg4" style="grid-template-columns:repeat(' + n + ',1fr)">' + inner + '</div>';
   async function renderAggregate() {
-    let gph = 0, xph = 0, kph = 0, kills = 0, caps = 0, shF = 0, shC = 0, money = 0, dia = 0, balls = 0, pot = 0, rev = 0, lifeT = 0, cards = '';
+    let gph = 0, xph = 0, kph = 0, kills = 0, caps = 0, shF = 0, shC = 0, money = 0, dia = 0, balls = 0, ballsInf = false, pot = 0, rev = 0, lifeT = 0, cards = '';
     for (let i = 0; i < count; i++) {
       const nm0 = tabNames[i] || stName(i), dot = ACOR[i] || '#8b949e';
       if (off[i] || !webviews[i]) { cards += aggCard(dot, nm0, null); continue; }
@@ -2406,7 +2492,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       cards += aggCard(dot, (d && d.name) || nm0, d);
       const a = d && d.ok ? d.a : null;
       if (a) { gph += a.gph || 0; xph += a.xph || 0; kph += a.kph || 0; kills += a.kills || 0; caps += a.captures || 0; shF += a.shinyFound || 0; shC += a.shinyCap || 0; }
-      if (d) { money += d.gold || 0; dia += d.diamonds || 0; balls += d.balls || 0; pot += d.potions || 0; rev += d.revives || 0; lifeT += d.shinyEnc || 0; }
+      if (d) { money += d.gold || 0; dia += d.diamonds || 0; if ((d.balls || 0) >= 999999) ballsInf = true; else balls += d.balls || 0; pot += d.potions || 0; rev += d.revives || 0; lifeT += d.shinyEnc || 0; } // balls 999999 = bola infinita (convencao do READ_STATE)
     }
     let h = '<div class="head" style="padding:12px 16px 8px;"><div class="sec" style="border:0;padding:0;"><span class="mk" style="background:#e3350d;"></span><span class="lb">' + t('stAllTitle') + '</span></div></div>';
     h += '<div class="kpis">'
@@ -2415,14 +2501,14 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       + '<div class="kpi n"><span class="ac"></span><div class="kv">' + nf(kph) + '</div><div class="kl">kills / h</div></div></div>';
     h += sec('#58a6ff', t('stSession')) + sgrid(4, a4c(t('stDefeated'), nc(kills)) + a4c(t('stCaptures'), nf(caps)) + a4c(t('stShinyF'), nf(shF), shF > 0 ? '#f778ba' : null) + a4c(t('stShinyC'), nf(shC), shC > 0 ? '#f778ba' : null))
       + row(t('stShinyLifeAll'), '✨ ' + nf(lifeT), '#f2c665');
-    h += sec('#2bb0a8', t('stSupplies')) + sgrid(3, a4c('Pokébolas', nc(balls), '#e3350d') + a4c('Potions', nc(pot), '#f778ba') + a4c('Revives', nc(rev), '#58a6ff'));
+    h += sec('#2bb0a8', t('stSupplies')) + sgrid(3, a4c('Pokébolas', ballsInf ? '∞' : nc(balls), '#e3350d') + a4c('Potions', nc(pot), '#f778ba') + a4c('Revives', nc(rev), '#58a6ff'));
     h += sec('#f2c665', t('stAssets')) + sgrid(2, a4c('$ total', '$' + nc(money), '#f2c665') + a4c('💎 total', nf(dia), '#8ab4ff'));
     h += sec('#e3350d', t('stPerAcc')) + cards;
     stBody.innerHTML = h + '<div style="height:12px;"></div>';
   }
 
   async function refreshStats() {
-    if (!statsOpen || dragging) return;
+    if (!statsOpen || dragging || janelaOculta) return; // escondida: ninguem esta olhando o Resumo
     if (stTabs.childElementCount !== count + 1) buildStatsTabs();
     if (statsIdx >= count) { statsIdx = 0; buildStatsTabs(); }
     if (statsIdx === -1) { await renderAggregate(); return; }
@@ -2532,7 +2618,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     } else h += '<div class="cfg-noc" style="padding:2px 15px">' + t('cfgNoCat') + '</div>';
     // Itens fixados
     h += '<div class="cfg-h">' + t('stPinned') + '</div><input class="cfg-search" id="cfgSearch" placeholder="' + t('cfgSearch') + '"><div class="cfg-results" id="cfgResults"></div><div class="cfg-pinned">';
-    cfg.pinned.forEach((p, idx) => h += '<div class="cfg-pin"><span>' + esc(p.name) + '</span><button data-rm="' + idx + '" title="Remover">✕</button></div>');
+    cfg.pinned.forEach((p, idx) => h += '<div class="cfg-pin"><span>' + esc(p.name) + '</span><button data-rm="' + idx + '" title="' + t('rmTitle') + '">✕</button></div>');
     h += '</div>';
     // Comprar pokebolas em massa: a compra roda na conta exibida no painel, com confirmacao
     h += '<div class="cfg-h">' + t('cfgBalls') + '</div>';
@@ -2550,7 +2636,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     h += '</div><input class="cfg-search" id="cfgLockSearch" placeholder="' + t('cfgLockSearch') + '"><div class="cfg-results" id="cfgLockResults"></div>';
     // Alvo shiny
     h += '<div class="cfg-h">' + t('cfgTarget') + '</div>';
-    if (cfg.shinyTarget) h += '<div class="cfg-pinned"><div class="cfg-pin"><span>🎯 ' + esc(cfg.shinyTarget.name) + '</span><button data-cleartarget="1" title="Remover">✕</button></div></div>';
+    if (cfg.shinyTarget) h += '<div class="cfg-pinned"><div class="cfg-pin"><span>🎯 ' + esc(cfg.shinyTarget.name) + '</span><button data-cleartarget="1" title="' + t('rmTitle') + '">✕</button></div></div>';
     if (lastData && lastData.usedList && lastData.usedList.length) h += '<input class="cfg-search" id="cfgTargetSearch" placeholder="' + t('cfgTargetSearch') + '"><div class="cfg-results" id="cfgTargetResults"></div>';
     else h += '<div class="cfg-noc" style="padding:2px 15px">' + t('cfgNoCat') + '</div>';
     h += '<div class="cfg-h">' + t('cfgCredits') + '</div><div class="cfg-credit">' + t('creditSidebar') + ' <b>poke-idle-launcher</b> · AntonioFleck<br>' + t('creditIV') + ' <b>JustPokédex</b> · guilherme-se · Discord: justpand</div>';
@@ -2595,7 +2681,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         msg.textContent = '\u23f3';
         try {
           const r = await webviews[j].executeJavaScript(
-            "(async()=>{try{const r=await fetch('/api/game/balls/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ballId:" + ballId + ",qty:" + qtd + "})});const j2=await r.json().catch(()=>null);return{st:r.status,gold:j2&&j2.gold}}catch(e){return{st:0}}})()");
+            "(async()=>{try{const r=await fetch('/api/game/balls/buy',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},(window.__poke&&window.__poke.auth)?{Authorization:window.__poke.auth}:{}),body:JSON.stringify({ballId:" + ballId + ",qty:" + qtd + "})});const j2=await r.json().catch(()=>null);return{st:r.status,gold:j2&&j2.gold}}catch(e){return{st:0}}})()"); // o jogo so vende com o Bearer da conta (apiPostAuth): sem ele, 401
           if (r && r.st === 200) { msg.textContent = '\u2705 ' + t('cfgBallsOk').replace('{q}', nf(qtd)); refreshStats(); }
           else msg.textContent = '\u274c ' + t('cfgBallsErr') + (r && r.st ? ' (' + r.st + ')' : '');
         } catch { msg.textContent = '\u274c ' + t('cfgBallsErr'); }
@@ -2731,7 +2817,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     Object.values(HS).forEach(M => Object.values(M || {}).forEach(v => { if (v && +v.hpk > 0 && +v.kph > 0 && (+v.n || 0) >= 5 && !(+v.tma > 0) && !(+v.tpa > 0)) pts.push({ h: +v.hpk, t: 3600 / +v.kph }); })); // so golpe natural: com TM/AoE os kills vem em salva e o tempo por kill nao e a x golpes + b
     const med = (v) => { const w = v.slice().sort((p, q) => p - q); return w[Math.floor(w.length / 2)]; };
     const sl = []; for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) if (Math.abs(pts[i].h - pts[j].h) > 0.3) sl.push((pts[j].t - pts[i].t) / (pts[j].h - pts[i].h));
-    if (pts.length < 6 || sl.length < 3) { tempoCal = { a: 2.1, b: 3.1, n: pts.length }; return tempoCal; }
+    if (pts.length < 6 || sl.length < 3) { tempoCal = { a: 2.1, b: 3.1, n: pts.length < 6 ? pts.length : 0 }; return tempoCal; } // 6+ hunts de golpes/kill parecidos: nao ajustou, o texto nao pode dizer que sim
     const a = Math.max(0.5, Math.min(10, med(sl))), b = Math.max(0, Math.min(20, med(pts.map(p => p.t - a * p.h))));
     tempoCal = { a: Math.round(a * 100) / 100, b: Math.round(b * 100) / 100, n: pts.length };
     return tempoCal;
@@ -2740,7 +2826,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   // folga que o modelo previu pro lider daquela conta naquela hunt, da o fator de correcao da constante K (o modelo
   // nasceu otimista: dizia "mata de 1" onde as contas medem 2 golpes). Mediana das ultimas amostras, uma por conta+hunt,
   // persistida. 1 = ainda sem medicao. ponytail: fator unico; se depender do nivel, virar tabela por faixa.
-  let danoAm = []; try { const v = lsObj('danoAm'); if (Array.isArray(v)) danoAm = v.slice(-40); } catch {}
+  // lista: o lsObj devolve {} pra array, entao nunca carregava e o fator voltava a 1 a cada abertura
+  let danoAm = []; try { const v = JSON.parse(lsGet('danoAm') || '[]'); if (Array.isArray(v)) danoAm = v.filter(s => s && typeof s === 'object').slice(-40); } catch {}
   let danoFator = 1;
   const danoRecalc = () => { const v = danoAm.map(s => +s.r).filter(r => r > 0.02 && r < 50).sort((p, q) => p - q); danoFator = v.length >= 3 ? Math.round(v[Math.floor(v.length / 2)] * 1000) / 1000 : 1; return danoFator; };
   danoRecalc();
@@ -2768,7 +2855,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   };
   const alvosDe = (x, q2) => { const v = medHunt(x, q2 === 'aoe' ? 'tpa' : 'tma'); return v > 0 ? Math.max(1, Math.min(12, v)) : 2; };
   const taxaTm = (x) => { const v = medHunt(x, 'tsh'); return v > 0 ? Math.min(360, v) : 360; };
-  const calChave = () => tempoCal.a + '/' + tempoCal.b + '/' + danoFator + '/' + JSON.stringify(Object.values((typeof huntStats !== 'undefined' && huntStats) || {}).map(M => Object.values(M || {}).map(v => (+v.tma || 0) + '/' + (+v.tpa || 0) + '/' + (+v.tsh || 0)))); // entra nas chaves de cache: calibracao ou medicao nova = nota nova
+  // entra nas chaves de cache: calibracao ou medicao nova = nota nova. Arredondada: a EMA do amostrador (30 s) e o Theil-Sen
+  // mexem nas casas decimais o tempo todo, e cada mexida invalidava o cache (o Ditto do Simples re-varria 0,3 s a cada 30 s)
+  const calChave = () => { const q = (v, p) => Math.round((+v || 0) / p) * p; return q(tempoCal.a, 0.1).toFixed(1) + '/' + q(tempoCal.b, 0.1).toFixed(1) + '/' + q(danoFator, 0.05).toFixed(2) + '/' + JSON.stringify(Object.values((typeof huntStats !== 'undefined' && huntStats) || {}).map(M => Object.values(M || {}).map(v => q(v && v.tma, 0.5) + '/' + q(v && v.tpa, 0.5) + '/' + q(v && v.tsh, 20)))); };
   const sugCalc = (A, x) => {
     const M2 = window.PokeGridIvMath;
     const aB = A && basesByName[A.sp], am = A && movesByName[A.sp];
@@ -2887,7 +2976,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     for (const sp in movesByName) {
       if (!R.pode(sp) || !basesByName[sp]) continue;
       const sg = sugCalc({ sp, level: A.level, q: R.fix.q, ivt: R.fix.ivt, tlv: A.tlv, mult: R.fix.mult }, x);
-      if (sg) out.push({ sp, sg, sc: sg.xph || sg.ritmo });
+      if (sg && sg.ritmo >= 0.15) out.push({ sp, sg, sc: sg.xph || sg.ritmo }); // piso do Simples: forma inviavel na hunt nao entra
     }
     out.sort((p, q) => (q.sc - p.sc) || (q.sg.eff - p.sg.eff) || ((q.sg.mg || 0) - (p.sg.mg || 0))); // empate no teto: efetividade, depois folga
     return out.slice(0, 12);
@@ -2913,7 +3002,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       let best = null;
       lista.forEach((x, k) => {
         const sg = sugCalc(A2, x);
-        if (!sg) return;
+        if (!sg || !(sg.ritmo >= 0.15)) return; // piso do Simples: forma inviavel na hunt nao entra no quadro nem no ranking
         if (A.tlv > 0 && sg.hl > A.tlv) return; // hunt que a conta nao alcanca nao vale como "melhor lugar"
         const cand = { sc: sg.xph || sg.ritmo, sp, x, sg };
         if (melhor(best, cand)) best = cand; // empate no teto: a forma robusta (efetividade, folga), nao a 1a da lista
@@ -2930,7 +3019,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   };
   const dittoSweep = (A, lista) => dittoVarre(A, lista).rows;   // por tipo (quadro do Simples)
   const dittoHunts = (A, lista) => dittoVarre(A, lista).hunts;  // por hunt (painel do Ditto)
-  let huntsCache = null, huntsCacheT = 0, huntSort = 'sv', huntAccSel = -1;
+  let huntsCache = null, huntsCacheT = 0, huntSort = 'sv', huntAccSel = -1, huntsOuroTent = 0;
   let huntFavs = {}; try { huntFavs = lsObj('huntFavs'); } catch {}
   let huntHidden = {}; try { huntHidden = lsObj('huntHidden'); } catch {}
   let huntScope = lsGet('huntScope') || 'minhas'; // 'minhas' (as que voce farma/favoritou) | 'todas'
@@ -2979,17 +3068,43 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       ? { gph: Math.round(c.gph * (1 - al) + a.gph * al), xph: Math.round(c.xph * (1 - al) + a.xph * al), cph: c.cph * (1 - al) + cph * al, kph: Math.round((c.kph || 0) * (1 - al) + (a.kph || 0) * al), hpk: ema('hpk'), tma: ema('tma'), tsh: ema('tsh'), tpa: ema('tpa'), n: (c.n || 0) + 1, t: Date.now() }
       : { gph: Math.round(a.gph), xph: Math.round(a.xph), cph, kph: Math.round(a.kph || 0), hpk: m.hpk, tma: m.tma, tsh: m.tsh, tpa: m.tpa, n: 1, t: Date.now() };
   }
+  // calibracao do dano: cada conta com 5+ min na hunt, lider conhecido e dano medido vira uma amostra (dano real / folga do
+  // modelo). Precisa do catalogo (o Simples ou a tierlist carregam). So conta golpe do lider ATUAL: a sessao so zera ao
+  // trocar de hunt e os golpes somam por NOME, entao o lider antigo pode ter um golpe com o mesmo nome do novo (Slash no Scizor
+  // e no Kabutops). Por isso a troca de lider (ou a evolucao dele) dentro da mesma sessao marca a conta+hunt como misturada, e
+  // ela so volta a amostrar quando os golpes somados zeram (troca de hunt ou Zerar do app). Nao vale o a.seconds: o lixo do
+  // Hunt Analyzer do jogo zera o analyzer mas nao os golpes. Limite: a troca feita antes de o app abrir nao aparece.
+  const ldVisto = new Map(); // cid|hunt -> { id: lider (id do jogo + especie), n: golpes somados na ultima leitura, mix }
+  function amostraDano(d) {
+    try {
+      const a = d.a || {}, team = d.team || [], L = team.find(p => p && p.ld) || team[0];
+      if (!L || !d.hunt) return;
+      const hk = hkey(d.hunt), ck = d.cid + '|' + hk, idL = (L.id || '') + '|' + String(L.name || '').toLowerCase(), sec = +a.seconds || 0;
+      const nMv = (Array.isArray(a.mvs) ? a.mvs : []).reduce((t2, e) => t2 + (+(e && e.n) || 0), 0), v = ldVisto.get(ck);
+      if (!v || nMv < v.n) ldVisto.set(ck, { id: idL, n: nMv, mix: false }); // 1a leitura ou golpes zerados
+      else { if (v.id !== idL) v.mix = true; v.id = idL; v.n = nMv; }
+      if (ldVisto.get(ck).mix) return;
+      if (!(sec >= 300) || L.dt || !L.name || !huntsCache) return;
+      const att = { sp: String(L.name).toLowerCase(), level: +L.level || 1, q: +L.q || 0, ivt: +L.ivt || 0, tlv: +d.level || 0, mult: 1, tms: Array.isArray(L.tms) ? L.tms : null };
+      const dele = new Set(((movesByName[att.sp] || {}).a || []).map(g => String(g[0]).toLowerCase())); // os dois lados cortam o nome em 24
+      const hitHp = hitHpDe((a.mvs || []).filter(e => e && dele.has(String(e.m).toLowerCase()))); if (!hitHp) return; // dano medio do golpe NORMAL (o TM fica fora: e outro poder)
+      const x = huntsCache.find(x2 => hkey(x2.sl || x2.name) === hk); if (!x) return;
+      const sg = sugCalc(att, x); if (!sg || !(sg.mg > 0)) return;
+      danoAmostra(d.cid + '|' + hk, (hitHp / 100) / (sg.mg / danoFator), att.level, x.level);
+    } catch {}
+  }
   // amostrador de fundo: roda mesmo com painel/cartas fechados, pra base acumular durante o farm
   setInterval(async () => {
     let mudou = false;
     for (let i = 0; i < count; i++) {
       if (off[i] || !webviews[i]) continue;
-      try { const d = await webviews[i].executeJavaScript(READ_STATE); if (d && d.ok && d.cid && d.hunt && d.a) { amostraHunt(d.cid, d.hunt, d.a); mudou = true; } } catch {}
+      try { const d = await webviews[i].executeJavaScript(READ_STATE); if (d && d.ok && d.cid && d.hunt && d.a) { amostraHunt(d.cid, d.hunt, d.a); amostraDano(d); mudou = true; } } catch {}
     }
     if (mudou) { try { lsSet('huntStats2', JSON.stringify(huntStats)); } catch {} }
   }, 30000);
   // junta os marcadores do mapa com o catalogo de criaturas (tudo dado que o jogo ja entrega ao cliente)
-  const HUNTS_JS = `(async()=>{try{const [mk,cr]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null)]);const limpa=s=>String(s||'').toLowerCase().replace(/\\[.*?\\]/g,'').replace(/\\(.*?\\)/g,'').replace(/[_-]+/g,' ').replace(/\\s+/g,' ').trim();const chave=s=>limpa(s).replace(/female/g,'fe').replace(/male/g,'ma').replace(/[^a-z0-9]/g,'');const cs={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.name&&!(cs[chave(c.name)]&&!c.area&&+c.pokeId>=10000))cs[chave(c.name)]={nm0:c.name.toLowerCase().trim(),t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||c.priceNpc||0,xp:c.experience||c.xp||0,lvl:c.huntLevel||0,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string'),ar:String(c.area||'')||((+c.pokeId>=10000&&+c.pokeId<11000)?'outland':''),xm:+c.orreXpMul||0,tr:+c.orreTier||0};});const acha=nm=>{const k=chave(nm);if(cs[k])return cs[k];const pt=limpa(nm).split(/ e | and /);if(pt.length>1){const k2=chave(pt[0]);if(cs[k2])return cs[k2];}const w=limpa(nm).split(' ');for(let i=0;i<w.length;i++){const suf=chave(w.slice(i).join(' '));if(suf&&cs[suf])return cs[suf];}for(let i=0;i<w.length;i++){const kk=chave(w[i]);if(kk&&cs[kk])return cs[kk];}return null;};const ml={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null)ml[c.pokeId]=+c.huntLevel||0;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{const e=c?(+c.evolvesToId||0):0;if(!e||ml[e]==null)return;const v=Math.max(ml[c.pokeId]||0,+c.evolveLevel||0);if(v<ml[e])ml[e]=v;});const byId={},bs={},mv={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null&&c.name){byId[c.pokeId]=c.name;const pMv=mv[String(c.name).toLowerCase()];if(bs[String(c.name).toLowerCase()]&&!c.area&&+c.pokeId>=10000)return;bs[String(c.name).toLowerCase()]=[+c.baseHp||0,+c.baseAtk||0,+c.baseDef||0,+c.baseSpAtk||0,+c.baseSpDef||0,+c.baseSpeed||0];mv[String(c.name).toLowerCase()]={hl:+c.huntLevel||0,ml:(ml[c.pokeId]!=null?ml[c.pokeId]:(+c.huntLevel||0)),id:(pMv&&pMv.id&&pMv.id<(+c.pokeId||0))?pMv.id:(+c.pokeId||0),t:[String(c.type1||'').toUpperCase(),String(c.type2||'').toUpperCase()],fin:(!c.evolvesToId||[123,112,114,125,126,356,375,372].indexOf(+c.pokeId)>=0)?1:0,a:(c.attacks||[]).slice(0,24).map(g=>[String((g&&g.name)||'').slice(0,24),+(g&&g.power)||0,String((g&&g.type)||'').toUpperCase(),String((g&&g.category)||'').toUpperCase()==='PHYSICAL'?'P':'S',+(g&&g.cooldownMs)||0,+(g&&g.learnLevel)||0,String((g&&g.tm)||'').toUpperCase().slice(0,12)])};}});const nat={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&+c.pokeId>=1&&+c.pokeId<1026)nat[chave(c.name)]=+c.pokeId;});const EXTRA={darumaka:554,darmanitan:555,pyroar:668};const dex={};((cr&&cr.creatures)||[]).forEach(c=>{if(!c||!((+c.pokeId>=10000&&+c.pokeId<11000)||(+c.pokeId>=50000&&+c.pokeId<51000)))return;const k=limpa(c.name);let d=nat[chave(k)];const w=k.split(' ');for(let i=0;i<w.length&&!d;i++)d=nat[chave(w.slice(i).join(' '))];for(let i=0;i<w.length&&!d;i++)d=nat[chave(w[i])]||EXTRA[chave(w[i])];if(d)dex[+c.pokeId]=d;});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const mlN={};ms.forEach(m2=>{const c=acha(m2.hunt||m2.name||m2.slug||m2.title||'');const lv=+(m2.level||m2.lvl||m2.minLevel)||0;if(c&&lv>0&&(mlN[c.nm0]==null||lv<mlN[c.nm0]))mlN[c.nm0]=lv;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{if(!c)return;const e=+c.evolvesToId||0;if(!e)return;const de=String(c.name||'').toLowerCase(),pa=String(byId[e]||'').toLowerCase();if(!pa||mlN[de]==null)return;const v=Math.max(mlN[de],+c.evolveLevel||0);if(mlN[pa]==null||v<mlN[pa])mlN[pa]=v;});for(const k in mv){if(mlN[k]!=null)mv[k].ml=mlN[k];}const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const c=acha(nm);out.push({sl:String(m2.slug||''),name:String(nm).replace(/[_-]+/g,' ').trim(),level:m2.level||m2.lvl||m2.minLevel||(c?c.lvl:0)||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?Math.round((+c.xp||0)*((c.ar==='orre'&&c.xm>0)?c.xm:1)):0,loot:c?c.loot:[],sp:c?c.nm0:'',ar:c?c.ar:'',tr:c?c.tr:0});});return {h:out,byId:byId,bs:bs,mv:mv,dex:dex};}catch(e){return null}})()`;
+  // fin (pode aprender TM): estagio final ou a lista TM_STAGE_EXEMPT do jogo (build de 25/09/2026, que pos a Misdreavus 200)
+  const HUNTS_JS = `(async()=>{try{const [mk,cr,itj]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null),fetch('/game/items.json').then(r=>r.json()).catch(()=>null)]);const pr={},prL={};((itj&&itj.items)||[]).forEach(i=>{if(i&&i.name){pr[String(i.name)]=+i.npcPrice||0;const lk=String(i.name).toLowerCase();if(prL[lk]==null)prL[lk]=+i.npcPrice||0;}});const gkDe=c=>(c.loot||[]).reduce((s,l)=>{if(!l||!(+l.chance>0))return s;const nm=String(l.name||'');const p=pr[nm]!=null?pr[nm]:(prL[nm.toLowerCase()]||0);return s+(+l.chance/1e5)*((+l.minCount||1)+(+l.maxCount||+l.minCount||1))/2*p;},0);const limpa=s=>String(s||'').toLowerCase().replace(/\\[.*?\\]/g,'').replace(/\\(.*?\\)/g,'').replace(/[_-]+/g,' ').replace(/\\s+/g,' ').trim();const chave=s=>limpa(s).replace(/female/g,'fe').replace(/male/g,'ma').replace(/[^a-z0-9]/g,'');const cs={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.name&&!(cs[chave(c.name)]&&!c.area&&+c.pokeId>=10000))cs[chave(c.name)]={nm0:c.name.toLowerCase().trim(),t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||c.priceNpc||0,xp:c.experience||c.xp||0,lvl:c.huntLevel||0,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string'),ar:String(c.area||'')||((+c.pokeId>=10000&&+c.pokeId<11000)?'outland':''),xm:+c.orreXpMul||0,tr:+c.orreTier||0,gk:gkDe(c)};});const acha=nm=>{const k=chave(nm);if(cs[k])return cs[k];const pt=limpa(nm).split(/ e | and /);if(pt.length>1){const k2=chave(pt[0]);if(cs[k2])return cs[k2];}const w=limpa(nm).split(' ');for(let i=0;i<w.length;i++){const suf=chave(w.slice(i).join(' '));if(suf&&cs[suf])return cs[suf];}for(let i=0;i<w.length;i++){const kk=chave(w[i]);if(kk&&cs[kk])return cs[kk];}return null;};const ml={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null)ml[c.pokeId]=+c.huntLevel||0;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{const e=c?(+c.evolvesToId||0):0;if(!e||ml[e]==null)return;const v=Math.max(ml[c.pokeId]||0,+c.evolveLevel||0);if(v<ml[e])ml[e]=v;});const byId={},bs={},mv={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null&&c.name){byId[c.pokeId]=c.name;const pMv=mv[String(c.name).toLowerCase()];if(bs[String(c.name).toLowerCase()]&&!c.area&&+c.pokeId>=10000)return;bs[String(c.name).toLowerCase()]=[+c.baseHp||0,+c.baseAtk||0,+c.baseDef||0,+c.baseSpAtk||0,+c.baseSpDef||0,+c.baseSpeed||0];mv[String(c.name).toLowerCase()]={hl:+c.huntLevel||0,ml:(ml[c.pokeId]!=null?ml[c.pokeId]:(+c.huntLevel||0)),id:(pMv&&pMv.id&&pMv.id<(+c.pokeId||0))?pMv.id:(+c.pokeId||0),t:[String(c.type1||'').toUpperCase(),String(c.type2||'').toUpperCase()],fin:(!c.evolvesToId||[123,112,114,125,126,356,375,372,200].indexOf(+c.pokeId)>=0)?1:0,a:(c.attacks||[]).slice(0,24).map(g=>[String((g&&g.name)||'').slice(0,24),+(g&&g.power)||0,String((g&&g.type)||'').toUpperCase(),String((g&&g.category)||'').toUpperCase()==='PHYSICAL'?'P':'S',+(g&&g.cooldownMs)||0,+(g&&g.learnLevel)||0,String((g&&g.tm)||'').toUpperCase().slice(0,12)])};}});const nat={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&+c.pokeId>=1&&+c.pokeId<1026)nat[chave(c.name)]=+c.pokeId;});const EXTRA={darumaka:554,darmanitan:555,pyroar:668};const dex={};((cr&&cr.creatures)||[]).forEach(c=>{if(!c||!((+c.pokeId>=10000&&+c.pokeId<11000)||(+c.pokeId>=50000&&+c.pokeId<51000)))return;const k=limpa(c.name);let d=nat[chave(k)];const w=k.split(' ');for(let i=0;i<w.length&&!d;i++)d=nat[chave(w.slice(i).join(' '))];for(let i=0;i<w.length&&!d;i++)d=nat[chave(w[i])]||EXTRA[chave(w[i])];if(d)dex[+c.pokeId]=d;});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const mlN={};ms.forEach(m2=>{const c=acha(m2.hunt||m2.name||m2.slug||m2.title||'');const lv=+(m2.level||m2.lvl||m2.minLevel)||0;if(c&&lv>0&&(mlN[c.nm0]==null||lv<mlN[c.nm0]))mlN[c.nm0]=lv;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{if(!c)return;const e=+c.evolvesToId||0;if(!e)return;const de=String(c.name||'').toLowerCase(),pa=String(byId[e]||'').toLowerCase();if(!pa||mlN[de]==null)return;const v=Math.max(mlN[de],+c.evolveLevel||0);if(mlN[pa]==null||v<mlN[pa])mlN[pa]=v;});for(const k in mv){if(mlN[k]!=null)mv[k].ml=mlN[k];}const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const c=acha(nm);out.push({sl:String(m2.slug||''),name:String(nm).replace(/[_-]+/g,' ').trim(),level:m2.level||m2.lvl||m2.minLevel||(c?c.lvl:0)||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?Math.round((+c.xp||0)*((c.ar==='orre'&&c.xm>0)?c.xm:1)):0,loot:c?c.loot:[],sp:c?c.nm0:'',ar:c?c.ar:'',tr:c?c.tr:0,gk:c?Math.round(c.gk):0});});return {h:out,byId:byId,bs:bs,mv:mv,dex:dex};}catch(e){return null}})()`;
   let creaturesById = {};
   let basesByName = {}; // bases do creatures.json, por nome minusculo (poder do time)
   let movesByName = {}; // golpes compactos e nivel de hunt por especie (sugestao de onde cacar)
@@ -3005,7 +3120,11 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     }
   }
   function carregaHunts() {
-    if ((huntsCache && Object.keys(movesByName).length) || Date.now() - huntsCacheT < 60e3) return; // hunts sem catalogo (creatures.json falhou): continua tentando
+    // hunts sem catalogo (creatures.json falhou) ou sem precos (items.json falhou: gold/h zerado): continua tentando.
+    // Os precos, no maximo 5 vezes: se o jogo mudar o formato do items.json, nao baixa o catalogo inteiro todo minuto.
+    const semOuro = !!huntsCache && !huntsCache.some(x => +x.gk > 0) && huntsOuroTent < 5;
+    if ((huntsCache && Object.keys(movesByName).length && !semOuro) || Date.now() - huntsCacheT < 60e3) return;
+    if (semOuro) huntsOuroTent++;
     huntsCacheT = Date.now();
     for (let i = 0; i < count; i++) {
       if (off[i] || !webviews[i]) continue;
@@ -3015,23 +3134,31 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         // o app perdia sprites, stats e golpes junto. As hunts seguem sendo tentadas de novo a cada 60s.
         if (r.byId && Object.keys(r.byId).length) { creaturesById = r.byId; formDex = r.dex || {}; basesByName = r.bs || {}; movesByName = r.mv || {}; }
         if (r.h && r.h.length) { const seen = {}; huntsCache = r.h.filter(x => !seen[x.name + x.level] && (seen[x.name + x.level] = 1)); }
+        dittoCache.clear(); tlCache = null; // dado novo com a mesma chave (huntsCacheT marca o INICIO da busca): varredura feita com a lista velha no meio tempo nao vale mais
       }).catch(() => {});
       break;
     }
   }
+  // sem preco depois da 5a busca, e a ultima ja voltou (a trava de 60 s do carregaHunts passou): o app desistiu ate reabrir
+  const semPrecoFim = () => huntsOuroTent >= 5 && Date.now() - huntsCacheT >= 60e3;
   // ===== Tierlist por elemento: cada especie contra todas as hunts, no mesmo modelo do sugestor =====
   let tlCache = null;
   let tlEl = String(lsGet('tlEl') || '');
   let tlNivel = 0; // nivel escolhido na tierlist (0 = ainda nao inicializado)
   let tlTm = lsGet('tlTm') === '1'; // considerar golpes de TM? padrao nao: TM e item, nem todo mundo tem
+  let tlObj = lsGet('tlObj') === 'gold' ? 'gold' : 'xp'; // o que a nota mede: XP/h ou gold/h
+  let tlPk = (() => { try { const o = JSON.parse(lsGet('tlPk') || '{}'); return o && typeof o === 'object' ? o : {}; } catch { return {}; } })(); // modo Pokemon: { m, sp, level, q, ivt, tms, cid }
+  let tlPkCtlNivel = -1, tlPkMeusKey = '';
   const tlMax = () => Math.max(3000, ...(huntsCache || []).map(x => +x.level || 0)); // acompanha a hunt mais alta do jogo (nightmare chega a 3000)
   let tlRetryT = 0, tlRenderT = 0; // tlRenderT: coalesce recalculos ao trocar de nivel rapido | re-tentativa da 1a abertura: a coleta de hunts leva ~1s pra voltar do painel
   const TL_TIERS = [[90, 'S', '#f2c665'], [70, 'A', '#3fb950'], [50, 'B', '#79c0ff'], [30, 'C', '#f0883e'], [0, 'D', '#8b949e']];
-  function tierCalc(nivel, comTm) {
+  function tierCalc(nivel, comTm, obj) {
     nivel = +nivel || 0; // 0 = cada especie no nivel da propria hunt (antigo); >0 = nivel escolhido, so hunts alcancaveis
+    const ouro = obj === 'gold'; // nota por gold/h: kills/h do modelo x loot esperado por kill (x.gk, preco de NPC)
     calibraTempo();
-    const key = nivel + ':' + (comTm ? 'T' : 'N') + ':' + huntsCacheT + ':' + ((huntsCache || []).length) + ':' + calChave();
-    if (tlCache && tlCache.key === key) return tlCache.rows;
+    const key = nivel + ':' + (comTm ? 'T' : 'N') + ':' + (ouro ? 'G' : 'X') + ':' + huntsCacheT + ':' + ((huntsCache || []).length) + ':' + calChave();
+    if (!(tlCache instanceof Map)) tlCache = new Map(); // ate 4 chaves: alternar TM, objetivo ou voltar ao nivel anterior sai na hora
+    if (tlCache.has(key)) return tlCache.get(key);
     const lista = huntsCache || [];
     // a folga (dano alem do necessario) ja pesa dentro do ritmo (chance de matar de 1 golpe): sem fator a parte
     const rows = [];
@@ -3047,9 +3174,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         // nivel da propria hunt: avaliar no nivel do jogador achatava o ranking (98% das especies viravam S).
         if (nivel > 0 && (+x.level || 0) > nivel) return;
         const lvH = Math.max(1, +x.level || +((movesByName[x.sp] || {}).hl) || 1);
-        const sg = sugCalc({ sp, level: lvH, q: 1, ivt: 96, tlv: 0, mult: 1, tms: comTm ? true : null }, x); if (!sg) return;
-        const sc = sg.xph || sg.ritmo;
-        if (discos.length) discos.forEach((d, k) => { const s1 = sugCalc({ sp, level: lvH, q: 1, ivt: 96, tlv: 0, mult: 1, tms: [d, 'AOE'] }, x); if (s1) somas[k] += (s1.xph || s1.ritmo); }); else soma += sc; // rendimento somado em todas as hunts: a nota da aba Geral
+        const sg = sugCalc({ sp, level: lvH, q: 1, ivt: 96, tlv: 0, mult: 1, tms: comTm ? true : null }, x); if (!sg || !(sg.ritmo >= 0.15)) return; // piso do Simples: hunt inviavel nao e "melhor hunt" nem soma no Geral
+        const sc = ouro ? sg.kh * (+x.gk || 0) : (sg.xph || sg.ritmo);
+        if (discos.length) discos.forEach((d, k) => { const s1 = sugCalc({ sp, level: lvH, q: 1, ivt: 96, tlv: 0, mult: 1, tms: [d, 'AOE'] }, x); if (s1) somas[k] += ouro ? s1.kh * (+x.gk || 0) : (s1.xph || s1.ritmo); }); else soma += sc; // rendimento somado em todas as hunts: a nota da aba Geral
         if (!best || sc > best.sc || (sc === best.sc && (sg.mg || 0) > (best.sg.mg || 0))) best = { sc, sg, x };
         // faixa de Outland: a banda de pokeId 10000-10999 (marcada como ar='outland' no HUNTS_JS).
         // Antes era 'fora de Orre e Lv150+', mas o update trouxe Mega/endgame lv600 que nao sao Outland.
@@ -3070,8 +3197,27 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     rows.forEach(r => { const b2 = canon(r.sp); if (!porBase[b2] || r.comp > porBase[b2].comp) { r.base = b2; porBase[b2] = r; } });
     const unicos = Object.values(porBase);
     unicos.sort((p, q) => (q.comp - p.comp) || (q.sg.eff - p.sg.eff));
-    tlCache = { key, rows: unicos };
+    tlCache.set(key, unicos); if (tlCache.size > 4) tlCache.delete(tlCache.keys().next().value);
     return unicos;
+  }
+  // Um Pokemon escolhido (do time ou qualquer especie) contra todas as hunts ate o nivel da conta, por XP/h ou gold/h.
+  // Ditto vai pela varredura do painel do Ditto: a melhor forma numa hunt e a mesma nos dois objetivos (xp e gold sao
+  // kills/h vezes uma constante da hunt). Copia as linhas: o resultado do dittoVarre fica no cache e nao pode mudar.
+  function tierPoke(A, lista, obj) {
+    const ouro = obj === 'gold';
+    const val = (sg, x) => ouro ? sg.kh * (+x.gk || 0) : (sg.xph || sg.ritmo);
+    let rows;
+    if (/ditto/.test(A.sp)) rows = dittoVarre(A, lista).hunts.map(r => Object.assign({}, r, { sc: val(r.sg, r.x) }));
+    else {
+      rows = [];
+      lista.forEach(x => {
+        const sg = sugCalc(A, x);
+        if (!sg || !(sg.ritmo >= 0.15)) return; // piso do Simples: hunt inviavel pro atacante
+        if (A.tlv > 0 && sg.hl > A.tlv) return; // a conta ainda nao alcanca
+        rows.push({ x, sg, sp: A.sp, proprio: 1, sc: val(sg, x) });
+      });
+    }
+    return rows.filter(r => r.sc > 0).sort((p, q) => (q.sc - p.sc) || ((q.sg.mg || 0) - (p.sg.mg || 0)));
   }
   const tlNameId = () => { const m2 = {}; for (const id in creaturesById) m2[String(creaturesById[id]).toLowerCase()] = +id; return m2; };
   function tlLinha(r, pos, max, ids, valor) {
@@ -3088,9 +3234,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       + '<span class="tl-tier" style="background:' + tr2[2] + '22;color:' + tr2[2] + '">' + tr2[1] + '</span>'
       + (id ? '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png" onerror="this.remove()">' : '')
       + '<span class="tl-info"><b>' + esc(cap(r.base || r.sp)) + '</b> ' + (r.base && r.base !== r.sp ? '<span class="tl-sub">(' + esc(cap(r.sp)) + ')</span> ' : '') + r.tipos.map(ty => '<span style="color:' + cor(ty) + ';font-size:12px;font-weight:600">' + esc(ty) + '</span>').join('/')
-      + ' <span class="tl-sub">' + (r.sg.fis ? '<span class="tl-cat" title="' + t('tlFisTip') + '">' + t('tlFis') + '</span>' : '<span class="tl-cat esp" title="' + t('tlEspTip') + '">' + t('tlEsp') + '</span>') + ' ' + esc(r.sg.nome) + ((valor != null ? r.gerTm : r.sg.tm) ? ' <b style="color:#f2c665;font-size:9px">TM ' + esc(valor != null ? r.gerTm : r.sg.tm) + '</b>' : '') + ' \u00d7' + (Math.round(r.sg.eff * 100) / 100) + ((r.sg.mg || 0) > 0 ? ' \u00b7 folga \u00d7' + (Math.round(Math.min(r.sg.mg, 9.9) * 100) / 100) : '') + '</span>'
+      + ' <span class="tl-sub">' + (r.sg.fis ? '<span class="tl-cat" title="' + t('tlFisTip') + '">' + t('tlFis') + '</span>' : '<span class="tl-cat esp" title="' + t('tlEspTip') + '">' + t('tlEsp') + '</span>') + ' ' + esc(r.sg.nome) + ((valor != null ? r.gerTm : r.sg.tm) ? ' <b style="color:#f2c665;font-size:9px">TM ' + esc(valor != null ? r.gerTm : r.sg.tm) + '</b>' : '') + ' \u00d7' + (Math.round(r.sg.eff * 100) / 100) + ((r.sg.mg || 0) > 0 ? ' \u00b7 ' + t('dtFolga') + ' \u00d7' + (Math.round(Math.min(r.sg.mg, 9.9) * 100) / 100) : '') + '</span>'
       + '<br><span class="tl-sub" title="' + t('tlOut') + '">' + reg(r.x, valor != null ? null : pct) + (r.out ? ' &nbsp;|&nbsp; ' + reg(r.out.x, valor != null ? null : pctOut) : '') + '</span></span>'
-      + '<span class="tl-num" style="color:' + tr2[2] + '" title="' + pct + ' de 100 (o melhor da aba \u00e9 a base 100)">' + pct + '</span>'
+      + '<span class="tl-num" style="color:' + tr2[2] + '" title="' + t('tlNotaTip').replace('{p}', pct) + '">' + pct + '</span>'
       + '</div>';
   }
   function renderTier() {
@@ -3114,42 +3260,139 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     lvIn.max = tlMax(); lvIn.value = tlNivel;
     const tmIn = document.getElementById('tlTm'); tmIn.checked = tlTm; document.getElementById('tlTmLbl').textContent = t('tlTm'); document.getElementById('tlTmWrap').title = t('tlTmTip');
     if (!tmIn.__wired) { tmIn.__wired = 1; tmIn.onchange = () => { tlTm = tmIn.checked; lsSet('tlTm', tlTm ? '1' : '0'); renderTier(); }; }
+    const obIn = document.getElementById('tlObj'); obIn.title = t('tlObjTip'); obIn.options[0].textContent = t('tlObjXp'); obIn.options[1].textContent = t('tlObjGold'); obIn.value = tlObj;
+    if (!obIn.__wired) { obIn.__wired = 1; obIn.onchange = () => { tlObj = obIn.value === 'gold' ? 'gold' : 'xp'; lsSet('tlObj', tlObj); obIn.blur(); renderTier(); }; }
     if (!lvIn.__wired) { lvIn.__wired = 1; lvIn.onchange = () => { tlNivel = Math.max(1, Math.min(tlMax(), +lvIn.value || tlNivel)); lvIn.value = tlNivel; lsSet('tlLevel', String(tlNivel)); renderTier(); }; }
+    const modoPk = tlEl === '@';
+    const ctl = document.getElementById('tlPkCtl');
+    ctl.style.display = modoPk ? 'flex' : 'none';
+    // os controles sao refeitos ao abrir o modal e quando o time muda (nunca com um campo deles focado: refazer no meio
+    // do change perde o clique). Nivel novo so troca a lista de especies e o nivel padrao, sem refazer os campos.
+    if (modoPk && (!ctl.firstChild || (tlPkMeusKey !== JSON.stringify(timeMeus()) && !ctl.contains(document.activeElement)))) tlPkControles();
+    else if (modoPk && tlPkCtlNivel !== tlNivel) {
+      tlPkCtlNivel = tlNivel;
+      const dl = document.getElementById('tlSpList'); if (dl) dl.innerHTML = tlPkNomes().map(sp => '<option value="' + esc(cap(sp)) + '">').join('');
+      const lv = document.getElementById('tlPkLv'); if (lv && !tlPk.level) lv.value = tlNivel;
+    }
     body.innerHTML = '<div class="cd-empty">\u23f3</div>';
     clearTimeout(tlRenderT);
     tlRenderT = setTimeout(() => {
-      const rows = tierCalc(tlNivel, tlTm);
+      if (!tlOv.classList.contains('show')) return; // fechou nos 140ms: nao calcula a toa
       const ids = tlNameId();
+      const semPreco = tlObj === 'gold' && !(huntsCache || []).some(x => +x.gk > 0);
+      const rows = (modoPk || semPreco) ? [] : tierCalc(tlNivel, tlTm, tlObj);
       const els = {};
       rows.forEach(r => r.tipos.forEach(ty => (els[ty] = els[ty] || []).push(r)));
-      const nomes = Object.keys(els).sort();
+      const nomes = rows.length ? Object.keys(els).sort() : tlTipos(); // fora do modo Pokemon, so elementos com especie no nivel
       const chips = ['<button data-el="" class="' + (tlEl === '' ? 'on' : '') + '">' + t('tlAll') + '</button>',
-        '<button data-el="*" class="' + (tlEl === '*' ? 'on' : '') + '" style="color:#f2c665">' + t('tlGeral') + '</button>']
+        '<button data-el="*" class="' + (tlEl === '*' ? 'on' : '') + '" style="color:#f2c665">' + t('tlGeral') + '</button>',
+        '<button data-el="@" class="' + (modoPk ? 'on' : '') + '" style="color:#79c0ff">' + t('tlPoke') + '</button>']
         .concat(nomes.map(ty => '<button data-el="' + esc(ty) + '" class="' + (tlEl === ty ? 'on' : '') + '" style="color:' + tipoCor(ty) + '">' + esc(ty) + '</button>'));
       document.getElementById('tlChips').innerHTML = chips.join('');
       document.getElementById('tlChips').querySelectorAll('button').forEach(b2 => b2.onclick = () => { tlEl = b2.dataset.el; lsSet('tlEl', tlEl); renderTier(); });
       let h = '';
-      if (!tlEl) {
-        nomes.forEach(ty => {
-          const arr = els[ty]; const max = arr[0].comp || arr[0].sc;
-          h += '<div class="tl-h" style="color:' + tipoCor(ty, '#f2c665') + '">' + esc(ty) + '</div>';
-          arr.slice(0, 3).forEach((r, i2) => h += tlLinha(r, i2 + 1, max, ids));
-        });
-      } else if (tlEl === '*') {
-        const gs = rows.slice().sort((p, q) => (q.ger || 0) - (p.ger || 0));
-        const max = gs[0] && gs[0].ger || 0;
-        h += '<div style="font-size:9px;color:#586069;padding:0 4px 5px">' + t('tlGeralHint') + '</div>';
-        gs.slice(0, 60).forEach((r, i2) => h += tlLinha(r, i2 + 1, max, ids, r.ger || 0));
-      } else if (els[tlEl]) {
-        const arr = els[tlEl]; const max = arr[0].comp || arr[0].sc;
-        arr.slice(0, 60).forEach((r, i2) => h += tlLinha(r, i2 + 1, max, ids));
-      } else h = '<div class="cd-empty">\u2014</div>';
+      if (semPreco) { // o items.json nao veio: busca de novo (carregaHunts tem trava propria) e reabre sozinho
+        carregaHunts(); h = '<div class="cd-empty">' + t(semPrecoFim() ? 'tlGoldFail' : 'tlGoldNone') + '</div>';
+        clearTimeout(tlRetryT); if (!semPrecoFim()) tlRetryT = setTimeout(() => { if (tlOv.classList.contains('show')) renderTier(); }, 5000);
+      } else if (modoPk) h = tlPkCorpo(ids); // uma especie so: 450 chamadas ao sugCalc (poucos ms), sem a tierlist inteira
+      else {
+        if (!tlEl) {
+          nomes.forEach(ty => {
+            const arr = els[ty]; if (!arr || !arr.length) return;
+            const max = arr[0].comp || arr[0].sc;
+            h += '<div class="tl-h" style="color:' + tipoCor(ty, '#f2c665') + '">' + esc(ty) + '</div>';
+            arr.slice(0, 3).forEach((r, i2) => h += tlLinha(r, i2 + 1, max, ids));
+          });
+        } else if (tlEl === '*') {
+          const gs = rows.slice().sort((p, q) => (q.ger || 0) - (p.ger || 0));
+          const max = gs[0] && gs[0].ger || 0;
+          h += '<div style="font-size:9px;color:#586069;padding:0 4px 5px">' + t('tlGeralHint') + '</div>';
+          gs.slice(0, 60).forEach((r, i2) => h += tlLinha(r, i2 + 1, max, ids, r.ger || 0));
+        } else if (els[tlEl]) {
+          const arr = els[tlEl]; const max = arr[0].comp || arr[0].sc;
+          arr.slice(0, 60).forEach((r, i2) => h += tlLinha(r, i2 + 1, max, ids));
+        } else h = '<div class="cd-empty">\u2014</div>';
+      }
       body.innerHTML = h;
     }, 140);
   }
+  // elementos pros chips: tirados das especies (fixo), nao das linhas calculadas, pra o modo Pokemon nao pagar a tierlist inteira
+  const tlPkNomes = () => Object.keys(movesByName).filter(sp => basesByName[sp] && (+movesByName[sp].ml || 0) <= tlNivel).sort(); // especies que da pra ter no nivel
+  const tlTipos = () => { const s2 = new Set(); tlPkNomes().forEach(sp => (movesByName[sp].t || []).forEach(ty => { if (ty) s2.add(String(ty).toLowerCase()); })); return [...s2].sort(); };
+  // Pokemon do time das contas ligadas (ultima leitura empurrada de cada painel), com qualidade, IV e TMs reais
+  const timeMeus = () => {
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const pc = stCache[i], d = pc && pc.d;
+      if (off[i] || !d || !d.ok) continue;
+      (d.team || []).forEach((p, ix) => {
+        if (!p || !p.name) return;
+        const dt = !!p.dt, sp = dt ? (p.shiny ? 'shiny ditto' : 'ditto') : String(p.name).toLowerCase();
+        out.push({ chave: String(d.cid || i) + ':' + (p.id ? 'id' + p.id : ix), conta: String(d.name || tabNames[i] || stName(i)), sp, // chave pelo id do jogo: o slot muda quando o time e reordenado
+          rot: dt && !/ditto/i.test(String(p.name)) ? (p.shiny ? 'Shiny Ditto' : 'Ditto') : String(p.name), level: +p.level || 1, q: +p.q || 0, ivt: +p.ivt || 0, tlv: +d.level || 0, cid: String(d.cid || ''),
+          tms: dt ? null : (Array.isArray(p.tms) ? p.tms.filter(x => typeof x === 'string').map(x => x.toUpperCase().slice(0, 12)).slice(0, 24) : null) });
+      });
+    }
+    return out;
+  };
+  function tlPkControles() {
+    const ctl = document.getElementById('tlPkCtl');
+    const meus = timeMeus();
+    tlPkMeusKey = JSON.stringify(meus); tlPkCtlNivel = tlNivel; // o conteudo inteiro: troca de Pokemon ou level up no mesmo lugar refaz o select
+    const dit = /ditto/.test(String(tlPk.sp || ''));
+    const cx = 'background:#0d1117;border:1px solid #30363d;border-radius:5px;color:#e6edf3;font-size:12px;padding:3px 5px';
+    const inp = (id, val, w, extra) => '<input id="' + id + '" type="number" ' + extra + ' value="' + esc(String(val)) + '" style="width:' + w + 'px;text-align:center;' + cx + '">';
+    const lab = (k, html, id, oculto) => '<label' + (id ? ' id="' + id + '"' : '') + ' style="display:' + (oculto ? 'none' : 'flex') + ';gap:4px;align-items:center">' + t(k) + ' ' + html + '</label>';
+    const nomes = tlPkNomes();
+    ctl.innerHTML = (meus.length ? '<select id="tlPkMine" style="font-size:11px;' + cx + '"><option value="">' + t('tlPkMine') + '</option>' + meus.map((m, k) => '<option value="' + k + '"' + (tlPk.m === m.chave && tlPk.sp === m.sp ? ' selected' : '') + '>' + esc(m.conta) + ' \u00b7 ' + esc(m.rot) + ' Lv' + m.level + '</option>').join('') + '</select>' : '')
+      + lab('tlPkSp', '<input id="tlPkSp" list="tlSpList" value="' + esc(cap(String(tlPk.sp || ''))) + '" style="width:130px;' + cx + '"><datalist id="tlSpList">' + nomes.map(sp => '<option value="' + esc(cap(sp)) + '">').join('') + '</datalist>')
+      + lab('tlPkLv', inp('tlPkLv', tlPk.level || tlNivel, 54, 'min="1" max="' + tlMax() + '"'))
+      + lab('tlPkQ', inp('tlPkQ', tlPk.q || 1, 54, 'min="0.5" max="10" step="0.01"'), 'tlPkQL', dit) + lab('tlPkIv', inp('tlPkIv', +tlPk.ivt > 0 ? tlPk.ivt : 96, 48, 'min="1" max="192"'), 'tlPkIvL', dit);
+    const salva = () => lsSet('tlPk', JSON.stringify(tlPk));
+    const sel = document.getElementById('tlPkMine');
+    if (sel) sel.onchange = () => {
+      const m = sel.value === '' ? null : meus[+sel.value]; if (!m) return; // o placeholder nao e o 1o do time
+      tlPk = { m: m.chave, sp: m.sp, level: m.level, q: m.q, ivt: m.ivt, tms: m.tms, cid: m.cid };
+      if (m.tlv > 0) { tlNivel = Math.max(1, Math.min(tlMax(), m.tlv)); lsSet('tlLevel', String(tlNivel)); } // alcance = nivel da conta dona do Pokemon
+      salva(); tlPkControles(); renderTier();
+    };
+    const spIn = document.getElementById('tlPkSp');
+    spIn.onchange = () => {
+      const v = String(spIn.value || '').toLowerCase().trim();
+      tlPk = { sp: v, level: tlPk.level, q: tlPk.q, ivt: tlPk.ivt }; // especie digitada: sai do time (TMs do jogo nao valem mais)
+      if (sel) sel.value = '';
+      ['tlPkQL', 'tlPkIvL'].forEach(id => { const e2 = document.getElementById(id); if (e2) e2.style.display = /ditto/.test(v) ? 'none' : 'flex'; }); // Ditto usa os valores fixos do jogo
+      salva(); renderTier();
+    };
+    const num = (id, k, min, max) => { const el = document.getElementById(id); if (!el) return; el.onchange = () => { const v = +el.value; if (el.value !== '' && Number.isFinite(v)) tlPk[k] = Math.max(min, Math.min(max, v)); el.value = tlPk[k] != null ? tlPk[k] : el.value; salva(); renderTier(); }; };
+    // qualidade: o jogo vai ate Divina (>= 4; Mitica >= 2 e Ancia >= 3 so de shiny e breeding) e o cliente nao tem teto
+    // fixo (o do breeding vem do servidor). O teto 2 cortava shiny e cruzado; 10 so segura digitacao errada.
+    num('tlPkLv', 'level', 1, tlMax()); num('tlPkQ', 'q', 0.5, 10); num('tlPkIv', 'ivt', 1, 192);
+  }
+  function tlPkCorpo(ids) {
+    const sp = String(tlPk.sp || '').toLowerCase().trim(), dit = /ditto/.test(sp);
+    if (!sp || (!dit && !(movesByName[sp] && basesByName[sp]))) return '<div class="cd-empty">' + t('tlPkPick') + '</div>';
+    const seen = {}; const lista = (huntsCache || []).filter(x => x && x.name && !seen[x.name + '@' + x.level] && (seen[x.name + '@' + x.level] = 1));
+    if (tlObj === 'gold' && !lista.some(x => +x.gk > 0)) return '<div class="cd-empty">' + t(semPrecoFim() ? 'tlGoldFail' : 'tlGoldNone') + '</div>';
+    const A = { sp, level: Math.max(1, Math.min(tlMax(), +tlPk.level || tlNivel)), tlv: tlNivel, cid: String(tlPk.cid || ''), mult: 1,
+      q: dit ? 0 : (+tlPk.q || 1), ivt: dit ? 0 : (tlPk.ivt != null && tlPk.ivt !== '' ? Math.max(0, Math.min(192, +tlPk.ivt || 0)) : 96), // Ditto: dittoRegras poe os valores fixos do jogo
+      tms: dit ? null : (Array.isArray(tlPk.tms) ? tlPk.tms : (tlTm ? true : null)) }; // do time: os TMs que ele tem; digitado: a caixinha TM
+    const rows = tierPoke(A, lista, tlObj);
+    const fora = lista.filter(x => (+x.level || 0) > tlNivel).length;
+    const arr = rows.slice(0, 60), max = arr.length ? arr[0].sc : 0;
+    const nota = r2 => max > 0 ? Math.round(r2.sc / max * 100) : 0;
+    let pos = 0; // empate na nota exibida divide a posicao
+    let h = arr.map((r2, k) => {
+      if (!k || nota(arr[k - 1]) !== nota(r2)) pos = k + 1;
+      const extra = '<br><span class="tl-sub">\u2248 ' + nf(r2.sg.kh) + ' kills/h \u00b7 <span style="color:#79c0ff">' + nc(r2.sg.xph) + ' xp/h</span> \u00b7 <span style="color:#3fb950;cursor:help" title="' + esc(t('tlGoldTip')) + '">' + nc(r2.sg.kh * (+r2.x.gk || 0)) + ' gold/h</span></span>';
+      return dtLinha(r2, pos, max, ids, '', extra);
+    }).join('');
+    if (fora) h += '<div style="font-size:10px;color:#586069;padding:6px 4px 0">' + t('dtHidden').replace('{n}', fora) + '</div>';
+    return h || '<div class="cd-empty">' + t('cdNone') + '</div>';
+  }
   const calTexto = () => { calibraTempo(); const s2 = (danoAm.length >= 3 ? t('tlCal').replace('{d}', Math.round(danoFator * 100)).replace('{n}', danoAm.length) : t('tlCal0')); return s2.replace('{a}', String(tempoCal.a).replace('.', ',')).replace('{b}', String(tempoCal.b).replace('.', ',')) + (tempoCal.n >= 6 ? ' ' + t('tlCalT').replace('{n}', tempoCal.n) : ''); };
   const tlOv = document.getElementById('tlOverlay');
-  document.getElementById('tierBtn').onclick = () => { menu.classList.remove('show'); tlOv.classList.add('show'); renderTier(); };
+  document.getElementById('tierBtn').onclick = () => { menu.classList.remove('show'); tlOv.classList.add('show'); document.getElementById('tlPkCtl').innerHTML = ''; renderTier(); }; // controles do modo Pokemon refeitos a cada abertura (time e idioma atuais)
   document.getElementById('tlClose').onclick = () => tlOv.classList.remove('show');
   tlOv.onclick = (e) => { if (e.target === tlOv) tlOv.classList.remove('show'); };
 
@@ -3236,21 +3479,21 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     }, 140);
   }
   // uma linha: a hunt (regiao, nivel, xp) e a forma que o Ditto vira nela, com golpe, efetividade e folga
-  function dtLinha(r, pos, max, ids, ty) {
+  function dtLinha(r, pos, max, ids, ty, extra) {
     const pct = max > 0 ? Math.round(r.sc / max * 100) : 0;
     const tr2 = TL_TIERS.find(t2 => pct >= t2[0]) || TL_TIERS[TL_TIERS.length - 1];
-    const id = dexId(ids[r.sp] || 0);
+    const id = dexId(ids[r.proprio ? r.x.sp : r.sp] || 0); // Pokemon proprio (tierlist por Pokemon): mostra o selvagem da hunt
     const x2 = r.x, sg = r.sg;
     const reg = x2.ar === 'orre' ? '<b style="color:#c297ff;font-size:9px">ORRE</b> ' : x2.ar === 'outland' ? '<b style="color:#7ee0a0;font-size:9px">OUT</b> ' : x2.ar === 'nightmare' ? '<b style="color:#ff6b6b;font-size:9px">NIGHTMARE</b> ' : '';
     const hunt = reg + esc(x2.name) + (+x2.level ? ' <span class="tl-sub">Lv' + (+x2.level) + '</span>' : '') + (+x2.xp ? ' <span class="tl-sub" style="color:#79c0ff">' + nc(+x2.xp) + ' xp</span>' : '');
-    const golpe = (sg.fis ? '<span class="tl-cat" title="' + t('tlFisTip') + '">' + t('tlFis') + '</span>' : '<span class="tl-cat esp" title="' + t('tlEspTip') + '">' + t('tlEsp') + '</span>') + ' ' + esc(sg.nome) + ' \u00d7' + (Math.round(sg.eff * 100) / 100) + ((sg.mg || 0) > 0 ? ' \u00b7 ' + t('dtFolga') + ' \u00d7' + (Math.round(Math.min(sg.mg, 9.9) * 100) / 100) : '');
+    const golpe = (sg.fis ? '<span class="tl-cat" title="' + t('tlFisTip') + '">' + t('tlFis') + '</span>' : '<span class="tl-cat esp" title="' + t('tlEspTip') + '">' + t('tlEsp') + '</span>') + ' ' + esc(sg.nome) + (sg.tm ? ' <b style="color:#f2c665;font-size:9px">TM ' + esc(sg.tm) + '</b>' : '') + ' \u00d7' + (Math.round(sg.eff * 100) / 100) + ((sg.mg || 0) > 0 ? ' \u00b7 ' + t('dtFolga') + ' \u00d7' + (Math.round(Math.min(sg.mg, 9.9) * 100) / 100) : '');
     const forma = '<b>' + esc(cap(r.sp)) + '</b>';
     return '<div class="tl-row">'
       + '<span style="flex:0 0 22px;color:#586069;font-size:10px;text-align:right">' + pos + '.</span>'
       + '<span class="tl-tier" style="background:' + tr2[2] + '22;color:' + tr2[2] + '">' + tr2[1] + '</span>'
       + (id ? '<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png" onerror="this.remove()">' : '')
       + '<span class="tl-info">' + (ty ? '<b style="color:' + tipoCor(ty, '#79c0ff') + '">' + esc(ty) + '</b> \u2192 ' + forma + '<br><span class="tl-sub">' + hunt + ' \u00b7 ' + golpe + '</span>'
-        : hunt + '<br><span class="tl-sub">' + t('dtVira') + ' ' + forma + ' \u00b7 ' + golpe + '</span>') + '</span>'
+        : hunt + '<br><span class="tl-sub">' + (r.proprio ? '' : t('dtVira') + ' ' + forma + ' \u00b7 ') + golpe + '</span>' + (extra || '')) + '</span>'
       + '<span class="tl-num" style="color:' + tr2[2] + '">' + pct + '</span>'
       + '</div>';
   }
@@ -3311,7 +3554,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       const best = cl.length ? cl.reduce((b, x) => (bestScore(x) > bestScore(b) ? x : b)) : null;
       const last = cl.length ? cl[cl.length - 1] : null;
       (d.usedList || []).forEach(x => {
-        const sid = +x.sid || 0, att = +x.attempts || 0; // dados do jogo: numero ou nada (sid vai pra data-sid)
+        const sid = +x.sid || 0, att = +x.total || 0; // dados do jogo: numero ou nada (sid vai pra data-sid). total, nao attempts: attempts zera ao capturar
         if (x.shiny && att > 0 && sid) {
           const ub = utBase[i] || (utBase[i] = { init: 0 });
           if (ub[sid] === undefined) ub[sid] = ub.init ? 0 : att; // especie nova no meio da sessao conta do zero
@@ -3405,6 +3648,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + '<div><div style="display:flex;justify-content:space-between;font-size:11px;color:#7d8590"><span>XP/dia \u00b7 ' + dias.length + 'd</span><span style="color:#79c0ff">' + nc(Math.round(xD[xD.length - 1])) + '</span></div>' + spark(xD, '#79c0ff') + '</div>'; })()
       + '</div></div>';
     SB.catches = () => {
+      if (cdFC.p >= count) { cdFC.p = -1; try { lsSet('cdFC', JSON.stringify(cdFC)); } catch {} } // painel saiu no botao Paineis: sem isso o select mostrava 'todas' e a lista seguia filtrada
       const f = cdFC;
       const optConta = [-1].concat([...Array(count).keys()]).map(v => v < 0
         ? '<option value="-1"' + (f.p === -1 ? ' selected' : '') + '>' + t('cdFAll') + '</option>'
@@ -3427,15 +3671,15 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + '<label class="cd-inp" style="cursor:pointer" title="shiny">✨<input id="cdFcSh" type="checkbox" style="margin-left:3px"' + (f.sh ? ' checked' : '') + '></label>'
         + '</div>'
         + (catches.length ? catches.map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">' + (x.fx ? '<span title="' + t('cdFirst') + '">🆕</span> ' : '') + (x.sh ? '✨ ' : '') + esc(x.n) + raroHtml(x.q) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span style="color:#55e6d3">' + (+x.iv || 0) + '/192</span>' + (+x.q ? '<span style="color:#f2c665">×' + (+x.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtDT(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'; };
-    SB.teams = () => {
+    SB.team = () => { // chave 'team', a mesma do CDSECTS e do cardsCfg.order (SB.teams nunca era desenhado)
       const M = window.PokeGridIvMath;
-      const alvo = Math.max(1, Math.min(500, +(lsGet('cdPjLv') || 500)));
+      const alvo = Math.max(1, Math.min(tlMax(), +(lsGet('cdPjLv') || 500)));
       const cols = ordered.filter(r => r.st === 'on' && (r.team || []).length);
       const poder = (p) => { // mesmo modulo do card de IV; sem base/qualidade/IV nao inventa numero
         const b = basesByName[String(p.name || '').toLowerCase()];
         if (!M || !b || !(+p.q > 0) || !(+p.ivt > 0) || !(+p.level > 0)) return null;
         const sp = { baseStats: { hp: b[0], atk: b[1], def: b[2], spa: b[3], spd: b[4], speed: b[5] } };
-        try { return { agora: M.projectPokemon({ level: +p.level, quality: +p.q, ivTotal: +p.ivt, species: sp }, +p.level).power, proj: M.projectPokemon({ level: +p.level, quality: +p.q, ivTotal: +p.ivt, species: sp }, alvo).power }; } catch { return null; }
+        try { return { agora: M.projectPokemon({ level: +p.level, quality: +p.q, ivTotal: +p.ivt, species: sp }, +p.level).power, proj: M.projectPokemon({ level: +p.level, quality: +p.q, ivTotal: +p.ivt, species: sp }, Math.max(alvo, +p.level)).power, lv: Math.max(alvo, +p.level) }; } catch { return null; } // acima do alvo: projeta no nivel atual, nunca abaixo
       };
       const inner = cols.length ? '<div style="display:grid;grid-template-columns:repeat(' + Math.min(4, cols.length) + ',1fr);gap:12px">' + cols.map(r =>
         '<div><div class="cd-h" style="margin-bottom:4px"><span class="cd-dot" style="background:' + r.dot + '"></span>' + esc(r.name) + '</div>'
@@ -3444,11 +3688,11 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
           return '<div class="cd-row" style="flex-wrap:wrap"><span class="rn">' + (p.ld ? '⭐ ' : '') + (p.shiny ? '✨ ' : '') + esc(p.name) + ' <b style="color:#adbac7">Lv' + nf(p.level) + '</b></span>'
             + (p.ivt != null ? '<span style="color:#55e6d3">' + nf(p.ivt) + '/192</span>' : '')
             + (+p.q ? '<span style="color:#f2c665">×' + (+p.q).toFixed(2) + '</span>' : '')
-            + (pw ? '<span style="color:#3fb950" title="' + t('ivcPower') + '">' + nf(pw.agora) + '</span><span style="color:#8ab4ff" title="Lv' + alvo + '">→' + nf(pw.proj) + '</span>' : '')
+            + (pw ? '<span style="color:#3fb950" title="' + t('ivcPower') + '">' + nf(pw.agora) + '</span><span style="color:#8ab4ff" title="Lv' + pw.lv + '">→' + nf(pw.proj) + '</span>' : '')
             + '</div>';
         }).join('') + '</div>').join('') + '</div>' : '<div class="cd-empty">' + t('cdNone') + '</div>';
       return '<div class="cd-sec"><div class="cd-h">' + t('cdTeams') + '</div>'
-        + '<div class="cd-cfg-row" style="margin-bottom:6px">' + t('cdProjLv') + ' <input id="cdPjLv" type="number" min="1" max="500" class="cd-inp" style="width:64px" value="' + alvo + '"></div>' + inner + '</div>'; };
+        + '<div class="cd-cfg-row" style="margin-bottom:6px">' + t('cdProjLv') + ' <input id="cdPjLv" type="number" min="1" max="' + tlMax() + '" class="cd-inp" style="width:64px" value="' + alvo + '"></div>' + inner + '</div>'; };
     SB.inv = () => {
       const filtro = String(lsGet('cdInvF') || '').slice(0, 30).toLowerCase();
       const tot = {}; // id -> total e detalhe por conta (tooltip)
@@ -3468,7 +3712,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + (linhas || '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'; };
     SB.shinies = () => { const shinies = lifeShiny.slice(-12).reverse(); return '<div class="cd-sec"><div class="cd-h">' + t('cdShinies') + '</div>'
       + '<div style="display:flex;gap:10px;margin-bottom:8px;font-size:11px;flex-wrap:wrap"><span style="color:#3fb950">' + nf(sumSC) + ' ' + t('cdCaught') + '</span><span style="color:#f2c665">' + nf(sumSF) + ' ' + t('cdSeen') + '</span><span style="color:#f85149">' + nf(lost) + ' ' + t('cdLost') + '</span><span style="color:#6e7681;margin-left:auto">' + t('cdLifeHint') + '</span></div>'
-      + (shinies.length ? shinies.map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">✨ <b style="color:#f778ba">' + esc(nomeShiny(x)) + '</b>' + (x.cap ? ' <span style="color:#3fb950" title="capturado">✓</span>' : (x.def ? ' <span style="color:#f85149" title="derrotado">✕</span>' : '')) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span class="rt">' + fmtDT(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'; };
+      + (shinies.length ? shinies.map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">✨ <b style="color:#f778ba">' + esc(nomeShiny(x)) + '</b>' + (x.cap ? ' <span style="color:#3fb950" title="' + t('shCapT') + '">✓</span>' : (x.def ? ' <span style="color:#f85149" title="' + t('shDefT') + '">✕</span>' : '')) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span class="rt">' + fmtDT(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div>'; };
     SB.shinyTried = () => {
       const modo = stMode, val = (s) => modo === 'sess' ? s.sess : s.total;
       let arr = Object.values(shinyTried);
@@ -3517,23 +3761,14 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       if (huntScope === 'minhas') lista = lista.filter(x => x.md || x.fav || minhas.has(hkey(x.sl || x.name))); // só as que você farma/favoritou
       let maxSug = 0;
       if (huntSort === 'sug') {
+        calibraTempo(); // kills/h e XP/h com os tempos medidos (antes so a tierlist e o Ditto recalibravam: o Simples ficava no padrao)
         lista.forEach(x => {
           x.sug = atacante ? sugCalc(atacante, x) : null;
           if (x.sug && atacante.tlv > 0 && x.sug.hl > atacante.tlv) x.trava = x.sug.hl; // conta ainda nao alcanca essa hunt
           if (x.sug && !x.trava && x.sug.ritmo >= 0.15) maxSug = Math.max(maxSug, x.sug.xph || x.sug.ritmo); // piso: hunt inviavel (ritmo<0.15) nao escala a barra
         });
         lista.forEach(x => { if (x.sug && !x.trava && x.sug.ritmo >= 0.15) x.est = { kh: x.sug.kh, xph: x.sug.xph }; }); // kills/h e XP/h do modelo de tempo (calibrado pelas suas medicoes)
-        // calibracao do dano: cada conta com 5+ min na hunt, lider conhecido e dano medido vira uma amostra (dano real / folga do modelo)
-        on.forEach(r => {
-          try {
-            const L = r.lead; if (!(r.secs >= 300) || !L || L.dt || !L.name || !r.hunt) return;
-            const hitHp = hitHpDe(r.mvs); if (!hitHp) return; // dano medio do golpe NORMAL (o TM fica fora: e outro poder)
-            const hk = hkey(r.hunt); const x = huntsCache.find(x2 => hkey(x2.sl || x2.name) === hk); if (!x) return;
-            const att = { sp: String(L.name).toLowerCase(), level: +L.level || 1, q: +L.q || 0, ivt: +L.ivt || 0, tlv: +r.tlv || 0, mult: 1, tms: Array.isArray(L.tms) ? L.tms : null };
-            const sg = sugCalc(att, x); if (!sg || !(sg.mg > 0)) return;
-            danoAmostra(r.cid + '|' + hk, (hitHp / 100) / (sg.mg / danoFator), att.level, x.level);
-          } catch {}
-        });
+        // (a amostra de dano saiu daqui: roda no amostrador de fundo, amostraDano, em qualquer ordem e com a janela escondida)
       }
       if (huntSort === 'sug' && atacante && atacante.sp.indexOf('ditto') >= 0) {
         const alvoSel = String(lsGet('cdDitAlvo') || '');
@@ -3629,7 +3864,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const fcIv = cardsEl.querySelector('#cdFcIv'); if (fcIv) fcIv.onchange = () => { cdFC.iv = Math.max(0, numLivre(fcIv.value)); fcIv.blur(); fcSave(); };
     const fcQ = cardsEl.querySelector('#cdFcQ'); if (fcQ) fcQ.onchange = () => { cdFC.q = Math.max(0, numLivre(fcQ.value)); fcQ.blur(); fcSave(); };
     const fcSh = cardsEl.querySelector('#cdFcSh'); if (fcSh) fcSh.onchange = () => { cdFC.sh = fcSh.checked ? 1 : 0; fcSave(); };
-    const pjLv = cardsEl.querySelector('#cdPjLv'); if (pjLv) pjLv.onchange = () => { try { lsSet('cdPjLv', String(Math.max(1, Math.min(500, +pjLv.value || 500)))); } catch {} pjLv.blur(); cdHtmlAnt = ''; refreshCards(true); };
+    const pjLv = cardsEl.querySelector('#cdPjLv'); if (pjLv) pjLv.onchange = () => { try { lsSet('cdPjLv', String(Math.max(1, Math.min(tlMax(), +pjLv.value || 500)))); } catch {} pjLv.blur(); cdHtmlAnt = ''; refreshCards(true); };
     const invF = cardsEl.querySelector('#cdInvF'); if (invF) invF.onchange = () => { try { lsSet('cdInvF', String(invF.value || '').slice(0, 30)); } catch {} invF.blur(); cdHtmlAnt = ''; refreshCards(true); };
     // secao Hoje: metas e exportar CSV
     const gg = cardsEl.querySelector('#cdGoalG'); if (gg) gg.onchange = () => { goals.g = Math.max(0, +gg.value || 0); saveGoals(); gg.blur(); refreshCards(true); };
@@ -3657,10 +3892,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       wt.textContent = deu ? t('whTestOk') : t('whTestErr');
       setTimeout(() => { try { wt.textContent = rot; wt.disabled = false; } catch {} }, 3000);
     };
-    const ws2 = cardsEl.querySelector('#cdWhShiny'); if (ws2) ws2.onchange = () => { whCfg.shiny = ws2.checked; saveWh(); };
-    const wm = cardsEl.querySelector('#cdWhSum'); if (wm) wm.onchange = () => { whCfg.sum = wm.checked; saveWh(); };
-  const wp = cardsEl.querySelector('#cdWhProb'); if (wp) wp.onchange = () => { whCfg.prob = wp.checked; saveWh(); };
-  ['shiny', 'down', 'stalled', 'balls', 'faint'].forEach(k => { const el = cardsEl.querySelector('#cdAl_' + k); if (el) el.onchange = () => { alLocal[k] = el.checked; saveAl(); }; });
+    const ws2 = cardsEl.querySelector('#cdWhShiny'); if (ws2) ws2.onchange = () => { whCfg.shiny = ws2.checked; saveWh(); ws2.blur(); };
+    const wm = cardsEl.querySelector('#cdWhSum'); if (wm) wm.onchange = () => { whCfg.sum = wm.checked; saveWh(); wm.blur(); };
+  const wp = cardsEl.querySelector('#cdWhProb'); if (wp) wp.onchange = () => { whCfg.prob = wp.checked; saveWh(); wp.blur(); };
+  ['shiny', 'down', 'stalled', 'balls', 'faint'].forEach(k => { const el = cardsEl.querySelector('#cdAl_' + k); if (el) el.onchange = () => { alLocal[k] = el.checked; saveAl(); el.blur(); }; });
   const wmn = cardsEl.querySelector('#cdWhMention'); if (wmn) wmn.onchange = () => { whCfg.mention = String(wmn.value || '').replace(/\D/g, '').slice(0, 20); wmn.value = whCfg.mention; wmn.blur(); saveWh(); };
     let dragS = null;
     cardsEl.querySelectorAll('.cd-cfg-row').forEach(row => {
@@ -3726,10 +3961,17 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     document.body.classList.toggle('cards-on', cardsOn);
     cardsBtn.classList.toggle('on', cardsOn);
     lsSet('cardsOn', cardsOn ? '1' : '0');
-    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.setAudioMuted(cardsOn || muted); w.executeJavaScript(ultraScript(cardsOn)).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); w.executeJavaScript(chatScript(cardsOn || chatHidden)).catch(() => {}); } catch {} });
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.setAudioMuted(cardsOn || muted); w.executeJavaScript(ultraScript(leve())).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); w.executeJavaScript(chatScript(cardsOn || chatHidden)).catch(() => {}); } catch {} });
     if (cardsOn) { cdHtmlAnt = ''; cardsEl.innerHTML = '<div class="cd-empty" style="padding:20px">' + t('cdWaiting') + '</div>'; refreshCards(); }
   }
   cardsBtn.onclick = () => { cardsOn = !cardsOn; applyCards(); };
+  function aplicaJanela(vis) {
+    const oc = !vis; if (oc === janelaOculta) return;
+    janelaOculta = oc;
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(ultraScript(leve())).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); } catch {} });
+    if (!oc) { if (cardsOn) refreshCards(true); refreshStats(); } // voltou: redesenha na hora o que ficou parado
+  }
+  try { if (window.pokeAPI && window.pokeAPI.onJanela) window.pokeAPI.onJanela(aplicaJanela); } catch {}
   // Keepalive: um toque barato em cada painel ligado, de 30 em 30s, MESMO com a janela
   // escondida. Sozinho o backgroundThrottling=no ja resolve; isto e a rede de seguranca pra
   // quem deixa o PC de lado (e serve de pulso pro watchdog perceber painel travado).
@@ -3740,7 +3982,14 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       try { w.executeJavaScript('void 0').catch(() => {}); } catch {}
     });
   }, 30000);
-  setInterval(() => { if (cardsOn && !document.hidden) refreshCards(); }, 10000); // compasso do Simples: os dados chegam por push; isso so redesenha (e e a reserva se o push faltar)
+  setInterval(() => {
+    if (!cardsOn) return;
+    if (!janelaOculta) return refreshCards();
+    // escondida: nao redesenha, mas a Tendencia da ultima hora segue amostrando do push (que continua chegando)
+    const now = Date.now(); let g = 0, x = 0;
+    for (let i = 0; i < count; i++) { const c = stCache[i]; if (off[i] || !c || now - c.t >= 30000 || !c.d || !c.d.ok) continue; const a = c.d.a || {}; g += a.gph || 0; x += a.xph || 0; }
+    dhist.push({ t: now, g, x }); dhist = dhist.filter(p => p.t > now - 3600e3);
+  }, 10000); // compasso do Simples: os dados chegam por push; isso so redesenha (e e a reserva se o push faltar)
 
   // Zerar a sessao: nossos numeros vem de P.sess (acumulador proprio), que so reseta na troca de hunt.
   // Isso reinicia o acumulador de todas as contas AGORA, pra monitorar a partir deste ponto. Nao mexe
@@ -3844,7 +4093,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     el.innerHTML = allScripts().map(s => '<div class="sc-row"><label class="sc-chk"><input type="checkbox" data-sid="' + s.id + '"' + (scriptsOn[s.id] ? ' checked' : '') + '> <b>' + escH(s.name) + '</b>'
       + (s.version || s.author ? '<span class="sc-meta">' + (s.version ? 'v' + escH(s.version) : '') + (s.author ? ' \u00b7 ' + escH(s.author) : '') + '</span>' : '') + '</label>'
       + (s.file ? '<span class="sc-tag">preset \u00b7 ' + escH(s.author || '') + '</span>'
-        : (s.url ? '<button class="sc-upd" data-upd="' + s.id + '" title="' + t('scAtualizarTip') + '">' + t('scAtualizar') + '</button>' : '') + '<button class="sc-del" data-del="' + s.id + '" title="Remover">\u2715</button>') + '</div>').join('');
+        : (s.url ? '<button class="sc-upd" data-upd="' + s.id + '" title="' + t('scAtualizarTip') + '">' + t('scAtualizar') + '</button>' : '') + '<button class="sc-del" data-del="' + s.id + '" title="' + t('rmTitle') + '">\u2715</button>') + '</div>').join('');
     el.querySelectorAll('.sc-upd').forEach(b2 => b2.onclick = () => atualizaScript(b2.dataset.upd, b2));
     el.querySelectorAll('.sc-chk input').forEach(chk => chk.onchange = () => { if (!chk.checked && !window.confirm(t('scReloadAviso'))) { chk.checked = true; return; } scriptsOn[chk.dataset.sid] = chk.checked; saveScripts(); if (chk.checked) applyScriptToAll(chk.dataset.sid); else webviews.forEach((w, wi) => { if (!off[wi]) try { w.reload(); } catch {} }); });
     el.querySelectorAll('.sc-del').forEach(b => b.onclick = () => { const ativo = !!scriptsOn[b.dataset.del]; if (!window.confirm(t('scRemover') + (ativo ? ' ' + t('scReloadAviso') : ''))) return; userScripts = userScripts.filter(u => u.id !== b.dataset.del); delete scriptsOn[b.dataset.del]; if (ativo) webviews.forEach((w, wi) => { if (!off[wi]) try { w.reload(); } catch {} }); saveScripts(); renderScriptsList(); });
@@ -3891,9 +4140,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   // dos atributos-base), então aqui é exibição e entrada, sem fórmula duplicada.
   const ivEl = document.getElementById('ivCard');
   let ivAberto = lsGet('ivCardOpen') === '1', ivDados = null, ivFonte = -1;
-  let ivPos = null; try { ivPos = (() => { const p = lsObj('ivCardPos'); return typeof p.x === 'number' && typeof p.y === 'number' ? p : null; })(); } catch {}
+  let ivPos = null; try { ivPos = (() => { const p = lsObj('ivCardPos'); return Number.isFinite(p.l) && Number.isFinite(p.t) ? { l: p.l, t: p.t } : null; })(); } catch {}
   const TIPO_COR = { normal:'#a8a878', fire:'#f08030', water:'#6890f0', electric:'#f8d030', grass:'#78c850', ice:'#98d8d8', fighting:'#c03028', poison:'#a040a0', ground:'#e0c068', flying:'#a890f0', psychic:'#f85888', bug:'#a8b820', rock:'#b8a038', ghost:'#705898', dragon:'#7038f8', dark:'#705848', steel:'#b8b8d0', fairy:'#ee99ac',
-    fogo:'#f08030', agua:'#6890f0', água:'#6890f0', eletrico:'#f8d030', elétrico:'#f8d030', planta:'#78c850', gelo:'#98d8d8', lutador:'#c03028', luta:'#c03028', veneno:'#a040a0', terra:'#e0c068', voador:'#a890f0', psiquico:'#f85888', psíquico:'#f85888', inseto:'#a8b820', pedra:'#b8a038', fantasma:'#705898', dragao:'#7038f8', dragão:'#7038f8', sombrio:'#705848', metal:'#b8b8d0', aco:'#b8b8d0', aço:'#b8b8d0', fada:'#ee99ac' };
+    fogo:'#f08030', agua:'#6890f0', água:'#6890f0', eletrico:'#f8d030', elétrico:'#f8d030', planta:'#78c850', gelo:'#98d8d8', lutador:'#c03028', luta:'#c03028', veneno:'#a040a0', terra:'#e0c068', voador:'#a890f0', psiquico:'#f85888', psíquico:'#f85888', inseto:'#a8b820', pedra:'#b8a038', fantasma:'#705898', dragao:'#7038f8', dragão:'#7038f8', sombrio:'#705848', metal:'#b8b8d0', aco:'#b8b8d0', aço:'#b8b8d0', fada:'#ee99ac',
+    fuego:'#f08030', eléctrico:'#f8d030', electrico:'#f8d030', hielo:'#98d8d8', lucha:'#c03028', tierra:'#e0c068', volador:'#a890f0', bicho:'#a8b820', roca:'#b8a038', dragón:'#7038f8', siniestro:'#705848', acero:'#b8b8d0', hada:'#ee99ac' };
   // cor de tipo com tipo garantido: chave vinda do jogo pode ser qualquer string (ate constructor);
   // so cor declarada na tabela sai daqui, o resto cai no fallback
   const tipoCor = (ty, fb) => { const v = Object.prototype.hasOwnProperty.call(TIPO_COR, String(ty || "").toLowerCase().trim()) ? TIPO_COR[String(ty || "").toLowerCase().trim()] : null; return typeof v === "string" ? v : (fb || "#8b949e"); };
@@ -4079,6 +4329,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   };
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey) return; // combos (Ctrl+M etc) seguem intactos
+    if (document.querySelector('#overlay.show, #scOverlay.show, #tlOverlay.show, #dtOverlay.show')) return; // janela aberta: digitar antes de clicar no campo recarregava os paineis ('r') e desligava os alertas ('a')
     const ae = document.activeElement;
     if (ae && (ae.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) return;
     const fn = TECLAS_ATALHO[String(e.key || '').toLowerCase()];

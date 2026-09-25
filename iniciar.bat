@@ -8,10 +8,21 @@ where npm >nul 2>nul || (
   pause
   exit /b
 )
-if not exist node_modules (
-  echo Primeira vez: instalando o necessario. Isso pode levar alguns minutos...
+rem Instala quando falta o Electron, nao so sem node_modules: uma instalacao interrompida deixava dependencia faltando
+rem e o npm start falhava sempre. Com tudo no lugar o npm install leva segundos; o npm start baixa o Electron se faltar.
+set "PG_FALTA="
+if not exist "node_modules\electron\path.txt" set "PG_FALTA=1"
+if not exist "node_modules\electron\dist\electron.exe" set "PG_FALTA=1"
+if defined PG_FALTA (
+  echo Instalando o necessario. Na primeira vez isso pode levar alguns minutos...
   call npm install
 )
 echo Abrindo o PokeGrid...
-rem 2>nul descarta os logs do Chromium (ex.: STUN/WebRTC) que so poluem o terminal
-call npm start 2>nul
+rem O erro precisa aparecer: descartar o stderr escondia a causa quando o app nao abria. O proprio app ja
+rem silencia o spam do Chromium pelo log-level. Se fechar com erro, a janela fica aberta pra dar pra ler.
+call npm start
+if errorlevel 1 (
+  echo.
+  echo O PokeGrid fechou com erro. Tire um print desta janela pra pedir ajuda.
+  pause
+)

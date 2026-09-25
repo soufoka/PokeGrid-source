@@ -19,7 +19,7 @@ try { new Function(src); ok(true, 'HUNTS_JS parseia'); } catch (e) { ok(false, '
 
 const cr = { creatures: J.creatures };
 const trechoNomes = src.slice(src.indexOf('const limpa='), src.indexOf('const byId='));
-const { acha, cs, limpa, chave } = new Function('cr', trechoNomes + '\nreturn { acha, cs, limpa, chave };')(cr);
+const { acha, cs, limpa, chave } = new Function('cr', 'gkDe', trechoNomes + '\nreturn { acha, cs, limpa, chave };')(cr, () => 0); // gkDe (gold por kill) vem definido antes do trecho
 const trechoDex = src.slice(src.indexOf('const nat={}'), src.indexOf('const ms='));
 const { dex } = new Function('cr', 'limpa', 'chave', trechoDex + '\nreturn { dex };')(cr, limpa, chave);
 

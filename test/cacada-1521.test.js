@@ -143,7 +143,7 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
     const mesma = roda(velho, { live: true, sess: { start: 1, kills: 9 }, slug: 'orre_y', cid: 'A' });
     ok(mesma.snap.slug === 'orre_y' && mesma.snap.cid === 'A', 'mesma conta: atualiza e guarda o id da conta');
     const outra = roda(velho, { live: true, sess: { start: 1 }, slug: 'kanto_z', cid: 'B' });
-    ok(outra.snap === undefined && outra.exec[0] === 'RESET' && outra.saiuCedo, 'outra conta no mesmo painel: descarta a foto, zera a sessao e nao mistura os numeros');
+    ok(outra.snap === undefined && /^RESET;/.test(outra.exec[0]) && /\.analyzer=null/.test(outra.exec[0]) && outra.saiuCedo, 'outra conta no mesmo painel: descarta a foto, zera a sessao, larga o analyzer guardado e nao mistura os numeros');
     ok(b.includes('try { delete sessSnap[i]; webviews[i].reload(); } catch {}'), 'limpar conta descarta a foto');
     ok(b.includes("if (sn && Date.now() - sn.t < 600e3 && !(wv.getURL() || '').startsWith(LOGIN_URL)) {"), 'e a tela de login nao e re-semeada com sessao antiga');
   }
@@ -185,7 +185,7 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
     ok(Math.round(kphLog(0).gyarados) === 700, 'calibragem: so as hunts do painel do atacante (' + Math.round(kphLog(0).gyarados) + ' kills/h)');
     ok(Math.round(kphLog(1).gyarados) === 100, 'a outra conta tem a medicao dela (' + Math.round(kphLog(1).gyarados) + ')');
     ok(kphLog(null).gyarados > 0, 'sem atacante definido: usa todas, como antes');
-    ok(b.includes('cid: rSel.cid, pi: rSel.i,') && b.includes("danoAmostra(r.cid + '|' + hk,"), 'e a amostra de dano real e por conta e hunt (o lider de uma conta nao calibra a outra)');
+    ok(b.includes('cid: rSel.cid, pi: rSel.i,') && b.includes("danoAmostra(d.cid + '|' + hk,"), 'e a amostra de dano real e por conta e hunt (o lider de uma conta nao calibra a outra)');
     ok(b.includes("out.push({sl:String(m2.slug||''),") && b.includes('accStats[hkey(x2.sl || x2.name)]') && b.includes('hkey(x2.sl || x2.name) === hk'), 'medicao casa pelo slug do marcador (nome com pontuacao nao casava)');
   }
   ok(b.includes("';window.__pgSellTxt=' + JSON.stringify([t('sgAviso'), t('sgConfirma')])).catch(() => {});"), 'venda protegida: texto traduzido tambem ao recarregar o painel');
@@ -263,7 +263,8 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
   console.log('\n--- cacada 1521b: o resto, conferido no texto ---');
   ok(b.includes("++deadT[i] >= ((w.getURL() || '').includes('maintenance=1') ? 100 : 10)"), 'manutencao do jogo: relogin a cada 10 min, nao a cada 60s (cada tentativa recarrega o painel)');
   ok(b.includes("wv.addEventListener('did-navigate-in-page', (e) => { if (e.isMainFrame !== false) autoLogin(e); })") && b.includes("wv.addEventListener('did-navigate', autoLogin);"), 'Sair pelo dock (rota interna pra /login) tambem dispara o auto-login');
-  ok(b.includes("if ((huntsCache && Object.keys(movesByName).length) || Date.now() - huntsCacheT < 60e3) return;"), 'creatures.json falhou mas as hunts vieram: o catalogo continua sendo tentado (tierlist/Ditto nao ficam vazios ate reiniciar)');
+  ok(b.includes("if ((huntsCache && Object.keys(movesByName).length && !semOuro) || Date.now() - huntsCacheT < 60e3) return;"), 'creatures.json falhou mas as hunts vieram: o catalogo continua sendo tentado (tierlist/Ditto nao ficam vazios ate reiniciar)');
+  ok(b.includes('const semOuro = !!huntsCache && !huntsCache.some(x => +x.gk > 0) && huntsOuroTent < 5;'), 'items.json falhou (gold/h zerado): os precos tambem sao tentados de novo, ate 5 vezes');
   ok(b.includes("const BK_SKIP = ['userScripts', 'scriptsOn', 'webhook', 'curDay']"), 'curDay nao viaja no export/import (importado, mandaria o resumo do dia de outra pessoa pro Discord)');
   ok(b.includes("if (okC || window.confirm(t('bkNoCopy'))) grava();") && s.split("bkNoCopy:'").length - 1 === 3, 'importar sem conseguir a copia de seguranca pergunta antes (3 idiomas)');
   ok(b.includes("lista.map(x => x.name + '@' + x.level).join('|')"), 'cache do Ditto: a lista inteira de hunts entra na chave (trocar uma do meio invalidava nada)');

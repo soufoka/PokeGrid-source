@@ -69,8 +69,10 @@ Suas contas continuam salvas.
 
 DEU PROBLEMA?
 -------------
-- "iniciar.bat" abre e fecha na hora: o Node.js nao foi
-  instalado. Refaca o Passo 1.
+- "Abrir PokeGrid" abre e fecha e o app nao aparece: costuma
+  ser o Controle inteligente de aplicativos do Windows ou o
+  antivirus barrando o Electron. O FAQ do PokeGrid explica o
+  que conferir, na pergunta sobre isso.
 - Uma conta nao entra sozinha: abra "Treinadores" e confira o
   e-mail e a senha daquela conta.
 - Travando ou lento: ligue o "Eco" no menu "Opcoes".

@@ -193,6 +193,15 @@ console.log('--- tudo que o app carrega vai no pacote (incidente 1.5.5 a 1.5.23:
   }
 }
 
+console.log('--- janela minimizada ou na bandeja: a interface fica sabendo (e poe os jogos no modo leve) ---');
+{
+  const ev = (e, v) => main.includes("win.on('" + e + "', () => avisaJanela(" + v + '))');
+  ok(ev('hide', false) && ev('minimize', false), 'main.js avisa quando a janela some (hide e minimize)');
+  ok(ev('show', true) && ev('restore', true) && ev('focus', true), 'e quando volta, por show, restore ou focus (nenhum caminho deixa os jogos presos no modo leve)');
+  ok(preload.includes("onJanela: (cb) => ipcRenderer.on('janela'") && index.includes('window.pokeAPI.onJanela(aplicaJanela)'), 'o preload repassa e a interface escuta');
+  ok(index.includes('const ecoFps = () => leve() ? 1 : (eco ? 15 : 0);') && index.includes('if (leve()) wv.executeJavaScript(ultraScript(true))'), 'escondida, os jogos vao pro modo do Simples, inclusive painel que recarrega nesse meio tempo');
+}
+
 console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o zip do source como Trojan:Script/Wacatac.H!ml) ---');
 {
   const naRaiz = fs.readdirSync(RAIZ);
@@ -206,6 +215,7 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
     // A 1.5.25 procurava o electron.exe logo depois do npm install e avisava 'nao terminou' pra sempre.
     const iPede = bat.indexOf('node -e "require(\'electron\')"'), iConfere = bat.lastIndexOf('if not exist "node_modules\\electron\\dist\\electron.exe"');
     ok(iPede > 0 && iPede < iConfere, 'Abrir PokeGrid.bat pede o download do Electron antes de conferir o electron.exe');
+    ok(bat.includes('if not exist "node_modules\\electron\\path.txt" set "PG_FALTA=1"') && bat.includes('if not exist "node_modules\\electron\\dist\\electron.exe" set "PG_FALTA=1"') && bat.includes('if defined PG_FALTA ('), 'Abrir PokeGrid.bat reinstala se faltar o path.txt (extracao pela metade) OU o electron.exe (antivirus levou depois)');
   } else ok(true, 'sem lancador .bat neste repo (o instalador abre o app)');
 }
 try { fs.rmSync(path.join(RAIZ, '.teste-tmp'), { recursive: true, force: true }); } catch {}

@@ -128,7 +128,11 @@ function baixaUserScript(url, saltos = 0) {
 }
 ipcMain.handle('userscript:fetch', (_e, url) => baixaUserScript(url));
 // Instancia unica: abrir o app de novo so foca a janela ja aberta.
-if (!app.requestSingleInstanceLock()) app.quit();
+// segunda instancia: fecha e o 'second-instance' da primeira mostra a janela dela. Fica no relatorio, pra separar
+// 'nem rodou' (antivirus, Controle inteligente de aplicativos) de 'ja tinha um aberto' quando alguem diz que nada abre
+// O quit() antes do ready nao impede o ready: sem o lockOk o whenReady criava a janela e gravava 'janela criada' aqui tambem
+const lockOk = app.requestSingleInstanceLock();
+if (!lockOk) { logErro('boot', 'ja havia um PokeGrid aberto: esta instancia fechou e mostrou aquele'); app.quit(); }
 
 // Paineis presos ao dominio do jogo: nada de popup, e navegar o painel
 // (que carrega a sessao logada) para outro site abre no navegador de fora.
@@ -291,7 +295,7 @@ ipcMain.handle('autostart:set', (_e, on) => { const r = setAutoStart(!!on); if (
 ipcMain.handle('webhook:send', (_e, url, text) => {
   try {
     const u = new URL(String(url));
-    if (u.protocol !== 'https:' || !/^(discord\.com|discordapp\.com)$/.test(u.hostname) || !u.pathname.startsWith('/api/webhooks/')) return false;
+    if (u.protocol !== 'https:' || !/^(?:(?:ptb|canary)\.)?discord(?:app)?\.com$/.test(u.hostname) || !u.pathname.startsWith('/api/webhooks/')) return false; // ptb. e canary.: a URL que o Discord PTB/Canary copia
     // Mencao: so os IDs de usuario que JA estao no texto (o app so poe o que voce configurou).
     // parse: [] segue barrando @everyone/@here e cargos, mesmo se o nome de uma conta tentar.
     const ids = (String(text).match(/<@(\d{5,20})>/g) || []).map(x => x.replace(/\D/g, '')).slice(0, 5);
@@ -309,14 +313,17 @@ ipcMain.handle('webhook:send', (_e, url, text) => {
 let tray; // referencia viva para o icone nao sumir (GC)
 
 app.whenReady().then(() => {
+  if (!lockOk) return; // segunda instancia: ja esta saindo
   // Nada aqui pode derrubar a criacao da janela: se qualquer peca do sistema falhar (registro,
   // particao de sessao corrompida, bandeja), o app tem que abrir assim mesmo. Antes destas
   // guardas, uma excecao aqui deixava o processo vivo e SEM JANELA, que e o pior sintoma possivel.
   try { app.setAppUserModelId('online.idleworld.pokegrid'); } catch (e) { logErro('boot', 'appUserModelId: ' + e.message); } // notificacoes do Windows com o nome certo
 
-  // Nega pedidos de permissao dos jogos (mic, camera, localizacao, notificacao...).
+  // Nega pedidos de permissao dos jogos (mic, camera, localizacao, notificacao...). So a escrita no clipboard passa:
+  // sem ela os botoes Copiar do jogo (Recovery Key, codigos 2FA, Pix, link de indicacao) falhavam calados. O Chromium
+  // ja exige foco e gesto do usuario pra essa escrita, e a leitura (clipboard-read) segue negada.
   for (let i = 1; i <= 4; i++)
-    try { session.fromPartition('persist:conta' + i).setPermissionRequestHandler((_wc, _p, cb) => cb(false)); } catch (e) { logErro('boot', 'sessao conta' + i + ': ' + e.message); }
+    try { session.fromPartition('persist:conta' + i).setPermissionRequestHandler((_wc, p, cb) => cb(p === 'clipboard-sanitized-write')); } catch (e) { logErro('boot', 'sessao conta' + i + ': ' + e.message); }
 
   const win = new BrowserWindow({
     width: 1600,
@@ -425,6 +432,13 @@ app.whenReady().then(() => {
   setTimeout(prepararBandeja, 1500); // a janela ja esta na tela quando isso roda
   // sem bandeja, esconder ao minimizar deixaria a janela inalcancavel: minimiza normal
   win.on('minimize', () => { if (minToTray && tray) win.hide(); });
+  // A interface nao percebe sozinha que a janela sumiu: com backgroundThrottling desligado (o que segura o farm)
+  // a pagina fica 'visible' ate na bandeja e os 4 jogos seguiam desenhando pra ninguem. Avisa, e ela poe os jogos
+  // no modo leve do Simples. Some = false; qualquer sinal de volta (show, restore, focus) = true, pra nunca ficar preso.
+  const avisaJanela = (v) => { try { if (!win.isDestroyed()) win.webContents.send('janela', v); } catch {} };
+  win.on('hide', () => avisaJanela(false)); win.on('minimize', () => avisaJanela(false));
+  win.on('show', () => avisaJanela(true)); win.on('restore', () => avisaJanela(true)); win.on('focus', () => avisaJanela(true));
+  win.webContents.on('did-finish-load', () => avisaJanela(win.isVisible() && !win.isMinimized())); // nasceu na bandeja (--hidden)
   app.on('second-instance', () => mostrar());
 
   // checa atualizacao (nao incomoda quem abriu escondido na bandeja pra farmar)

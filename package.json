@@ -6,7 +6,7 @@
   "author": "soufoka",
   "scripts": {
     "start": "electron .",
-    "test": "node test/iv-math.test.js && node test/boot.test.js && node test/atualizacao-jogo.test.js && node test/volta-hunt.test.js && node test/destrava.test.js && node test/cacada-1521.test.js && node test/tierlist-ditto.test.js && node test/tierlist-gold.test.js && node test/eco-raf.test.js && node test/chat-jogo.test.js && node test/bughunt4-A.test.js && node test/bughunt4-B.test.js && node test/bughunt4-C.test.js && node test/bughunt4-D.test.js && node test/bughunt4-E.test.js && node test/boost-discord.test.js && node test/gpu-sandbox.test.js"
+    "test": "node --test test/portable-services.test.js && node test/iv-math.test.js && node test/boot.test.js && node test/atualizacao-jogo.test.js && node test/volta-hunt.test.js && node test/destrava.test.js && node test/cacada-1521.test.js && node test/tierlist-ditto.test.js && node test/tierlist-gold.test.js && node test/eco-raf.test.js && node test/chat-jogo.test.js && node test/bughunt4-A.test.js && node test/bughunt4-B.test.js && node test/bughunt4-C.test.js && node test/bughunt4-D.test.js && node test/bughunt4-E.test.js && node test/boost-discord.test.js && node test/gpu-sandbox.test.js"
   },
   "keywords": [
     "electron",

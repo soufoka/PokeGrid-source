@@ -1150,7 +1150,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     a.mvs = (Array.isArray(a0.mvs) ? a0.mvs : []).slice(0, 8).filter(e => e && typeof e === 'object').map(e => ({ m: String(e.m || '').slice(0, 24), n: num(e.n), s: num(e.s), a: num(e.a), hp: num(e.hp) }));
     d.a = a;
     d.name = String(d.name || '').slice(0, 40); d.cid = String(d.cid || '').slice(0, 60); d.hunt = String(d.hunt || '').slice(0, 60);
-    ['catchLog', 'usedList', 'team', 'chatShares'].forEach(k => d[k] = (Array.isArray(d[k]) ? d[k] : []).slice(0, k === 'usedList' ? 3000 : 120) // usedList: uma linha por especie/variante ja tentada, passa de 120 facil
+    ['catchLog', 'usedList', 'team', 'chatShares'].forEach(k => d[k] = (Array.isArray(d[k]) ? d[k] : []).slice(k === 'catchLog' ? -120 : 0, k === 'usedList' ? 3000 : k === 'catchLog' ? undefined : 120) // usedList: uma linha por especie/variante ja tentada, passa de 120 facil; catchLog: as 120 MAIS NOVAS (o Ultimo catch e o fim da lista)
       .map(e => { if (e && typeof e === 'object') { for (const p2 in e) if (typeof e[p2] === 'string') e[p2] = e[p2].slice(0, 80); } return e; }));
     ['gold', 'diamonds', 'balls', 'potions', 'revives', 'shinyEnc', 'level'].forEach(k => d[k] = num(d[k]));
     const im = d.invMap && typeof d.invMap === 'object' && !Array.isArray(d.invMap) ? d.invMap : {};
@@ -2189,7 +2189,7 @@ inH:String((ws['field-init']&&ws['field-init'].slug)||''),fa:Date.now()-Math.max
       for (const id in S.drops) { const dd = S.drops[id]; const g = dd.qty * ((cat[id] && cat[id].npcPrice) || 0); lootGold += g; dr.push({ name: dd.name, qty: dd.qty, gold: g }); }
       dr.sort((x, y) => y.gold - x.gold);
       // supply = bolas jogadas + itens de cura consumidos (ambos ao preco em gold do catalogo)
-      const capGold = S.sellG || 0, supplyGold = (S.supGold || 0), balance = lootGold + capGold - supplyGold, ph = v => Math.round(v / secs * 3600);
+      const capGold = S.sellG || 0, supplyGold = (S.supGold || 0), balance = lootGold + capGold - supplyGold, ph = v => Math.round(v / Math.max(secs, 60) * 3600);
       // O servidor manda o Hunt Analyzer pronto (ws.analyzer). Quando ele existe e e da sessao
       // ATUAL (nao serve pra hunt encerrada, que o app fecha por conta propria), os numeros dele
       // mandam: o cliente nao tem como saber qual bola foi jogada em cada arremesso, se o pokemon
@@ -2204,7 +2204,8 @@ inH:String((ws['field-init']&&ws['field-init'].slug)||''),fa:Date.now()-Math.max
         const AB = (P.anBase && typeof P.anBase === 'object') ? P.anBase : null;
         const sb = (f) => Math.max(0, nS(AN[f]) - (AB ? nS(AB[f]) : 0));
         const segs = Math.max(1, nS(AN.seconds) - (AB ? nS(AB.seconds) : 0));
-        const pha = (v) => Math.round(v / segs * 3600);
+        // taxa por hora sobre pelo menos 1 min: logo depois do Zerar (ou ao entrar na hunt) 1 kill no 1o segundo virava 3.600 kills/h
+        const pha = (v) => Math.round(v / Math.max(segs, 60) * 3600);
         // Rare Pokemon Picture (profissao fotografo): o analyzer manda a contagem a parte, fora do balance e dos drops, e o jogo soma fotos x preco
         const fq = Math.max(0, nS(AN.photos) - (AB ? nS(AB.photos) : 0)), fg = Math.round(fq * nS(AN.photoNpcGold));
         const bd = {}; if (AB && Array.isArray(AB.drops)) AB.drops.forEach(x => { if (x && x.name) bd[String(x.name)] = nS(x.qty); });
@@ -3077,7 +3078,11 @@ inH:String((ws['field-init']&&ws['field-init'].slug)||''),fa:Date.now()-Math.max
   // Melhor catch: por que criterio. Padrao IV x qualidade, porque a qualidade multiplica os
   // stats e o poder final, entao IV puro sozinho engana (126/192 x1.80 bate 150/192 x0.95).
   let bestCrit = ['ivq', 'iv', 'q'].includes(lsGet('bestCrit')) ? lsGet('bestCrit') : 'ivq';
-  const bestScore = (x) => !x ? -1 : bestCrit === 'iv' ? (+x.iv || 0) : bestCrit === 'q' ? (+x.q || 0) : (+x.iv || 0) * (+x.q || 1);
+  const bestScoreK = (k, x) => !x ? -1 : k === 'iv' ? (+x.iv || 0) : k === 'q' ? (+x.q || 0) : (+x.iv || 0) * (+x.q || 1);
+  const bestScore = (x) => bestScoreK(bestCrit, x);
+  // melhor catch da sessao por painel, nos 3 criterios: so troca por um melhor. O coletor guarda as ultimas 400 capturas e o
+  // push as ultimas 120, entao o melhor saia da lista e a coluna caia pro segundo melhor. Zera com a lista (Zerar) ou com outra conta.
+  const bestVisto = [];
   // shinies tentados: escopo da lista (total | sessao | alvos marcados com estrela)
   let stMode = ['total', 'sess', 'targets'].includes(lsGet('shinyTriedMode')) ? lsGet('shinyTriedMode') : 'total';
   let shinyTargets = {}; try { shinyTargets = lsObj('shinyTargets'); } catch {}
@@ -3598,7 +3603,9 @@ inH:String((ws['field-init']&&ws['field-init'].slug)||''),fa:Date.now()-Math.max
       ativos++;
       sumG += a.gph || 0; sumX += a.xph || 0; sumK += a.kph || 0; sumC += a.captures || 0; sumSF += a.shinyFound || 0; sumSC += a.shinyCap || 0;
       const cl = d.catchLog || [];
-      const best = cl.length ? cl.reduce((b, x) => (bestScore(x) > bestScore(b) ? x : b)) : null;
+      let bv = bestVisto[i]; if (!bv || bv.cid !== d.cid || !cl.length) bv = bestVisto[i] = { cid: d.cid, b: {} };
+      cl.forEach(x => ['ivq', 'iv', 'q'].forEach(k => { if (bestScoreK(k, x) > bestScoreK(k, bv.b[k])) bv.b[k] = x; }));
+      const best = bv.b[bestCrit] || null;
       const last = cl.length ? cl[cl.length - 1] : null;
       (d.usedList || []).forEach(x => {
         const sid = +x.sid || 0, att = +x.total || 0; // dados do jogo: numero ou nada (sid vai pra data-sid). total, nao attempts: attempts zera ao capturar
@@ -4042,12 +4049,15 @@ inH:String((ws['field-init']&&ws['field-init'].slug)||''),fa:Date.now()-Math.max
   // Isso reinicia o acumulador de todas as contas AGORA, pra monitorar a partir deste ponto. Nao mexe
   // em totais da conta (gold, nivel, shinies de vida) nem em knownPokes (senao contaria captura repetida).
   const RESET_SESS = "(()=>{const P=window.__poke;if(!P)return;P.sess={start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,supGold:0,supN:0,slug:P.lastSlug||'',hp:{}};P.catchLog=[];P.shinyLog=[];P.anBase=(P.ws&&P.ws.analyzer&&typeof P.ws.analyzer==='object')?JSON.parse(JSON.stringify(P.ws.analyzer)):null;try{if(P.sock&&P.sock.readyState===1)P.sock.send(JSON.stringify({type:'analyzer-clear'}))}catch(e){}})()";
-  function resetSessao() {
+  async function resetSessao() {
     if (!window.confirm(t('resetConfirm'))) return;
-    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(RESET_SESS).catch(() => {}); } catch {} });
+    const zera = webviews.map((w, i) => { if (off[i] || !w) return null; try { return w.executeJavaScript(RESET_SESS).catch(() => {}); } catch { return null; } });
+    // a leitura empurrada de antes do Zerar vale por ate 30 s: o Simples redesenhava com ela e o Zerar parecia nao ter pegado
+    for (const k in stCache) if (stCache[k]) stCache[k].t = 0;
     dhist = []; // zera a tendencia (sparklines) tambem
     utBase.length = 0; sessSnap.length = 0; // shinies tentados "sessao" recomecam; e a semente antiga nao ressuscita a sessao zerada
-    refreshStats(); if (cardsOn) refreshCards();
+    await Promise.race([Promise.all(zera), new Promise(r => setTimeout(r, 2000))]); // painel travado nao segura o redesenho
+    refreshStats(); if (cardsOn) refreshCards(true);
   }
   statsEl.querySelector('.st-reset').onclick = resetSessao;
 

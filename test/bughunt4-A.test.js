@@ -265,6 +265,9 @@ const HIST = () => new Function('lsObj', 'lsSet', 'lsGet', corta('  let histDay 
     const d = stSane({ ok: true, usedList: ul, catchLog: new Array(300).fill({ n: 'a' }) });
     ok(d.usedList.length === 500 && d.usedList[499].sid === 250, 'as 500 linhas chegam ao Simples (' + d.usedList.length + ')');
     ok(d.usedList[1].name.length === 80 && d.catchLog.length === 120, 'o corte das strings (80) e das outras listas (120) continua');
+    const cl = []; for (let n = 1; n <= 300; n++) cl.push({ n: 'C' + n, t: n });
+    const d2 = stSane({ ok: true, catchLog: cl });
+    ok(d2.catchLog.length === 120 && d2.catchLog[0].n === 'C181' && d2.catchLog[119].n === 'C300', 'o catchLog chega com as 120 capturas MAIS NOVAS: o Ultimo catch e a ultima de verdade (' + d2.catchLog[0].n + '..' + d2.catchLog[119].n + ')');
   }
 
   console.log('\n--- barra de EXP do time: curva do jogo acima do Lv150 ---');
@@ -355,6 +358,48 @@ const HIST = () => new Function('lsObj', 'lsSet', 'lsGet', corta('  let histDay 
     ok(Object.keys(S.hp).length === 2 && S.faintN === 1, 'hp so do time (' + Object.keys(S.hp).length + ' chaves) e o desmaio continua contando (' + S.faintN + ')');
     m.msg({ type: 'poke-delta', poke: { id: 3, team: false, hp: 40 } });
     ok(!(3 in m.P().sess.hp), 'saiu do time: sai do hp');
+  }
+
+  console.log('\n--- Zerar: 1 kill no primeiro segundo nao vira milhoes por hora ---');
+  {
+    const m = mundo();
+    m.msg({ type: 'pokes', list: [] });
+    m.msg({ type: 'field-init', slug: 'ancient_pupitar' });
+    m.msg({ type: 'analyzer', seconds: 3600, kills: 3000, balance: 1500000, xpGained: 3e7, drops: [] });
+    m.run(RESET_SESS);
+    m.msg({ type: 'analyzer', seconds: 0, kills: 0, balance: 0, xpGained: 0, drops: [] }); // o servidor zerou
+    m.msg({ type: 'analyzer', seconds: 1, kills: 1, balance: -104, xpGained: 10000, drops: [] }); // 1 kill e uma bola no 1o segundo
+    let a = m.run(READ_STATE).a;
+    ok(a.seconds === 1 && a.kph === 60 && a.xph === 600000 && a.gph === -6240, 'Hunt Analyzer, 1 s depois do Zerar: taxa sobre 1 min, nao 3.600 kills/h nem 36M XP/h (' + [a.seconds, a.kph, a.xph, a.gph] + ')');
+    m.msg({ type: 'analyzer', seconds: 120, kills: 20, balance: 40000, xpGained: 200000, drops: [] });
+    a = m.run(READ_STATE).a;
+    ok(a.kph === 600 && a.xph === 6000000 && a.gph === 1200000, 'passado 1 min a taxa e a de verdade (' + [a.kph, a.xph, a.gph] + ')');
+    const m2 = mundo();
+    m2.msg({ type: 'pokes', list: [] });
+    m2.msg({ type: 'field-init', slug: 'ancient_pupitar' });
+    m2.run(RESET_SESS); m2.tick(1000);
+    m2.msg({ type: 'field-kill', xpGained: 10000, loot: [] });
+    a = m2.run(READ_STATE).a;
+    ok(a.kph === 60 && a.xph === 600000, 'sem o Hunt Analyzer (conta local) vale o mesmo piso de 1 min (' + [a.kph, a.xph] + ')');
+  }
+
+  console.log('\n--- Zerar num clique: o Simples nao redesenha com a leitura de antes ---');
+  {
+    const src = corta('  async function resetSessao() {', '\n  statsEl.querySelector');
+    const ordem = [];
+    const wv = { executeJavaScript: (c) => { ordem.push(c === 'RESET' ? 'reset' : 'outro'); return Promise.resolve(); } };
+    const stCache = { 0: { t: Date.now(), d: { ok: true, a: { gph: 999 } } }, 1: { t: Date.now(), d: { ok: true } } };
+    let lida = null, forca = null;
+    const env = { window: { confirm: () => true }, t: (k) => k, webviews: [wv, wv], off: [false, false], RESET_SESS: 'RESET', stCache, dhist: [1], utBase: [1], sessSnap: [1], cardsOn: true,
+      refreshStats: () => {}, refreshCards: (f) => { forca = f; lida = Object.keys(stCache).map((k) => Date.now() - stCache[k].t >= 30000); ordem.push('redesenho'); } };
+    const rs = new Function(...Object.keys(env), src.replace('dhist = []', 'dhist.length = 0') + '\nreturn resetSessao;')(...Object.values(env));
+    await rs();
+    ok(ordem.join() === 'reset,reset,redesenho', 'o Simples so redesenha depois de os paineis zerarem (' + ordem.join() + ')');
+    ok(lida && lida.every(Boolean) && forca === true, 'e nao usa a leitura empurrada de antes do Zerar: relê cada painel na hora (' + lida + ')');
+    const trava = { executeJavaScript: () => new Promise(() => {}) }; let red = 0;
+    const rs2 = new Function(...Object.keys(env), src.replace('dhist = []', 'dhist.length = 0') + '\nreturn resetSessao;')(...Object.values(Object.assign({}, env, { webviews: [trava], off: [false], refreshCards: () => { red++; } })));
+    const t0 = Date.now(); await rs2();
+    ok(red === 1 && Date.now() - t0 < 3000, 'painel travado nao segura o redesenho (espera no maximo 2 s)');
   }
 
   console.log('\n--- Resumo Σ: bola infinita aparece como ∞ ---');

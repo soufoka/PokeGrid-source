@@ -187,6 +187,26 @@ const conta = (gph, extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', 
     ok(/<option value="3" selected>/.test(h2) && h2.includes('Gengar') && !h2.includes('Pikachu'), 'com o painel 4 aberto o filtro da conta 4 segue valendo');
   });
 
+  await secao('melhor catch so troca por um melhor (a lista de capturas e uma janela das mais novas)', async () => {
+    const H = monta();
+    const cap = (n, iv, q) => ({ n, iv, q, sh: false, t: Date.now() });
+    const pinta = async (cl, cid) => { H.stCache[0] = { t: Date.now(), d: conta(1000, { catchLog: cl, cid: cid || 'c1' }) }; await H.refreshCards(true); await H.refreshCards(true); return H.cardsEl.innerHTML; }; // a 1a passada do harness pode pintar so o aviso de espera
+    const mostra = (h, nome, iv) => h.includes(nome + '</span> <span style="color:#55e6d3">' + iv + '/192');
+    H.cardsSet(true);
+    let h = await pinta([cap('Kabutops', 180, 1.7), cap('Scyther', 120, 1.1), cap('Paras', 90, 1.0)]);
+    ok(mostra(h, 'Kabutops', 180), 'o melhor da lista aparece');
+    h = await pinta([cap('Scyther', 120, 1.1), cap('Paras', 90, 1.0), cap('Pinsir', 140, 1.2)]);
+    ok(mostra(h, 'Kabutops', 180) && !mostra(h, 'Pinsir', 140), 'o Kabutops saiu da janela e chegou um pior: continua o Kabutops');
+    ok(h.includes('Pinsir'), 'e o Ultimo catch mostra o Pinsir');
+    h = await pinta([cap('Paras', 90, 1.0), cap('Pinsir', 140, 1.2), cap('Dragonite', 190, 2.0)]);
+    ok(mostra(h, 'Dragonite', 190), 'chegou um melhor de verdade: troca');
+    h = await pinta([]);
+    ok(!mostra(h, 'Dragonite', 190), 'Zerar esvazia a lista: o melhor recomeca');
+    await pinta([cap('Dragonite', 190, 2.0)]);
+    h = await pinta([cap('Rattata', 30, 0.9)], 'c2');
+    ok(mostra(h, 'Rattata', 30) && !mostra(h, 'Dragonite', 190), 'outra conta no painel nao herda o melhor da anterior');
+  });
+
   await secao('textos fixos em portugues passam pelo idioma (baixa)', async () => {
     const I18N = new Function('lsGet', code.slice(code.indexOf('  const I18N = {'), code.indexOf('\n  let lang = ')) + '\nreturn I18N;')(() => null);
     const novas = ['tlNotaTip', 'acLife', 'closeT', 'rmTitle', 'shCapT', 'shDefT', 'scHint', 'scDrop', 'scUrlPh', 'scOuCole', 'scNamePh', 'scCodePh', 'scAddBtn'];

@@ -206,6 +206,8 @@ function painel(url, resposta) {
     ok(ws.map((w) => w.nav.length).join('') === '0101', 'e-mail trocado em Treinadores: o Logar equipe reloga esse painel mesmo vivo; trocar so o nome nao (' + ws.map((w) => w.nav.length).join('') + ')');
     api.mkAuto(1, ws[1])({ url: LOGIN_URL });
     ok(logins.join() === 'nova@x' && trocou[1] === false, 'o auto-login usou a credencial nova e baixou a marca');
+    ok(sessSnap[1] === undefined, 'e largou a foto da conta antiga (nao arma o VOLTA da nova na hunt da antiga)');
+    sessSnap[1] = { t: now, sk: true }; // o vigia fotografa a conta nova, ja logada
     ws.forEach((w) => { w.nav.length = 0; });
     api.loginAll();
     ok(ws[1].nav.length === 0, 'depois de logado com a nova, o proximo Logar equipe deixa ele em paz');
@@ -327,10 +329,11 @@ function painel(url, resposta) {
       const dir = path.join(base, 'Pasta (' + (++n) + ') do PokeGrid');
       const nm = path.join(dir, 'node_modules');
       fs.mkdirSync(path.join(nm, 'electron'), { recursive: true });
+      fs.writeFileSync(path.join(dir, 'package.json'), '{"name":"pokegrid","version":"0.0.0"}'); // o .bat so roda dentro da pasta do app
       fs.writeFileSync(path.join(nm, 'electron', 'package.json'), '{"name":"electron","main":"index.js"}');
       fs.writeFileSync(path.join(nm, 'electron', 'index.js'), electronFalso);
       monta(nm);
-      const txt = fs.readFileSync(bat, 'latin1').replace(/start "" "node_modules\\electron\\dist\\electron\.exe" \./, 'echo ABRIRIA O PROGRAMA');
+      const txt = fs.readFileSync(bat, 'latin1').replace(/start "" "node_modules\\electron\\dist\\electron\.exe" \./, 'echo ABRIRIA O PROGRAMA').replace(/node "node_modules\\electron\\cli\.js" \./, 'echo ABRIRIA O PROGRAMA');
       const alvo = path.join(dir, path.basename(bat));
       fs.writeFileSync(alvo, txt, 'latin1');
       try { fs.unlinkSync(path.join(bin, 'log.txt')); } catch {}
@@ -352,9 +355,9 @@ function painel(url, resposta) {
       ok(r4.out.includes('Node.js deste PC e antigo') && r4.npm.length === 0 && !r4.out.includes('Confira a internet'), 'Node 20 antigo: diz pra atualizar o Node em vez de mandar conferir a internet (baixa)');
       if (iniciar) {
         const r5 = roda(iniciar, (nm) => { comGet(nm); fs.writeFileSync(path.join(nm, 'electron', 'path.txt'), 'electron.exe'); });
-        ok(r5.npm.join(',') === 'npm install,npm start', 'iniciar.bat: sem o electron.exe roda o npm install antes do npm start (' + r5.npm.join(',') + ')');
+        ok(r5.npm.join(',') === 'npm install' && r5.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: sem o electron.exe roda o npm install e abre pelo cli.js do Electron (' + r5.npm.join(',') + ')');
         const r6 = roda(iniciar, (nm) => { comGet(nm); comExe(nm); });
-        ok(r6.npm.join(',') === 'npm start', 'iniciar.bat: tudo instalado, so o npm start');
+        ok(r6.npm.length === 0 && r6.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: tudo instalado, nem chama o npm, so abre pelo cli.js');
       }
     } finally { try { fs.rmSync(base, { recursive: true, force: true }); } catch {} }
   });

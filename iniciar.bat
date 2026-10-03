@@ -9,7 +9,7 @@ where npm >nul 2>nul || (
   exit /b
 )
 rem Instala quando falta o Electron, nao so sem node_modules: uma instalacao interrompida deixava dependencia faltando
-rem e o npm start falhava sempre. Com tudo no lugar o npm install leva segundos; o npm start baixa o Electron se faltar.
+rem e o app nao abria nunca. Com tudo no lugar o npm install leva segundos; abrir baixa o Electron se faltar.
 set "PG_FALTA="
 if not exist "node_modules\electron\path.txt" set "PG_FALTA=1"
 if not exist "node_modules\electron\dist\electron.exe" set "PG_FALTA=1"
@@ -20,7 +20,8 @@ if defined PG_FALTA (
 echo Abrindo o PokeGrid...
 rem O erro precisa aparecer: descartar o stderr escondia a causa quando o app nao abria. O proprio app ja
 rem silencia o spam do Chromium pelo log-level. Se fechar com erro, a janela fica aberta pra dar pra ler.
-call npm start
+rem Direto no cli.js do Electron, sem npm start: o electron.cmd que o npm cria em node_modules\.bin quebra com & no caminho da pasta.
+node "node_modules\electron\cli.js" .
 if errorlevel 1 (
   echo.
   echo O PokeGrid fechou com erro. Tire um print desta janela pra pedir ajuda.

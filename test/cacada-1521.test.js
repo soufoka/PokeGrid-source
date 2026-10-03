@@ -88,7 +88,7 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
     const expr = entre(b, 'live=!!(ch.id||hasBalls||hasInv)', ';', true);
     const live = (ch, P) => new Function('ch', 'hasBalls', 'hasInv', 'P', 'let ' + expr + ' return live;')(ch, false, false, P);
     ok(live({ id: 7 }, { meMiss: 0, sock: { readyState: 1 } }) === true, 'conta normal: viva');
-    ok(live({ id: 7 }, { meMiss: 2, sock: { readyState: 3 } }) === false, '2 /me seguidos sem personagem E socket fechado: morta (antes ficava "online" pra sempre)');
+    ok(live({ id: 7 }, { meMiss: 2, sock: { readyState: 3 }, wc: 4001 }) === false, '2 /me seguidos sem personagem E socket fechado pelo servidor com 4001 (auth): morta (antes ficava "online" pra sempre)');
     ok(live({ id: 7 }, { meMiss: 5, sock: { readyState: 1 } }) === true, 'socket aberto e farmando nunca e declarada morta (5xx passageiro do /me nao derruba ninguem)');
     ok(live({ id: 7 }, { meMiss: 1, sock: null }) === true, 'um /me falho so nao basta');
     const col = entre(b, "if(key==='/api/characters/me'){", 'P.api[key]=j', true);
@@ -117,8 +117,8 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
   {
     const L = s.split('\n'); const at = (n) => L.findIndex((x) => x.includes(n));
     const um = (ev) => /\(\)\s*=>\s*\{(.*)\}\s*\)\s*;/.exec(L[at("wv.addEventListener('" + ev + "'")])[1];
-    const f0 = at("wv.addEventListener('did-fail-load'"); const corpo = [];
-    for (let k = f0 + 1; !L[k].trim().startsWith('});'); k++) corpo.push(L[k]);
+    const f0 = at('const falhaCarga = (e) => {'); const corpo = []; // o did-fail-load (e o did-navigate com HTTP 5xx) chamam esta funcao
+    for (let k = f0 + 1; !L[k].trim().startsWith('};'); k++) corpo.push(L[k]);
     const timers = []; let reloads = 0;
     const h = new Function('off', 'i', 'dot', 'status', 't', 'alerta', 'wv', 'setTimeout',
       'let fails = 0, alertedDown = false, falhou = false;\nconst onStart = () => {' + um('did-start-loading') + '\n};\nconst onFail = (e) => {' + corpo.join('\n') + '\n};\nreturn { onStart, onFail };')(
@@ -262,7 +262,10 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
 
   console.log('\n--- cacada 1521b: o resto, conferido no texto ---');
   ok(b.includes("++deadT[i] >= ((w.getURL() || '').includes('maintenance=1') ? 100 : 10)"), 'manutencao do jogo: relogin a cada 10 min, nao a cada 60s (cada tentativa recarrega o painel)');
-  ok(b.includes("wv.addEventListener('did-navigate-in-page', (e) => { if (e.isMainFrame !== false) autoLogin(e); })") && b.includes("wv.addEventListener('did-navigate', autoLogin);"), 'Sair pelo dock (rota interna pra /login) tambem dispara o auto-login');
+  { // Sair pelo dock: rota interna pra /login. Desde a caca 5 o documento com userscripts e trocado por um novo antes da senha (test/bh5-paineis)
+    const inPage = entre(b, "      wv.addEventListener('did-navigate-in-page', (e) => {\n        if (e.isMainFrame === false) return;", '\n      });', true);
+    ok(inPage.includes('autoLogin(e);') && inPage.indexOf('wv.__pgSemScripts === false && usNoLoginUrl(e.url)') < inPage.indexOf('autoLogin(e);') && b.includes("wv.addEventListener('did-navigate', (e) => { if (e.httpResponseCode >= 500) falhaCarga(e); else autoLogin(e); });"), 'Sair pelo dock (rota interna pra /login) tambem dispara o auto-login, depois de trocar o documento com userscripts');
+  }
   ok(b.includes("if ((huntsCache && Object.keys(movesByName).length && !semOuro) || Date.now() - huntsCacheT < 60e3) return;"), 'creatures.json falhou mas as hunts vieram: o catalogo continua sendo tentado (tierlist/Ditto nao ficam vazios ate reiniciar)');
   ok(b.includes('const semOuro = !!huntsCache && !huntsCache.some(x => +x.gk > 0) && huntsOuroTent < 5;'), 'items.json falhou (gold/h zerado): os precos tambem sao tentados de novo, ate 5 vezes');
   ok(b.includes("const BK_SKIP = ['userScripts', 'scriptsOn', 'webhook', 'curDay']"), 'curDay nao viaja no export/import (importado, mandaria o resumo do dia de outra pessoa pro Discord)');

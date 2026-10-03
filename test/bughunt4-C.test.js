@@ -220,7 +220,7 @@ const conta = (gph, extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', 
     ok(tl.includes('margin ×1.8') && !tl.includes('folga'), 'tierlist em ingles: margin, como o Ditto');
     ok(tl.includes('title="100 out of 100 (the best in the tab is the 100 baseline)"'), 'tooltip da nota em ingles');
     const ag = H.aggCard('#fff', 'Ash', { ok: true, gold: 1, diamonds: 0, shinyEnc: 3, balls: 10, potions: 2, revives: 1, a: { gph: 1, xph: 1, kph: 1, captures: 1, shinyFound: 0, shinyCap: 0 } });
-    ok(ag.includes('3 lifetime') && ag.includes('10 balls') && !/vida|bolas/.test(ag), 'Resumo por conta: lifetime e balls');
+    ok(ag.includes('3 balls at shinies') && ag.includes('10 balls') && ag.includes('2 potions') && !/vida|bolas/.test(ag), 'Resumo por conta: balls at shinies (era "lifetime", mas sao bolas jogadas em shiny), balls e potions');
     const hd = H.statsEl.querySelector('.st-head');
     const tits = [hd.querySelector('.st-reset').title, hd.querySelector('.st-gear').title, hd.querySelector('.st-x').title, H.statsEl.querySelector('.st-resize').title];
     ok(tits[0] === H.t('resetTitle') && tits[1] === 'Configure the panel' && tits[2] === 'Close' && tits[3] === 'Drag to adjust the width', 'cabecalho do Resumo em ingles (' + tits.join(' | ') + ')');

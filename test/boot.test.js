@@ -46,6 +46,15 @@ function JanelaFalsa() { return janela; }
 JanelaFalsa.getAllWindows = () => [janela];
 JanelaFalsa.fromWebContents = () => janela;
 const CAMINHOS = { appData: path.join(RAIZ, '.teste-tmp'), userData: path.join(RAIZ, '.teste-tmp'), temp: path.join(RAIZ, '.teste-tmp'), exe: process.execPath, home: RAIZ, desktop: RAIZ, documents: RAIZ, downloads: RAIZ, logs: RAIZ, crashDumps: RAIZ, sessionData: RAIZ, module: RAIZ };
+// Chave Run como o Electron 43 le (browser_win.cc): o caminho pedido e cada valor passam pelo CommandLine::FromString e so o
+// programa (argv[0]) e comparado. Sem aspas, um caminho com espaco vira "D:\Meus" e casa com o valor de outro programa.
+const programa = (s) => { const m = /^\s*(?:"([^"]*)"|(\S+))/.exec(String(s || '')); return m ? (m[1] !== undefined ? m[1] : m[2]) : ''; };
+const EXE_PORTATIL = 'D:\\Meus Jogos\\PokeGrid-portable.exe';
+const CHAVE_RUN = [
+  ['electron.app.Electron', '"' + EXE_PORTATIL + '" --hidden', 'user'], // 1.0.x e npm start: o Electron grava entre aspas
+  ['OutroApp', 'D:\\Meus Jogos\\Outro App\\outro.exe --hidden', 'user'], // outro programa, gravado sem aspas
+  ['electron.app.Maquina', '"' + EXE_PORTATIL + '" --hidden', 'machine'] // HKLM: o app nunca gravou la
+];
 const eletronFalso = {
   app: Object.assign(eventos(), {
     // sincrono: o corpo que cria janela e menu roda dentro do require (antes o process.exit do fim
@@ -55,12 +64,13 @@ const eletronFalso = {
     getPath: (n) => { if (!(n in CAMINHOS)) throw new Error("path desconhecido: " + n); return CAMINHOS[n]; },
     getVersion: () => '0.0.0-teste', getName: () => 'PokeGrid', getAppPath: () => RAIZ, isPackaged: false,
     quit() {}, focus() {}, setAppUserModelId() {}, setLoginItemSettings(o) { itensLogin.push(o); },
-    // como no Electron: sem args, a entrada antiga com --hidden le 'desligado'; launchItems vem casado pelo exe
-    getLoginItemSettings: (o) => { consultasLogin.push(o); return { openAtLogin: false, launchItems: [
-      { name: 'electron.app.Electron', path: 'x', args: ['--hidden'], scope: 'user' }, // 1.0.x e npm start
-      { name: 'OutroApp', path: 'x', args: [], scope: 'user' }, // nao e nosso: nao abria com --hidden
-      { name: 'electron.app.Maquina', path: 'x', args: ['--hidden'], scope: 'machine' } // HKLM: o app nunca gravou la
-    ] }; },
+    // como no Electron: sem args, a entrada antiga com --hidden le 'desligado'; launchItems vem casado pelo programa do caminho
+    getLoginItemSettings: (o) => {
+      consultasLogin.push(o);
+      const alvo = programa(o && o.path).toLowerCase();
+      return { openAtLogin: false, launchItems: CHAVE_RUN.filter(([, v]) => alvo && programa(v).toLowerCase() === alvo)
+        .map(([name, v, scope]) => ({ name, path: programa(v), args: v.includes('--hidden') ? ['--hidden'] : [], scope })) };
+    },
     requestSingleInstanceLock: () => true,
     userAgentFallback: 'Mozilla/5.0 Chrome/150.0.0.0 Electron/43.1.1 Safari/537.36',
     commandLine: { appendSwitch() {} }
@@ -80,7 +90,7 @@ const eletronFalso = {
     writeShortcutLink: (p, a, b) => { atalhos.push(b || a); try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, ''); } catch {} return true; },
     readShortcutLink: () => ({ target: process.execPath }) // o atalho antigo da portatil: a pasta temporaria
   },
-  session: { defaultSession: { setPermissionRequestHandler() {} }, fromPartition: () => ({ setPermissionRequestHandler() {} }) },
+  session: { defaultSession: { setPermissionRequestHandler() {} }, fromPartition: () => ({ setPermissionRequestHandler() {}, setPermissionCheckHandler() {} }) },
   Menu: { buildFromTemplate: (t) => ({ items: t || [] }), setApplicationMenu(m) { menuApp = m; } },
   Tray: function () { return Object.assign(eventos(), { setToolTip() {}, setContextMenu(m) { menuBandeja = m; }, destroy() {} }); },
   dialog: { showMessageBox: () => Promise.resolve({ response: 1 }), showErrorBox() {} },
@@ -140,7 +150,7 @@ console.log('--- Abrir com o Windows: atalho no exe real da portatil e chave Run
   global.setTimeout = st0;
   const lnk = path.join(RAIZ, '.teste-tmp', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'PokeGrid.lnk');
   try { fs.mkdirSync(path.dirname(lnk), { recursive: true }); fs.writeFileSync(lnk, ''); } catch {} // opcao ja ligada
-  const exePortatil = 'D:\\Jogos\\PokeGrid-portable.exe';
+  const exePortatil = EXE_PORTATIL;
   process.env.PORTABLE_EXECUTABLE_FILE = exePortatil;
   const bandeja = timers.find((f) => f.name === 'prepararBandeja');
   let erroB = null;
@@ -151,8 +161,8 @@ console.log('--- Abrir com o Windows: atalho no exe real da portatil e chave Run
   ok(atalhos.length > 0 && atalhos[atalhos.length - 1].target === exePortatil, 'portatil: o atalho da Inicializar aponta pro .exe que o usuario abriu, nao pra pasta temporaria' + (atalhos.length ? ' (gravou ' + atalhos[atalhos.length - 1].target + ')' : ' (nao regravou)'));
   const apagou = (n) => itensLogin.some((o) => o && o.openAtLogin === false && o.name === n);
   ok(apagou('online.idleworld.pokegrid') && apagou('electron.app.PokeGrid'), 'chave Run antiga apagada pelos dois nomes, sem depender do getLoginItemSettings (que lia "desligado" por causa do --hidden)');
-  ok(apagou('electron.app.Electron') && consultasLogin.some((o) => o && o.path === exePortatil), 'a entrada da 1.0.x/npm start (electron.app.Electron) sai, casada pelo exe real');
-  ok(!apagou('OutroApp') && !apagou('electron.app.Maquina'), 'entrada de outro app (sem --hidden) e de HKLM ficam intactas');
+  ok(apagou('electron.app.Electron') && consultasLogin.some((o) => o && o.path === '"' + exePortatil + '"'), 'a entrada da 1.0.x/npm start (electron.app.Electron) sai, casada pelo exe real entre aspas (caminho com espaco)');
+  ok(!apagou('OutroApp') && !apagou('electron.app.Maquina'), 'entrada de outro programa (gravada sem aspas, com --hidden) e de HKLM ficam intactas');
   // o item da bandeja acompanha o botao da janela (antes ficava dessincronizado e pedia dois cliques)
   const itemB = menuBandeja && (menuBandeja.items || []).find((it) => it.type === 'checkbox');
   Object.defineProperty(process, 'platform', { value: 'win32' });
@@ -228,7 +238,20 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
     // no checksum, entao o tar do Windows extrai. path.txt sem quebra de linha, senao o Electron procura "electron.exe\r\n".
     const iNativo = bat.indexOf('findstr /c:"native binding" instalacao.log >nul 2>&1 && (');
     ok(iNativo > iPede && iNativo < iConfere && bat.includes('"%SystemRoot%\\System32\\tar.exe" -xf ') && bat.includes('&& <nul set /p "=electron.exe" > "node_modules\\electron\\path.txt"'), 'Abrir PokeGrid.bat extrai com o tar do Windows quando o extrator do Electron foi barrado');
+    // aberto de dentro do zip ou copiado sozinho pra Area de Trabalho: rodava o npm install fora da pasta do app
+    const iPkg = bat.indexOf('if not exist "package.json" (\r\n'), blocoPkg = iPkg > 0 ? bat.slice(iPkg, bat.indexOf('\r\n)\r\n', iPkg)) : '';
+    ok(iPkg > bat.indexOf('cd /d "%~dp0"\r\n') && iPkg < bat.indexOf('set "PG_FALTA="') && blocoPkg.includes('Extrair tudo') && /\r\n {2}pause\r\n {2}exit \/b$/.test(blocoPkg), 'Abrir PokeGrid.bat fora da pasta do app (sem o package.json do lado): explica e para antes do npm install');
   } else ok(true, 'sem lancador .bat neste repo (o instalador abre o app)');
+  if (naRaiz.includes('iniciar.bat')) {
+    // o electron.cmd que o npm cria em node_modules\.bin quebra com & no caminho da pasta, e o npm start passava por ele
+    const ini = fs.readFileSync(path.join(RAIZ, 'iniciar.bat'), 'utf8'), iCli = ini.indexOf('node "node_modules\\electron\\cli.js" .');
+    ok(iCli > 0 && !/call npm start/i.test(ini) && ini.indexOf('if errorlevel 1 (') > iCli, 'iniciar.bat abre pelo cli.js do Electron, sem o npm start, e segue mostrando o erro');
+  }
+  if (naRaiz.includes('iniciar.sh')) {
+    // instalacao interrompida deixava a pasta node_modules sem o Electron; com Node velho o erro falava de sandbox
+    const sh = fs.readFileSync(path.join(RAIZ, 'iniciar.sh'), 'utf8'), iSemPath = sh.indexOf('if [ ! -f node_modules/electron/path.txt ]; then\n');
+    ok(iSemPath > 0 && !sh.includes('[ ! -d node_modules ]') && iSemPath < sh.indexOf('a>22||a===22&&b>=12') && sh.indexOf('a>22||a===22&&b>=12') < sh.indexOf('\n  npm install\n') && !sh.includes('\r'), 'iniciar.sh reinstala quando falta o path.txt do Electron, confere o Node 22.12 antes e segue em LF');
+  }
 }
 try { fs.rmSync(path.join(RAIZ, '.teste-tmp'), { recursive: true, force: true }); } catch {}
 console.log(falhas ? '\n' + falhas + ' falha(s)' : '\nInicializacao: tudo certo');

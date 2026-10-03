@@ -3,6 +3,17 @@ rem Abre o PokeGrid. Na primeira vez instala o necessario nesta janela; depois e
 rem Dica: botao direito neste arquivo > Enviar para > Area de trabalho (criar atalho).
 rem Nada de parenteses dentro dos textos de echo abaixo: dentro de um bloco if ( ) eles quebram o .bat.
 cd /d "%~dp0"
+rem Aberto de dentro do zip ou copiado sozinho pra outra pasta, ele nao acha o resto do app e o npm install falhava com
+rem um motivo que nao ajudava. Explica e para antes de instalar qualquer coisa.
+if not exist "package.json" (
+  echo.
+  echo O Abrir PokeGrid.bat precisa ficar dentro da pasta do PokeGrid, junto com os outros arquivos.
+  echo Se voce abriu de dentro do zip: clique com o botao direito no zip, Extrair tudo, e abra o Abrir PokeGrid.bat da pasta extraida.
+  echo Se copiou so ele pra Area de Trabalho: abra o original, de dentro da pasta. Pra ter atalho: botao direito no original, Enviar para, Area de trabalho.
+  echo.
+  pause
+  exit /b
+)
 rem path.txt e o ultimo arquivo que o Electron grava ao extrair. Sem ele a extracao ficou pela metade (janela fechada,
 rem antivirus) e o electron.exe sozinho abre e fecha sem aviso. Sem o electron.exe o antivirus levou o programa depois
 rem de instalado. Nos dois casos o bloco abaixo refaz o que faltou. O .bat nao tem OU: vai numa variavel.

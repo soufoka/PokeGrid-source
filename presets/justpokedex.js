@@ -58,6 +58,7 @@
     };
 
     let ultimoTexto = "";
+    let ultimoTip = null; // elemento do ultimo tooltip lido (o jogo cria um novo a cada hover)
     let ultimoPokemon = null;
     let pokemonManualAtual = null;
     let abaAtual = "leitor";
@@ -135,7 +136,8 @@
     }
 
     const SPRITE_ONERROR = "if(this.dataset.fallback){this.src=this.dataset.fallback;this.dataset.fallback='';}else{this.style.display='none'}";
-    const CACHE_KEY = "pokemon-api-cache";
+    // v2: a v1 guardou a base da PokeAPI (Gen 7+) de especies que o jogo usa com a base do creatures.json
+    const CACHE_KEY = "pokemon-api-cache-v2";
     let apiCache = {};
     try {
         apiCache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
@@ -149,15 +151,16 @@
 
     function isShiny(pokemon) {
         if (!pokemon) return false;
-        if (pokemon.nome && pokemon.nome.toLowerCase().includes("shiny")) return true;
+        if (pokemon.nome && /shiny|✨/i.test(pokemon.nome)) return true; // o tooltip do jogo marca com " ✨" no nome
         if (pokemon.multiplicadorQualidade > 1.8) return true;
         if (pokemon.qualidade && pokemon.qualidade.toLowerCase().includes("shiny")) return true;
         return false;
     }
 
     function obterUrlsSprite(id, shiny) {
-        // o jogo desloca os ids de Orre em +13000 (Treecko = 13252); sprites usam a dex nacional
-        id = (+id >= 13000 && +id < 14000) ? +id - 13000 : +id;
+        // o jogo desloca os ids de Orre em +13000 (Treecko = 13252) e os de megas e formas em +14000
+        // (Mega Blastoise = 14009, Castform Fire = 14351): o sprite e o da especie base, pela dex nacional
+        id = (+id >= 13000 && +id < 15000) ? +id % 1000 : +id;
         const pastaShiny = shiny ? "shiny/" : "";
         const baseUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
         return {
@@ -284,9 +287,9 @@
         if (tiposEng.length === 0) return "";
 
         const todosTipos = Object.keys(TYPE_SYSTEM.CHART);
+        // cada golpe tem um tipo so: no ataque o maximo contra um tipo e 2x (nao existe "Da 4x")
         const a = tiposEng.map(t => new Set(todosTipos.filter(def => TYPE_SYSTEM.CHART[t][def] === 2)));
-        const da4x = tiposEng.length === 2 ? todosTipos.filter(def => a[0].has(def) && a[1].has(def)) : [];
-        const da2x = todosTipos.filter(def => a.some(set => set.has(def)) && !da4x.includes(def));
+        const da2x = todosTipos.filter(def => a.some(set => set.has(def)));
 
         const toma4x = [];
         const toma2x = [];
@@ -318,7 +321,6 @@
         return `
             <div class="efetividade-card" style="margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.2); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div class="sec-title" style="font-size: 9px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #8390a5; margin-bottom: 8px;">📊 Efetividade</div>
-                ${criarLinhaEfetividade("⚔", "Dá 4x", da4x, "#ffd54a")}
                 ${criarLinhaEfetividade("⚔", "Dá 2x", da2x, "#61f6a4")}
                 ${criarLinhaEfetividade("🛡", "Toma 4x", toma4x, "#ff6b6b")}
                 ${criarLinhaEfetividade("🛡", "Toma 2x", toma2x, "#ffb04a")}
@@ -329,6 +331,7 @@
 
     let creaturesData = [];
     let creaturesMapByName = new Map();
+    let creaturesCarregando = null; // promessa da carga do creatures.json (buscarAtributosBase espera por ela)
 
     async function carregarCreatures() {
         try {
@@ -640,6 +643,7 @@
             // so aceita a linha se sobrar um tipo real, pra nao criar um chip "Ativo" duplicado
             const limpa = linha.replace(/ativo|activo|active/ig, "").trim();
             if (limpa && obterChaveTipo(limpa)) tipos.push(limpa);
+            else if (tipos.length) break; // os tipos vem juntos logo depois do nome; o <b> da berry ("Water") vem depois dos chips
         }
 
         const ivMatch =
@@ -660,8 +664,9 @@
             nome,
             tipos,
 
+            // so o chip ("⚔ Ativo"); a dica de quem esta na equipe termina em "deixa-lo ativo"
             ativo: linhas.some(linha =>
-                /ativo|activo|active/i.test(linha)
+                /^(?:⚔\s*)?(?:ativo|activo|active)$/i.test(linha)
             ),
 
             nivel: numero(
@@ -690,12 +695,13 @@
                 texto.match(/SpA\s+([\d.,]+)/i)?.[1]
             ),
 
+            // sem a flag i: na mochila em ingles a velocidade e "Spd" e a defesa especial "SpD"
             spd: numero(
-                texto.match(/SpD\s+([\d.,]+)/i)?.[1]
+                texto.match(/SpD\s+([\d.,]+)/)?.[1]
             ),
 
             vel: numero(
-                texto.match(/(?:Vel|Spe)\s+([\d.,]+)/i)?.[1]
+                texto.match(/(?:Vel|Spe|Spd)\s+([\d.,]+)/)?.[1]
             ),
 
             poder: numero(
@@ -1829,7 +1835,7 @@
                         const nomeNorm = normalizarNomePokemon(p.nome);
                         const cache = apiCache[nomeNorm];
                         const spriteUrl = cache && cache.id
-                            ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${cache.id}.png`
+                            ? obterUrlsSprite(cache.id, false).still // mesma conversao de id do resto (Orre, megas e formas)
                             : "";
                         const ivPercent = p.ivAtual !== null && p.ivMaximo
                             ? `${((p.ivAtual / p.ivMaximo) * 100).toFixed(1)}%`
@@ -1865,12 +1871,17 @@
                 }
             });
 
-            document.addEventListener("click", (e) => {
-                const popup = document.getElementById("historico-popup");
-                if (popup && !popup.contains(e.target) && !btnHist.contains(e.target)) {
-                    popup.remove();
-                }
-            });
+            // um ouvinte so por pagina (este render roda a cada hover); o botao e buscado na hora do clique
+            if (!window.__pgHistFecha) {
+                window.__pgHistFecha = true;
+                document.addEventListener("click", (e) => {
+                    const popup = document.getElementById("historico-popup");
+                    const btn = document.getElementById("btn-historico");
+                    if (popup && !popup.contains(e.target) && !(btn && btn.contains(e.target))) {
+                        popup.remove();
+                    }
+                });
+            }
         }
     }
 
@@ -2113,17 +2124,22 @@
             return apiCache[nomeBrutoLimpo];
         }
 
+        // A base que vale e a do creatures.json do jogo: em 16 especies (Dugtrio, Corsola, Mantine...)
+        // ela e a da Gen 6 e a PokeAPI ja traz a da Gen 7+. A PokeAPI so entra pra quem nao esta la.
+        await creaturesCarregando;
+        const doJogo = criaturaDoJogo(nome);
+
         // fetch rejeitado (sem internet, PokeAPI fora do ar) nao pode derrubar o card:
         // vira resposta nula e cai no mesmo caminho do 404, o creatures.json do proprio jogo.
         let resposta = null;
-        try {
+        if (!doJogo) try {
             resposta = await fetch(
                 `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(nomeNormalizado)}`
             );
         } catch {}
 
         // Fallback: Se o nome normalizado falhar (404) e tiver hífen, tenta buscar pelo primeiro termo (nome base da espécie)
-        if ((!resposta || !resposta.ok) && nomeNormalizado.includes("-")) {
+        if (!doJogo && (!resposta || !resposta.ok) && nomeNormalizado.includes("-")) {
             const primeiroNome = nomeNormalizado.split("-")[0];
             if (primeiroNome && primeiroNome !== nomeNormalizado) {
                 try {
@@ -2141,7 +2157,7 @@
         let dados;
         if (resposta && resposta.ok) dados = await resposta.json();
         else {
-            const c = criaturaDoJogo(nome);
+            const c = doJogo;
             if (!c) {
                 throw new Error(
                     `Pokémon não encontrado: ${nome}`
@@ -2201,8 +2217,11 @@
             tipos: tiposPt
         };
 
+        // na memoria sempre (o card e o sprite precisam dele); no localStorage, a base da PokeAPI so fica se o
+        // creatures.json carregou e a especie de fato nao esta nele. Com o creatures.json fora do ar ela pode ser
+        // a base Gen 7 de uma especie do jogo, e entao vale so ate recarregar a pagina.
         apiCache[nomeNormalizado] = info;
-        salvarCache();
+        if (doJogo || creaturesMapByName.size) salvarCache();
 
         return info;
     }
@@ -3270,9 +3289,18 @@
         const texto =
             tooltip?.innerText?.trim();
 
-        if (!texto || texto === ultimoTexto) {
+        if (!texto) return;
+
+        if (texto === ultimoTexto) {
+            // mesmo pokemon num tooltip novo (voltou pra ele depois de outro painel): o card do app
+            // pode estar mostrando o de outro painel, entao reenvia. O mesmo tooltip aberto nao reenvia.
+            if (tooltip !== ultimoTip && tooltip instanceof HTMLElement) {
+                ultimoTip = tooltip;
+                try { window.__pgIv && window.__pgIv.reportar(); } catch (x) {}
+            }
             return;
         }
+        ultimoTip = tooltip;
 
         if (
             !/Poder|Power/i.test(texto) ||
@@ -5332,9 +5360,11 @@
 
         // 1. Nome e Nível (Ex: "Geodude Lv.1")
         const nomeNivelTexto = lateral.querySelector(".mkt2-details-name")?.innerText?.trim() || "";
-        if (!nomeNivelTexto) return;
+        // so anuncio de pokemon tem o bloco de atributos (.mkt2-stats); item (Ultra Ball...) nao vai pro card
+        if (!nomeNivelTexto || !lateral.querySelector(".mkt2-stats")) return;
 
-        const nivelMatch = nomeNivelTexto.match(/Lv\.?\s*(\d+)/i);
+        // o nome hoje vem sem o nivel: ele fica no bloco "⚡ Nível / 120" (Level, Nivel)
+        const nivelMatch = nomeNivelTexto.match(/Lv\.?\s*(\d+)/i) || lateral.innerText.match(/(?:N[ií]vel|Level)\s*(\d+)/i);
         const nivel = nivelMatch ? Number(nivelMatch[1]) : 1;
         // Remove o "Lv.X" para isolar o nome limpo
         const nome = nomeNivelTexto.replace(/Lv\.?\s*\d+/i, "").trim();
@@ -5348,12 +5378,12 @@
         const ivAtual = ivMatch ? Number(ivMatch[1]) : null;
         const ivMaximo = ivMatch ? Number(ivMatch[2]) : 192;
 
-        // 4. Poder
-        const poderMatch = lateral.innerText.match(/(?:Poder|Power)\s*.*?(\d+)/i);
-        const poder = poderMatch ? Number(poderMatch[1]) : null;
+        // 4. Poder (Ex: "Poder\n⚡2.623": o jogo formata com ponto de milhar)
+        const poderMatch = lateral.innerText.match(/(?:Poder|Power)\s*⚡?\s*([\d.]+)/i);
+        const poder = poderMatch ? numero(poderMatch[1]) : null;
 
-        // 5. Tipos (Mapeia as badges de tipo dentro da lateral)
-        const tipos = Array.from(lateral.querySelectorAll(".mkt2-card-badges span, .mkt2-statlist span"))
+        // 5. Tipos (so os badges de tipo do bloco "Tipos"; os outros spans sao rotulos da tela)
+        const tipos = Array.from(lateral.querySelectorAll(".mkt2-stat-types > span"))
             .map(el => el.innerText.trim())
             .filter(txt => txt && !/Poder|Power|Ativo|Active|Somente|Only/i.test(txt));
 
@@ -5582,6 +5612,7 @@
     // O card fica na janela do app (fora dos paineis), pra poder abrir no centro da tela e maior.
     // O calculo continua aqui, que e onde estao as formulas e a busca dos atributos-base, entao
     // nao existe formula duplicada: o app so pede o resultado e mostra.
+    let ivPedido = 0; // numero do ultimo reportar()
     window.__pgIv = {
         async calc(entrada) {
             const e = entrada || {};
@@ -5609,7 +5640,7 @@
             const ivObs = (pk.ivAtual != null) ? Number(pk.ivAtual) : null;
             const usaObs = Number.isFinite(ivObs) && ivObs > 0;
             const pct = ((usaObs ? ivObs : soma) / CONFIG.maxIVTotal) * 100;
-            const ehShiny = /shiny/i.test(String(pk.nome || ""));
+            const ehShiny = /shiny|✨/i.test(String(pk.nome || "")); // o tooltip do jogo marca com " ✨" no nome
             // sprite: o id ja fica no apiCache depois do buscarAtributosBase
             let sprite = null;
             try { const ci = apiCache[normalizarNomePokemon(pk.nome)]; if (ci && ci.id) sprite = obterUrlsSprite(ci.id, ehShiny); } catch (x) {}
@@ -5625,7 +5656,7 @@
                 });
             } catch (x) {}
             return {
-                nome: pk.nome, tipos: pk.tipos || [], shiny: ehShiny,
+                nome: String(pk.nome).replace(/✨/g, "").trim(), tipos: pk.tipos || [], shiny: ehShiny, // o card do app ja poe o ✨ quando shiny
                 nivel, qualidade, qualidadeTexto: pk.qualidade || "",
                 bases, atuais, ivs,
                 ivTotal: usaObs ? ivObs : Math.ceil(soma),
@@ -5638,9 +5669,12 @@
                 pokemon: { nome: pk.nome, nivel: pk.nivel, ivAtual: pk.ivAtual, poder: pk.poder, tipos: pk.tipos || [], qualidade: pk.qualidade || "", multiplicadorQualidade: pk.multiplicadorQualidade || 1, hp: pk.hp, atk: pk.atk, def: pk.def, spa: pk.spa, spd: pk.spd, vel: pk.vel }
             };
         },
-        // avisa o app: o canal e o console do painel, que o app escuta (sem ficar consultando)
+        // avisa o app: o canal e o console do painel, que o app escuta (sem ficar consultando).
+        // So o pedido mais novo vai pro console: a base de um pokemon pode chegar da rede depois
+        // da do proximo (ja no cache), e o card ficaria no anterior com o mouse no atual.
         async reportar() {
-            try { const r = await window.__pgIv.calc(); if (r) console.log("__PGIV__" + JSON.stringify(r)); } catch (x) {}
+            const n = ++ivPedido;
+            try { const r = await window.__pgIv.calc(); if (r && n === ivPedido) console.log("__PGIV__" + JSON.stringify(r)); } catch (x) {}
         }
     };
 
@@ -5657,14 +5691,16 @@
                 if (alvo.childElementCount > 6) return; // container grande: nem le o texto (custa caro no mousemove)
                 const tx = (alvo.textContent || '').trim();
                 if (!tx || tx.length > 140) return;
-                const m = tx.match(/^(.{2,40}?)\s*\u00b7\s*(?:Nv|Lv)\s*(\d+)\s*\u00b7\s*IV\s*(\d+)\s*\u00b7\s*Q\s*([\d.,]+)/i);
+                // build de 02/10: "◀PikachuNv.50 · IV 120 · Q 1.40" (deposito) e "PikachuNv.50 · IV 120 · Q 1.40▶" (sua caixa),
+                // sem "·" antes do Nv; o formato antigo "Pikachu · Nv 50 · IV 120 · Q 1.40" continua valendo
+                const m = tx.match(/^[\u25c0\s]*(.{2,40}?)\s*(?:\u00b7\s*)?(?:Nv|Lv)\.?\s*(\d+)\s*\u00b7\s*IV\s*(\d+)\s*\u00b7\s*Q\s*([\d.,]+)/i);
                 if (!m) return;
-                const texto = m[1].trim() + '\nNv ' + m[2] + '\nIV ' + m[3] + '/192\nQualidade \u00d7' + m[4].replace(',', '.') + '\nPoder 0';
+                const texto = m[1].replace(/\u25b6\s*$/, '').trim() + '\nNv ' + m[2] + '\nIV ' + m[3] + '/192\nQualidade \u00d7' + m[4].replace(',', '.') + '\nPoder 0';
                 processarTooltip({ innerText: texto });
             } catch (x) {}
         }, true);
     }
-    carregarCreatures();
+    creaturesCarregando = carregarCreatures();
     criarPainel();
     observarTooltips();
     iniciarEscutasEventos();

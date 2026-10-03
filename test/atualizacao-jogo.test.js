@@ -120,7 +120,7 @@ console.log('\n--- pokebolas infinitas, vinculadas e com validade (lancamento de
   ok(comum.al.saldo === -300, 'o que o coletor somou entra no saldo: 300 de bola = saldo -300 (' + comum.al.saldo + ')');
   ok(!s.includes('ballPrice'), 'ballPrice sumiu do app (READ_ALERTS e READ_STATE nao recalculam mais o custo)');
   ok(s.includes("sBalls = g.items.some(x => x.inf) ? Math.max(g.total, 999999) : g.total"), 'Simples/Painel: bola infinita valida vira ilimitada (antes 1 no estoque disparava "poucas pokebolas" ali, mesmo com o READ_ALERTS ja tratando)');
-  ok(s.includes("ballMap[x.id.slice(1)] = x.inf ? '∞' : x.qty") && s.includes("(qty === '∞' ? qty : nf(qty))"), 'itens fixados leem a mochila tratada: vencida some, infinita mostra ∞');
+  ok(s.includes("ballMap[x.id.slice(1)] = x.inf ? '∞' : x.qty") && s.includes("(qty === '∞' || +qty >= 999999 ? '∞' : nf(qty))"), 'itens fixados leem a mochila tratada: vencida some, infinita mostra ∞');
   const zero = roda({ catalog, counts: { 1: 0 }, expires: {} });
   ok(zero.al.hasBalls === true && zero.al.balls === 0, 'sem bola de verdade continua 0 (o alerta de "sem pokebola" segue funcionando)');
 }

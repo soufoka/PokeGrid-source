@@ -290,6 +290,13 @@ console.log('\n--- VOLTA com a tela na cidade: o socket reconecta ---');
   }
 }
 
+console.log('\n--- VOLTA reconhece as cidades do jogo (goldenrod, shopping, ginasios) ---');
+{
+  const VOLTA_JS = new Function(linha('const VOLTA_JS = ') + '\nreturn VOLTA_JS;')();
+  ['goldenrod', 'shopping', 'gym_pewter', 'cerulean'].forEach((sl) => { const m = mundo(); ok(m.run(VOLTA_JS(sl)) === 'cidade', sl + ': e cidade, o VOLTA nao manda enter-hunt'); });
+  const m = mundo(); ok(m.run(VOLTA_JS('rota_x')) === 'armado', 'hunt de verdade continua armando');
+}
+
 console.log('\n--- ligacao no vigia e no dom-ready ---');
 {
   const vig = corta('  setInterval(() => {\n    webviews.forEach((w, i) => {', '  }, 6000);');

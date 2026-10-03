@@ -348,16 +348,24 @@ const HIST = () => new Function('lsObj', 'lsSet', 'lsGet', corta('  let histDay 
     ok(r && r[5] === 5 && r[7] === 4 && !(8 in r) && !(9 in r), 'depot com id soma (e itemId continua valendo): ' + JSON.stringify(r));
   }
 
-  console.log('\n--- S.hp guarda so o time (ia inteiro no READ_ALERTS a cada 6 s) ---');
+  console.log('\n--- patch de 02/10: o aviso de desmaio e o time inteiro derrotado (field.fainted), nao cada Pokemon ---');
   {
     const m = mundo();
-    m.msg({ type: 'pokes', list: [{ id: 1, team: true, hp: 50 }, { id: 2, team: false, hp: 10 }, { id: 3, team: true, hp: 40 }] });
-    for (let n = 0; n < 300; n++) m.msg({ type: 'poke-delta', poke: { id: 1000 + n, team: false, hp: 20 } });
-    m.msg({ type: 'poke-delta', poke: { id: 1, team: true, hp: 0 } });
-    const S = m.P().sess;
-    ok(Object.keys(S.hp).length === 2 && S.faintN === 1, 'hp so do time (' + Object.keys(S.hp).length + ' chaves) e o desmaio continua contando (' + S.faintN + ')');
-    m.msg({ type: 'poke-delta', poke: { id: 3, team: false, hp: 40 } });
-    ok(!(3 in m.P().sess.hp), 'saiu do time: sai do hp');
+    m.msg({ type: 'pokes', list: [{ id: 1, team: true, hp: 50 }, { id: 2, team: true, hp: 40 }, { id: 3, team: false, hp: 10 }] });
+    m.msg({ type: 'field-init', slug: 'rota_x' });
+    m.msg({ type: 'poke-delta', poke: { id: 1, team: true, hp: 0 } }); // o lider caiu e o proximo entrou sozinho
+    m.msg({ type: 'field', mobs: [], hits: [], fainted: false });
+    ok(m.run(READ_ALERTS).faintN === 0, 'um Pokemon caiu e o proximo entrou: o farm segue, sem aviso (' + m.run(READ_ALERTS).faintN + ')');
+    m.msg({ type: 'poke-delta', poke: { id: 2, team: true, hp: 0 } });
+    m.msg({ type: 'field', mobs: [], hits: [], fainted: true, reviveInMs: 5000 });
+    m.msg({ type: 'field', mobs: [], hits: [], fainted: true, reviveInMs: 4000 });
+    ok(m.run(READ_ALERTS).faintN === 1, 'o time inteiro caiu (field.fainted): conta uma vez so, mesmo com varios field seguidos (' + m.run(READ_ALERTS).faintN + ')');
+    m.msg({ type: 'field-teleport-city' });
+    m.msg({ type: 'field-init', slug: 'rota_x' });
+    m.msg({ type: 'field', mobs: [], hits: [], fainted: false });
+    m.msg({ type: 'field', mobs: [], hits: [], fainted: true });
+    ok(m.run(READ_ALERTS).faintN === 2, 'curou, voltou e caiu de novo: conta a segunda derrota (' + m.run(READ_ALERTS).faintN + ')');
+    ok(!('hp' in m.P().sess) || !Object.keys(m.P().sess.hp || {}).length, 'o coletor nao guarda mais o hp de cada Pokemon');
   }
 
   console.log('\n--- Zerar: 1 kill no primeiro segundo nao vira milhoes por hora ---');
@@ -390,7 +398,7 @@ const HIST = () => new Function('lsObj', 'lsSet', 'lsGet', corta('  let histDay 
     const wv = { executeJavaScript: (c) => { ordem.push(c === 'RESET' ? 'reset' : 'outro'); return Promise.resolve(); } };
     const stCache = { 0: { t: Date.now(), d: { ok: true, a: { gph: 999 } } }, 1: { t: Date.now(), d: { ok: true } } };
     let lida = null, forca = null;
-    const env = { window: { confirm: () => true }, t: (k) => k, webviews: [wv, wv], off: [false, false], RESET_SESS: 'RESET', stCache, dhist: [1], utBase: [1], sessSnap: [1], cardsOn: true,
+    const env = { window: { confirm: () => true }, t: (k) => k, webviews: [wv, wv], off: [false, false], RESET_SESS: 'RESET', stCache, dhist: [1], utBase: [1], sessSnap: [1], bestVisto: [], cardsOn: true,
       refreshStats: () => {}, refreshCards: (f) => { forca = f; lida = Object.keys(stCache).map((k) => Date.now() - stCache[k].t >= 30000); ordem.push('redesenho'); } };
     const rs = new Function(...Object.keys(env), src.replace('dhist = []', 'dhist.length = 0') + '\nreturn resetSessao;')(...Object.values(env));
     await rs();
@@ -400,6 +408,50 @@ const HIST = () => new Function('lsObj', 'lsSet', 'lsGet', corta('  let histDay 
     const rs2 = new Function(...Object.keys(env), src.replace('dhist = []', 'dhist.length = 0') + '\nreturn resetSessao;')(...Object.values(Object.assign({}, env, { webviews: [trava], off: [false], refreshCards: () => { red++; } })));
     const t0 = Date.now(); await rs2();
     ok(red === 1 && Date.now() - t0 < 3000, 'painel travado nao segura o redesenho (espera no maximo 2 s)');
+  }
+
+  console.log('\n--- patch de 02/10: lista de pokemon em partes (pokes-chunk, socket v=2) ---');
+  {
+    const m = mundo();
+    const pk = (id, extra) => Object.assign({ id, name: 'P' + id, level: 50, team: false, quality: '1.0', ivTotal: 100 }, extra || {});
+    m.msg({ type: 'pokes-chunk', gen: 7, seq: 2, total: 3, list: [pk(5), pk(6)] });
+    m.msg({ type: 'pokes-chunk', gen: 7, seq: 0, total: 3, list: [pk(1, { team: true, leader: true, name: 'Scizor' }), pk(2)] });
+    ok(!m.P().ws.pokes, 'faltando parte: ainda nao vira lista');
+    m.msg({ type: 'pokes-chunk', gen: 7, seq: 1, total: 3, list: [pk(3), pk(4)] });
+    const L = (m.P().ws.pokes || {}).list || [];
+    ok(L.map((x) => x.id).join() === '1,2,3,4,5,6' && m.P().pokesBaselined === true, 'as 3 partes (fora de ordem) viram a lista inteira, na ordem, e servem de base das capturas (' + L.map((x) => x.id) + ')');
+    ok(m.run(READ_STATE).team.map((x) => x.name).join() === 'Scizor', 'o time volta a aparecer no Simples e no Resumo');
+    m.msg({ type: 'poke-delta', poke: pk(99, { name: 'Novo' }) });
+    ok(m.run(READ_ALERTS).catchLog.length === 1, 'e a captura seguinte conta (' + m.run(READ_ALERTS).catchLog.length + ')');
+    m.msg({ type: 'pokes-chunk', gen: 8, seq: 0, total: 2, list: [pk(1, { team: true })] });
+    m.msg({ type: 'pokes-chunk', gen: 9, seq: 0, total: 1, list: [pk(7, { team: true })] });
+    ok(m.P().ws.pokes.list.map((x) => x.id).join() === '7', 'geracao nova descarta as partes da anterior (' + m.P().ws.pokes.list.map((x) => x.id) + ')');
+  }
+
+  console.log('\n--- patch de 02/10: potion infinita e item vencido no inventario ---');
+  {
+    const items = { items: [{ id: 90130, name: 'Golden Ultimate Potion', category: 'heal', npcPrice: 0 }, { id: 200, name: 'Small Potion', category: 'heal', npcPrice: 10, priceGold: 10 }, { id: 201, name: 'Great Potion', category: 'heal', npcPrice: 30 }, { id: 205, name: 'Revive', category: 'revive', npcPrice: 40 }] };
+    const m = mundo({ '/game/items.json': items }); await m.busca('/game/items.json');
+    const agora = m.run('Date.now()'), fut = new Date(agora + 864e5 * 15).toISOString(), pas = new Date(agora - 1000).toISOString(); // relogio da pagina (o harness tem o dele)
+    m.msg({ type: 'inventory', items: [{ itemId: 200, quantity: 5 }, { itemId: 201, quantity: 9, expiresAt: pas }, { itemId: 205, quantity: 30 }] });
+    ok(m.run(READ_ALERTS).potions === 5, 'potion vencida nao conta: 5 e nao 14 (' + m.run(READ_ALERTS).potions + ')');
+    m.msg({ type: 'inventory', items: [{ itemId: 90130, quantity: 1, infinite: true, expiresAt: fut }, { itemId: 200, quantity: 5 }, { itemId: 205, quantity: 30 }] });
+    ok(m.run(READ_ALERTS).potions >= 999999, 'potion infinita (nao acaba) vale ilimitado: sem aviso falso de poucas potions (' + m.run(READ_ALERTS).potions + ')');
+    const d = m.run(READ_STATE);
+    const heal = d.bag.find((g) => g.label === 'Heal') || { items: [] };
+    ok(d.potions >= 999999 && heal.items.some((x) => /Golden Ultimate Potion ∞/.test(x.name)) && d.invMap[90130] >= 999999, 'Simples e itens fixados mostram a potion infinita como ∞');
+    m.msg({ type: 'inventory', items: [{ itemId: 90130, quantity: 1, infinite: true, expiresAt: fut }, { itemId: 200, quantity: 2 }, { itemId: 205, quantity: 0 }] });
+    const S = m.P().sess;
+    ok(S.supGold === 30 && S.supN === 3, 'gasto de suprimento: 3 potions (30); vender os 30 revives aposentados no Mark nao conta como gasto (' + S.supGold + ', ' + S.supN + ')');
+  }
+
+  console.log('\n--- patch de 02/10: userscripts fora do /trocar-senha e icone so com nome de arquivo ---');
+  {
+    const usNoLoginUrl = new Function(corta('  const usNoLoginUrl = (u) =>', '\n  const usNoLogin = ') + '\nreturn usNoLoginUrl;')();
+    ok(usNoLoginUrl('https://poke.idleworld.online/trocar-senha') && !usNoLoginUrl('https://poke.idleworld.online/play'), 'tela de trocar senha (fechamento 4009) nao recebe userscript; o jogo recebe');
+    const icSrc = new Function(corta('      const icSrc = (u) =>', ' // so o nome do arquivo') + '\nreturn icSrc;')();
+    ok(icSrc('air_tank.png') === 'https://poke.idleworld.online/assets/items/air_tank.png' && icSrc('/assets/items/x.png') === 'https://poke.idleworld.online/assets/items/x.png', 'icone so com o nome do arquivo vai pra /assets/items/, como no jogo');
+    ok(icSrc('../x.png') === '' && icSrc('javascript:alert(1)') === '' && icSrc('https://evil.com/x.png') === '', 'e nada fora disso vira imagem');
   }
 
   console.log('\n--- Resumo Σ: bola infinita aparece como ∞ ---');

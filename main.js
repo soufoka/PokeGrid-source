@@ -43,22 +43,25 @@ ipcMain.handle('errlog:open', () => {
 
 // Backups automaticos (config semanal e hunts que sairiam do limite de 150): grava em
 // userData/backups sem dialogo. Nome vem do renderer, entao e tratado como hostil: so o
-// basename, charset restrito, teto de 2MB, e no maximo 12 arquivos por prefixo.
+// basename, charset restrito, so .json e .csv (um .html gravado aqui abriria sem a CSP da
+// interface), teto de 2MB, e no maximo 12 arquivos por familia (prefixo + data ou numero).
 ipcMain.handle('backup:save', (_e, nome, conteudo, cabecalho) => {
   try {
     if (typeof nome !== 'string' || typeof conteudo !== 'string') return false;
     nome = path.basename(nome);
-    if (!/^[\w.-]{1,60}$/.test(nome) || conteudo.length + (typeof cabecalho === 'string' ? cabecalho.length : 0) > 2e6) return false;
+    if (!/^[\w.-]{1,60}$/.test(nome) || !/\.(json|csv)$/i.test(nome) || conteudo.length + (typeof cabecalho === 'string' ? cabecalho.length : 0) > 2e6) return false;
     const dir = path.join(app.getPath('userData'), 'backups');
     fs.mkdirSync(dir, { recursive: true });
     const alvo = path.join(dir, nome);
-    // anexar so faz sentido em log/csv; num .json anexado o arquivo deixa de ser JSON valido e o
+    // anexar so faz sentido no csv; num .json anexado o arquivo deixa de ser JSON valido e o
     // backup nao volta mais na hora que o usuario precisa
-    const anexavel = /\.(csv|log|txt)$/i.test(nome);
+    const anexavel = /\.csv$/i.test(nome);
     if (anexavel && fs.existsSync(alvo)) fs.appendFileSync(alvo, conteudo);
     else fs.writeFileSync(alvo, (typeof cabecalho === 'string' ? cabecalho : '') + conteudo);
+    // irmaos = mesma familia: prefixo + so data/numero + extensao. Nome so de digitos ('0.json', prefixo vazio) ou de
+    // prefixo curto ('h1.json') pegava a pasta inteira, e 12 arquivos de enchimento apagavam o historico de hunts e os config
     const prefixo = nome.replace(/[\d-]+\.\w+$/, '');
-    const irmaos = fs.readdirSync(dir).filter((f) => f.startsWith(prefixo)).sort();
+    const irmaos = prefixo ? fs.readdirSync(dir).filter((f) => f.startsWith(prefixo) && /^[\d-]+\.\w+$/.test(f.slice(prefixo.length))).sort() : [];
     while (irmaos.length > 12) { try { fs.unlinkSync(path.join(dir, irmaos.shift())); } catch { break; } }
     return true;
   } catch (e) { try { logErro('backup', String(e && e.message).slice(0, 200)); } catch {} return false; }
@@ -211,11 +214,15 @@ app.on('web-contents-created', (_e, contents) => {
   };
   contents.on('will-navigate', guarda);
   contents.on('will-redirect', guarda);
-  // watchdog: se o processo do painel morrer (crash/OOM), recarrega sozinho
+  // watchdog: se o processo do painel morrer (crash/OOM), recarrega sozinho. Recuo crescente (1,5 s, 3 s, 6 s... ate 1 min):
+  // painel que cai de novo antes de terminar de carregar nao fica recarregando a cada 1,5 s pra sempre. Carregou, zera.
+  let quedas = 0;
+  contents.on('did-finish-load', () => { quedas = 0; });
   contents.on('render-process-gone', (_ev, d) => {
     if (d.reason !== 'clean-exit') {
-      logErro('painel', 'processo do painel caiu: ' + d.reason + (d.exitCode != null ? ' (exit ' + d.exitCode + ')' : ''));
-      setTimeout(() => { try { contents.reload(); } catch {} }, 1500);
+      const espera = Math.min(1500 * 2 ** quedas++, 60000);
+      logErro('painel', 'processo do painel caiu: ' + d.reason + (d.exitCode != null ? ' (exit ' + d.exitCode + ')' : '') + ', recarrega em ' + espera / 1000 + ' s');
+      setTimeout(() => { try { contents.reload(); } catch {} }, espera);
     }
   });
   // travou (processo vivo mas sem responder): 20s de tolerancia; se nao voltar,
@@ -374,8 +381,17 @@ app.whenReady().then(() => {
   // Nega pedidos de permissao dos jogos (mic, camera, localizacao, notificacao...). So a escrita no clipboard passa:
   // sem ela os botoes Copiar do jogo (Recovery Key, codigos 2FA, Pix, link de indicacao) falhavam calados. O Chromium
   // ja exige foco e gesto do usuario pra essa escrita, e a leitura (clipboard-read) segue negada.
+  const soClipboard = (_wc, p, cb) => cb(p === 'clipboard-sanitized-write');
   for (let i = 1; i <= 4; i++)
-    try { session.fromPartition('persist:conta' + i).setPermissionRequestHandler((_wc, p, cb) => cb(p === 'clipboard-sanitized-write')); } catch (e) { logErro('boot', 'sessao conta' + i + ': ' + e.message); }
+    try {
+      const ses = session.fromPartition('persist:conta' + i);
+      ses.setPermissionRequestHandler(soClipboard);
+      // Checagem sem pedido: o padrao responde "concedido", e o jogo e os userscripts liam os nomes do microfone, da
+      // camera e do alto-falante (enumerateDevices). Nega so essas duas; o resto segue o padrao.
+      ses.setPermissionCheckHandler((_wc, p) => p !== 'media' && p !== 'speaker-selection');
+    } catch (e) { logErro('boot', 'sessao conta' + i + ': ' + e.message); }
+  // A janela principal (onde ficam as senhas) tambem: sem isto a sessao padrao concedia tudo. O botao de copiar o link usa o clipboard.
+  try { session.defaultSession.setPermissionRequestHandler(soClipboard); } catch (e) { logErro('boot', 'sessao padrao: ' + e.message); }
 
   const win = new BrowserWindow({
     width: 1600,
@@ -386,22 +402,40 @@ app.whenReady().then(() => {
     webPreferences: { webviewTag: true, preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false }
   });
   win.loadFile(path.join(__dirname, 'index.html')); // caminho absoluto: robusto no build empacotado (asar)
-  // a janela principal so mostra index.html: bloqueia qualquer navegacao dela (canal de exfiltracao se houver XSS)
-  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('file://')) { e.preventDefault(); abreFora(url); } });
-  win.webContents.setWindowOpenHandler(({ url }) => { abreFora(url); return { action: 'deny' }; });
+  // A janela principal (que le as senhas) so mostra o index.html e nao navega pra lugar nenhum, nem file:// (um .html
+  // gravado no disco ou arrastado pra janela abria sem a CSP e com o pokeAPI). Passa so a recarga da propria pagina:
+  // o importar backup termina em location.reload(), que no Electron 43 tambem dispara will-navigate. Pro navegador de
+  // fora vao so os links fixos da interface; antes ia qualquer URL, e um XSS mandava as senhas na query de um link.
+  const LINKS = new Set(['https://github.com/soufoka/PokeGrid-source', 'https://github.com/soufoka/PokeGrid-source/blob/main/FAQ.md',
+    'https://github.com/soufoka/PokeGrid-source/blob/main/MANUAL.md', 'https://link.mercadopago.com.br/pokegrid',
+    'https://github.com/soufoka/PokeGrid/releases/latest']); // selo de versao nova no instalador/portatil
+  const linkFixo = (url) => { if (LINKS.has(url)) abreFora(url); };
+  win.webContents.on('will-navigate', (e, url) => { if (url !== win.webContents.getURL()) { e.preventDefault(); linkFixo(url); } });
+  win.webContents.setWindowOpenHandler(({ url }) => { linkFixo(url); return { action: 'deny' }; });
 
   // registra travamento/queda da propria interface no relatorio de erros
   win.webContents.on('unresponsive', () => logErro('janela', 'interface travou (sem responder)'));
   win.webContents.on('responsive', () => logErro('janela', 'interface voltou a responder'));
-  win.webContents.on('render-process-gone', (_e2, d) => { if (d.reason !== 'clean-exit') logErro('janela', 'interface caiu: ' + d.reason); });
+  // A interface caiu (falta de memoria, por exemplo): os 4 paineis morrem junto e nada voltava. Recarregar recria os
+  // paineis; no maximo 3 vezes por hora, pra uma interface que cai em loop nao ficar recarregando sem fim.
+  let quedasJanela = [];
+  win.webContents.on('render-process-gone', (_e2, d) => {
+    if (d.reason === 'clean-exit') return;
+    const agora = Date.now();
+    quedasJanela = quedasJanela.filter((t) => agora - t < 3600e3);
+    const volta = quedasJanela.length < 3;
+    if (volta) { quedasJanela.push(agora); setTimeout(() => { try { if (!win.isDestroyed()) win.webContents.reload(); } catch {} }, 1500); }
+    logErro('janela', 'interface caiu: ' + d.reason + (d.exitCode != null ? ' (exit ' + d.exitCode + ')' : '') + (volta ? ', recarregando' : ', ja recarregou 3 vezes na ultima hora: nao recarrega mais, feche e abra o app'));
+  });
   // Mostra a janela quando o conteudo esta pronto. Precisa do show() explicito: no Linux
   // varios gerenciadores de janela ignoram maximize() em janela ainda nao exibida, e o app
   // subia sem abrir nada. --hidden: nasce na bandeja, farmando.
   logErro('boot', 'janela criada');
   win.once('ready-to-show', gpuPronto); // a GPU entregou o primeiro quadro (dispara tambem com --hidden, janela escondida)
   if (!process.argv.includes('--hidden')) {
-    win.once('ready-to-show', () => { logErro('boot', 'conteudo pronto'); win.show(); win.maximize(); });
-    setTimeout(() => { if (!win.isDestroyed() && !win.isVisible()) { logErro('boot', 'rede de seguranca: mostrando a janela'); win.show(); win.maximize(); } }, 8000); // rede de seguranca se o evento nao vier
+    // rede de seguranca se o evento nao vier; se ele veio, ela sai de cena (senao reabria a janela que o usuario minimizou)
+    const rede = setTimeout(() => { if (!win.isDestroyed() && !win.isVisible()) { logErro('boot', 'rede de seguranca: mostrando a janela'); win.show(); win.maximize(); } }, 8000);
+    win.once('ready-to-show', () => { clearTimeout(rede); logErro('boot', 'conteudo pronto'); win.show(); win.maximize(); });
   }
 
   // Atalhos (funcionam mesmo com o jogo focado): Ctrl+1..4 expande painel, Ctrl+M mudo.
@@ -451,9 +485,11 @@ app.whenReady().then(() => {
         for (const name of ['online.idleworld.pokegrid', 'electron.app.PokeGrid'])
           try { app.setLoginItemSettings({ openAtLogin: false, name }); } catch (e) { logErro('boot', 'runkey ' + name + ': ' + e.message); }
         // 'electron.app.Electron' e o nome de qualquer app Electron sem marca: nao da pra apagar as cegas.
-        // Apaga so o que o proprio Electron casa com o NOSSO exe e que abria escondido (--hidden).
+        // Apaga so o que o proprio Electron casa com o NOSSO exe e que abria escondido (--hidden). O caminho vai entre
+        // aspas, como o Electron espera: sem elas "C:\Users\Joao Silva\..." virava "C:\Users\Joao" e casava com a entrada
+        // de OUTRO programa gravada sem aspas (que era apagada no lugar da nossa). O set com openAtLogin false apaga pelo nome.
         try {
-          for (const it of (app.getLoginItemSettings({ path: exeReal() }).launchItems || []))
+          for (const it of (app.getLoginItemSettings({ path: '"' + exeReal() + '"' }).launchItems || []))
             if (it && it.scope === 'user' && (it.args || []).includes('--hidden')) app.setLoginItemSettings({ openAtLogin: false, name: it.name });
         } catch (e) { logErro('boot', 'runkey itens: ' + e.message); }
         try { fs.writeFileSync(marca, '1'); } catch {}

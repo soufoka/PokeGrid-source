@@ -89,10 +89,11 @@ ok(b.includes("m.type==='field-init'){const sl=m.slug||'';P.fiT=Date.now();"), '
 ok(b.includes('recarregou farmando, volta pra hunt'), 'fica registrado no relatorio de erros quando age');
 
 console.log('\n--- interface ---');
-ok(s.includes('<button id="voltaHunt">'), 'botao no menu');
+ok(s.includes('<button id="voltaHunt" role="switch"'), 'botao no menu, como chave liga/desliga (redesign etapa A)');
 ok(b.includes('applySndShiny(); applyVoltaHunt(); applyAlerts();'), 'entra na cadeia de apply (texto e estado certos ao abrir e ao trocar idioma)');
-['voltaOn', 'voltaOff', 'voltaTitle'].forEach((k) => ok(s.split(k + ":'").length - 1 === 3, k + ' nos 3 idiomas'));
-ok(!/volta(On|Off|Title):'[^']*—/.test(s), 'sem travessao nos textos');
+// redesign etapa A: o rotulo e fixo ("↩ Voltar pra hunt") e o estado vai na chave, entao voltaOn/voltaOff viraram uma chave so
+['volta', 'voltaTitle'].forEach((k) => ok(s.split(k + ":'").length - 1 === 3, k + ' nos 3 idiomas'));
+ok(!/volta(Title)?:'[^']*—/.test(s), 'sem travessao nos textos');
 
 console.log(fail ? '\nFALHOU' : '\nTODOS PASSARAM');
 process.exit(fail);

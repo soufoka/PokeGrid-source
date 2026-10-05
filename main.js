@@ -303,12 +303,6 @@ ipcMain.handle('notify', (_e, title, body) => {
   try { if (Notification.isSupported()) new Notification({ title, body }).show(); } catch {}
 });
 
-// Le um preset de userscript da pasta presets/ (nome saneado, sem path traversal).
-ipcMain.handle('preset:read', (_e, name) => {
-  if (typeof name !== 'string' || !/^[\w.-]+\.js$/.test(name)) return '';
-  try { return fs.readFileSync(path.join(__dirname, 'presets', name), 'utf8'); } catch { return ''; }
-});
-
 // Anti-sono: impede o PC de dormir enquanto farma (a tela ainda pode desligar).
 let awakeId = null;
 ipcMain.handle('awake:set', (_e, on) => {

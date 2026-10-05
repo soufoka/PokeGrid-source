@@ -70,34 +70,43 @@ Electron (Chromium, o motor do Chrome). Cada conta roda numa sessão separada.
 ### Tenho um Shiny Ditto: onde caço e em que viro?
 **☰ Opções → ✨ Ditto** (logo abaixo da Tierlist). Escolha shiny ou comum, o nível do Ditto e o nível da conta (qualidade e IV são fixos no jogo, o app já usa os certos); **Meu Ditto…** preenche com o Ditto do seu time. **Por hunt** lista as hunts da melhor pra pior, cada uma com a forma certa pra ela; **Por tipo** mostra a melhor forma de cada elemento. Só entram formas que o jogo deixa o Ditto copiar (o shiny só vira espécie com forma shiny), sem TM, e com o debuff do jogo na conta.
 
+### O que quer dizer o aviso no topo de cada painel?
+Desde a 1.5.31 é o que a conta está fazendo, o mesmo status da coluna do 🍃 Simples. **Caçando** vem com a hunt e o tempo. **⚠ Parada há X min** aparece depois de 10 minutos sem kill numa conta que estava farmando: se o ↩ Voltar pra hunt estiver ligado, o app tenta destravar sozinho. **Na cidade** é a conta logada fora da hunt. **⚠ Potions p/ ~1h** (ou pokébolas) é a estimativa de quanto o suprimento dura no ritmo atual. **Time derrotado** quer dizer que a conta foi pro Centro Pokémon. **Erro ao carregar** e **Desconectada** trazem o botão **Recarregar**, que faz o mesmo que o ⟳ do painel. **Aguardando…** é o jogo ainda sem mandar os dados da conta.
+
 ### O app está pesado. Como deixo mais leve?
 Quase todo o peso vem dos jogos desenhando o mapa, um por conta aberta; os números, alertas e estatísticas do app gastam pouco. Do que mais alivia pro que menos:
 
 - 🍃 Simples (barra do topo, ou tecla C com o clique fora do jogo): esconde o jogo e mostra só os números. O jogo cai pra 1 quadro por segundo e o farm continua, porque roda no servidor. Ele começa desligado toda vez que o app abre (o login e o captcha precisam do jogo à vista), então ligue depois que as contas entrarem.
 - Minimizar ou mandar pra bandeja: desde a 1.5.27 os jogos entram sozinhos no mesmo modo leve do Simples enquanto a janela está escondida, e voltam ao normal quando você abre.
-- 🔢 Painéis (☰ Opções): cada painel é um jogo inteiro rodando. Clique no número de painéis que você quer, de 1 a 4. Pôr painéis só abre os novos, e tirar fecha os últimos da grade, então deixe as contas que você usa nos primeiros lugares do 👤 Treinadores. As contas que ficam na tela seguem farmando. O painel tirado fecha de verdade, e a senha dele continua salva.
-- ⚡ Eco (☰ Opções): segura cada jogo em 15 quadros por segundo. Já vem ligado; se o botão estiver como ⚡ Eco off, clique pra religar.
+- 🔢 Painéis (☰ Opções, grupo Tela): cada painel é um jogo inteiro rodando. Clique no número de painéis que você quer, de 1 a 4. Pôr painéis só abre os novos, e tirar fecha os últimos da grade, então deixe as contas que você usa nos primeiros lugares do 👤 Treinadores. As contas que ficam na tela seguem farmando. O painel tirado fecha de verdade, e a senha dele continua salva.
+- ⚡ Modo Eco (☰ Opções, grupo Sistema): segura cada jogo em 15 quadros por segundo. Já vem ligado; se a chave estiver desligada, clique pra religar.
 - 📊 Painel: feche quando não estiver olhando, principalmente na aba Σ. Aberto, ele relê as contas a cada 2 segundos.
 
-Mudo, grade e proporção não deixam o app mais leve.
+Silenciar jogos, grade e proporção não deixam o app mais leve.
 
 ### E nas configurações do próprio jogo?
 Ajudam quando você deixa o jogo à vista (com o 🍃 Simples ligado quase não mudam nada, porque o jogo nem aparece). Em cada painel, no menu de ícones do jogo, clique no ícone **Configurações**, escolha **Configurações** de novo e fique na aba **Vídeo**:
 
 - Modo Leve: ⚡ Ligado. Meia resolução e cenário parado (os pokémon continuam animados). Já coloca o FPS em 30 e a renderização em Default.
 - Modo de batalha: 🃏 Cartas. Na hunt, troca o mapa com personagens andando por herói e inimigos sem animação; nas cidades o jogo continua em 3D.
-- Limite de FPS: 30, se você desligou o ⚡ Eco. Com o Eco ligado o app já segura em 15.
+- Limite de FPS: 30, se você desligou o ⚡ Modo Eco. Com ele ligado o app já segura em 15.
 
-Com o 🧼 Limpar jogo ligado, o menu de ícones só aparece quando o mouse passa por cima; se ele sumiu de vez, aperte F2 no painel. Cada painel guarda a própria configuração, então repita nas contas que você usa. O 🧹 do Treinadores apaga essa configuração junto com os outros dados do jogo.
+Com o 🧼 Limpar jogo ligado, o menu de ícones do jogo só aparece quando o mouse passa por cima. O F2 liga e desliga o Limpar jogo, até com o mouse dentro do jogo. Cada painel guarda a própria configuração, então repita nas contas que você usa. O 🧹 do Treinadores apaga essa configuração junto com os outros dados do jogo.
 
 ### O chat do jogo some quando eu abro
-O app esconde o chat do jogo por padrão, pra sobrar tela: o botão em **☰ Opções** aparece como **💬 Chat oculto**. Clique nele pra virar **💬 Chat visível** e o chat aparece em todos os painéis. Até a 1.5.26, abrir pelo botão 💬 Chat do próprio jogo não adiantava: o app fechava de novo na mesma hora. Desde a 1.5.27 esse botão abre o chat naquele painel, até você mexer no 💬 do app ou ligar o 🍃 Simples.
+O app esconde o chat do jogo por padrão, pra sobrar tela: a chave **💬 Esconder chat** (☰ Opções, grupo Tela) vem ligada. Desligue e o chat aparece em todos os painéis. Até a 1.5.26, abrir pelo botão 💬 Chat do próprio jogo não adiantava: o app fechava de novo na mesma hora. Desde a 1.5.27 esse botão abre o chat naquele painel, até você mexer na chave do app ou ligar o 🍃 Simples.
 
 ### Mudo um filtro e nada acontece / painel demora
 Bug corrigido na **1.5.11**: o painel segurava a atualização enquanto o foco ficava no seletor. Até a 1.5.26 o mesmo acontecia ao marcar um alerta ou uma opção do webhook na engrenagem do Simples. Fora isso, o Simples atualiza a cada 10s de propósito, pra pesar menos.
 
 ### Não consigo mudar a pokébola!
 É o "sabonete": o botão **🧼 Limpar jogo** esconde o Auto-Helper do jogo, que é onde fica o seletor de pokébola. Desde a 1.5.13 basta **passar o mouse** no canto onde ele fica que ele aparece; em versões antigas, desligue o 🧼 na barra do topo, troque a bola e ligue de novo.
+
+### A calculadora de IV sumiu dos Scripts
+Desde a 1.5.31 ela é do próprio app e não precisa ligar nada: clique em **IVs** na barra do topo e passe o mouse num pokémon em qualquer painel, ou clique num anúncio do Mercado. Quem tinha o script antigo ligado não precisa fazer nada. Se um IV aparece como faixa (12-13), é que no nível daquele pokémon mais de um IV dá o mesmo atributo.
+
+### O card de IV troca de pokémon enquanto eu comparo
+Clique no ⏸ no topo do card: ele trava no pokémon atual, e os próximos que você passar o mouse vão só pro **Histórico**. Pra ver vários lado a lado, fixe até 3 com o 📌 e abra a aba **Comparar**. A lista de golpes fica na aba **Golpes**.
 
 ### Como desabilito um script?
 **Opções → Scripts**, desmarque a caixinha. Desde a 1.5.11 isso recarrega as contas e o script para na hora. Antes: desmarque e clique em **⟳ Atualizar tudo**.

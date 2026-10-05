@@ -126,14 +126,15 @@ function painel(url, resposta) {
     const btns = [1, 2, 3, 4].map((n) => ({ dataset: { n: String(n) }, classList: { toggle: (c, f) => { if (c === 'on') { if (f) on.add(n); else on.delete(n); } } } }));
     const lbl = { textContent: '' };
     const row = { title: '', querySelectorAll: (q) => (q === 'button' ? btns : []), querySelector: (q) => (q === 'span' ? lbl : null) };
-    const I = { count: '🔢 Paineis', countTitle: 'Quantas contas' };
+    const I = { count: 'Paineis', countTitle: 'Quantas contas' };
+    // redesign C: o rotulo entra pelo rotulo() (icone do app + texto); aqui ele so anota o que recebeu
     const env = { document: { getElementById: (id) => (id === 'countRow' ? row : null) }, grid, webviews, off: [false, false, false, false], lastLogin: [0, 0, 0, 0], alertedBalls: [], criarPainel,
-      t: (k) => I[k] || k, lsSet() {}, ajustaProporcao() {}, setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {} };
+      t: (k) => I[k] || k, lsSet() {}, ajustaProporcao() {}, setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {}, rotulo: (el, ic, tx) => { el.ico = ic; el.textContent = tx; } };
     const nomes = Object.keys(env);
     const api = new Function(...nomes, 'let count = 4;' + entre("  const countRow = document.getElementById('countRow');", '\n  function toggleExpand') + '\nreturn { build, n: () => count };')(...nomes.map((k) => env[k]));
     const clica = (n) => { eventos.length = 0; btns[n - 1].onclick(); return eventos.join(','); };
     api.build();
-    ok(btns.every((b) => typeof b.onclick === 'function') && lbl.textContent === '🔢 Paineis' && row.title === 'Quantas contas' && [...on].join() === '4', 'o menu tem 1, 2, 3 e 4, com o rotulo, a dica traduzida e o 4 marcado');
+    ok(btns.every((b) => typeof b.onclick === 'function') && lbl.textContent === 'Paineis' && lbl.ico === 'numero' && row.title === 'Quantas contas' && [...on].join() === '4', 'o menu tem 1, 2, 3 e 4, com o rotulo (e o icone), a dica traduzida e o 4 marcado');
     let ev = clica(3);
     ok(api.n() === 3 && ev === 'fecha 4' && [...on].join() === '3', 'com 4 abertos, escolher 3 fecha so o painel 4 (' + ev + ')');
     ev = clica(2);
@@ -163,20 +164,6 @@ function painel(url, resposta) {
     grav.length = 0; botoes[2].onclick(); await vez();
     ok(grav.length === 0 && ws.every((w) => w.reloads === 1), 'clicar no idioma que ja esta: nada recarrega');
     ok(b.split("localStorage.setItem('poke_lang', ${JSON.stringify(lang)})").length - 1 === 2 && !b.includes("lang === 'pt' ? 'pt' : 'en'"), 'o dom-ready tambem grava o idioma do app sem trocar es por en (a escolha de Espanol nao e desfeita a cada carga)');
-  });
-
-  await secao('jogo em espanhol: a calculadora de IV do JustPokedex le a Calidad (MEDIA: calculava tudo com x1,00)', async () => {
-    const jp = fs.readFileSync(path.join(RAIZ, 'presets', 'justpokedex.js'), 'utf8').replace(/\r\n/g, '\n');
-    const pedaco = (a, fim) => { const i = jp.indexOf(a), j = jp.indexOf(fim, i + a.length); if (i < 0 || j < 0) throw new Error('nao achei no preset: ' + a); return jp.slice(i, j); };
-    const parsePokemon = new Function(pedaco('    const TYPE_SYSTEM = {', '\n    function typeBadgeHtml(') + pedaco('    function numero(texto) {', '\n    function limitar(') + pedaco('    function parsePokemon(texto) {', '\n    function escapeHtml(') + '\nreturn parsePokemon;')();
-    // tooltip do jogo em es (rotulos do pokeTooltip do bundle de 24/09: Nv, Calidad, IV, Vel, Poder; chip Activo)
-    const es = parsePokemon(['Scizor', 'Bicho', 'Acero', 'Activo', 'Nv 40', 'Calidad Legendaria ×1.70', 'IV 150/192', 'HP 812', 'Atk 540', 'Def 410', 'SpA 190', 'SpD 330', 'Vel 260', 'Poder 2310'].join('\n'));
-    ok(es && es.multiplicadorQualidade === 1.7 && es.qualidade === 'Legendaria ×1.70', 'qualidade lida do "Calidad": x' + (es && es.multiplicadorQualidade) + ' (antes null, e a conta usava x1,00)');
-    ok(es.nivel === 40 && es.ivAtual === 150 && es.ivMaximo === 192 && es.vel === 260 && es.poder === 2310, 'nivel, IV, velocidade e poder tambem');
-    ok(es.ativo === true && es.tipos.join() === 'Bicho,Acero', 'o chip Activo marca ativo e nao vira tipo, e os tipos em es sao lidos (' + es.tipos.join() + ')');
-    const pt = parsePokemon(['Scizor', 'Bug', 'Ativo', 'Nv 40', 'Qualidade Lendária ×1.70', 'IV 150/192', 'Poder 2310'].join('\n'));
-    ok(pt.multiplicadorQualidade === 1.7 && pt.ativo === true, 'em portugues continua igual');
-    ok(/\(\?:Raridade\|Rarity\|Rareza\)/.test(jp), 'o Mercado em es (rotulo "Rareza") tambem e lido');
   });
 
   await secao('Logar equipe nao tira do jogo quem ja esta farmando (baixa)', async () => {

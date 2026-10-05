@@ -12,7 +12,6 @@ contextBridge.exposeInMainWorld('pokeAPI', {
   onHotkey: (cb) => ipcRenderer.on('hotkey', (_e, k) => cb(k)),
   onJanela: (cb) => ipcRenderer.on('janela', (_e, v) => cb(!!v)), // janela visivel (true) ou minimizada/na bandeja (false)
   notify: (title, body) => ipcRenderer.invoke('notify', title, body),
-  readPreset: (name) => ipcRenderer.invoke('preset:read', name),
   logError: (origem, msg) => ipcRenderer.invoke('errlog:write', origem, msg),
   openErrorLog: () => ipcRenderer.invoke('errlog:open'),
   saveBackup: (nome, conteudo, cabecalho) => ipcRenderer.invoke('backup:save', nome, conteudo, cabecalho),

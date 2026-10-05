@@ -66,8 +66,8 @@ const tlMax = new Function('huntsCache', s.slice(s.indexOf('const tlMax ='), s.i
 ok(tlMax(null) === 3000 && tlMax(J.hunts) === lvMax && tlMax([{ level: 9000 }]) === 9000, 'tlMax: 3000 sem cache, e sobe se o jogo subir');
 
 console.log('\n--- rotulo de regiao ---');
-ok(s.includes("x2.ar === 'nightmare' ? '<b style=\"color:#ff6b6b;font-size:9px\">NIGHTMARE</b> '"), 'tierlist rotula NIGHTMARE');
-ok(s.includes("(x2.ar === 'nightmare' ? ' <b style=\"color:#ff6b6b;font-size:9px\">NIGHTMARE</b>' : '')"), 'lista de hunts do Simples rotula NIGHTMARE');
+ok(s.includes("x2.ar === 'nightmare' ? '<b style=\"color:#ff6b6b;font-size:11px\">NIGHTMARE</b> '"), 'tierlist rotula NIGHTMARE'); // 11px: piso de fonte do redesign (etapa A)
+ok(s.includes("(x2.ar === 'nightmare' ? ' <b style=\"color:#ff6b6b;font-size:11px\">NIGHTMARE</b>' : '')"), 'lista de hunts do Simples rotula NIGHTMARE');
 
 console.log('\n--- mochila: toda categoria do jogo tem rotulo ---');
 const LABELS = new Function(s.slice(s.indexOf('const LABELS = {'), s.indexOf(';', s.indexOf('const LABELS = {')) + 1) + '\nreturn LABELS;')();

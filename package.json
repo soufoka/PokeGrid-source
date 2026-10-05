@@ -1,12 +1,12 @@
 {
   "name": "pokegrid",
-  "version": "1.5.30",
+  "version": "1.5.31",
   "description": "Rode 4 contas de Poke Idle World ao mesmo tempo, em uma janela so / Run 4 Poke Idle World accounts at once, in a single window",
   "main": "main.js",
   "author": "soufoka",
   "scripts": {
     "start": "electron .",
-    "test": "node test/iv-math.test.js && node test/boot.test.js && node test/atualizacao-jogo.test.js && node test/volta-hunt.test.js && node test/destrava.test.js && node test/cacada-1521.test.js && node test/tierlist-ditto.test.js && node test/tierlist-gold.test.js && node test/eco-raf.test.js && node test/chat-jogo.test.js && node test/bughunt4-A.test.js && node test/bughunt4-B.test.js && node test/bughunt4-C.test.js && node test/bughunt4-D.test.js && node test/bughunt4-E.test.js && node test/boost-discord.test.js && node test/gpu-sandbox.test.js && node test/bh5-iv.test.js && node test/bh5-dados.test.js && node test/bh5-paineis.test.js && node test/bh5-telas.test.js && node test/processo-principal.test.js"
+    "test": "node test/iv-math.test.js && node test/boot.test.js && node test/atualizacao-jogo.test.js && node test/volta-hunt.test.js && node test/destrava.test.js && node test/cacada-1521.test.js && node test/tierlist-ditto.test.js && node test/tierlist-gold.test.js && node test/eco-raf.test.js && node test/chat-jogo.test.js && node test/bughunt4-A.test.js && node test/bughunt4-B.test.js && node test/bughunt4-C.test.js && node test/bughunt4-D.test.js && node test/bughunt4-E.test.js && node test/boost-discord.test.js && node test/gpu-sandbox.test.js && node test/iv-integrada.test.js && node test/iv-visual.test.js && node test/bh5-dados.test.js && node test/bh5-paineis.test.js && node test/bh5-telas.test.js && node test/redesign-a.test.js && node test/redesign-b.test.js && node test/redesign-c.test.js && node test/redesign-d.test.js && node test/processo-principal.test.js"
   },
   "keywords": [
     "electron",

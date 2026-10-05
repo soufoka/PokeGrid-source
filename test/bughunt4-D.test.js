@@ -112,7 +112,7 @@ const conta = (extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', level
     const hs2 = H.cardsEl.querySelector('#cdHuntSort'); hs2.value = 'sug'; await hs2.onchange(); await vez();
     const tc = H.tempo();
     ok(tc.n === 6 && Math.abs(tc.a - 3) < 0.05 && Math.abs(tc.b - 6) < 0.1, 'so o Simples em Sugerido: tempos ajustados pras medicoes (' + tc.a + ' s por golpe + ' + tc.b + ' s por kill, ' + tc.n + ' hunts; antes 2,1 + 3,1 ate abrir a tierlist)');
-    const m = /<span class="rn">([^<]+?) ?(?:<span style="color:#7d8590">Lv (\d+)<\/span>|<)(?:(?!class="cd-row)[^≈])*≈([\d.,]+) kills\/h/.exec(H.cardsEl.innerHTML);
+    const m = /<span class="rn">([^<]+?) ?(?:<span style="color:var\(--mut\)">Lv (\d+)<\/span>|<)(?:(?!class="cd-row)[^≈])*≈([\d.,]+) kills\/h/.exec(H.cardsEl.innerHTML); // redesign B: #7d8590 virou a variavel --mut
     const x = m && lista.find((x2) => x2.name === m[1] && (+x2.level || 0) === (+m[2] || 0));
     const sg = x && H.sugCalc({ sp: 'kabutops', level: 300, q: 1.3, ivt: 120, tlv: 300, cid: 'c1', mult: 1, tms: null }, x);
     ok(!!sg && m[3] === H.nf(Math.round(sg.kh)), 'o kills/h mostrado e o do modelo calibrado (' + (m ? m[1] + ' Lv' + m[2] + ': ' + m[3] + ' contra ' + (sg ? H.nf(Math.round(sg.kh)) : '?') : 'sem linha') + ')');
@@ -173,7 +173,7 @@ const conta = (extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', level
     for (let i = 0; i < 4; i++) H.stCache[i] = { t: Date.now(), d: conta({ team: [{ name: 'Scizor', level: 650, q: 1.5, ivt: 150, ld: true }] }) };
     H.cardsSet(true);
     await H.refreshCards(true);
-    const m = /title="[^"]*">([\d.]+)<\/span><span style="color:#8ab4ff" title="Lv(\d+)">→([\d.]+)</.exec(H.cardsEl.innerHTML);
+    const m = /title="[^"]*">([\d.]+)<\/span><span title="Lv(\d+)">→([\d.]+)</.exec(H.cardsEl.innerHTML); // redesign B: o poder ficou neutro (a projecao era azul #8ab4ff)
     const num = (x) => +String(x).replace(/\./g, '');
     ok(m && num(m[3]) >= num(m[1]) && m[2] === '650', 'Scizor Lv650 com a projecao no padrao (500): projeta no proprio nivel, nunca abaixo do poder atual (' + (m ? m[1] + ' →' + m[3] + ' Lv' + m[2] : 'sem numero') + ')');
   });

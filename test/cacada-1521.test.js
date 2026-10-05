@@ -56,22 +56,24 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
   }
 
   console.log('\n--- userscripts: instalar e mexer ---');
-  ok(b.includes("if (!String(code || '').trim() || !window.confirm(t('scTrust'))) return;"), 'arrastar arquivo pede a mesma confirmacao de confianca do link');
-  ok(b.includes("if (!nm || !code.trim() || !window.confirm(t('scTrust'))) return;"), 'colar codigo tambem');
-  ok(b.includes("if (e.dataTransfer.files.length > 1) { window.alert(t('scSoUser')); return; }"), 'soltar varios arquivos avisa em vez de ignorar o resto');
+  // redesign D: as perguntas e avisos sao o dialogo do app (pgConfirma/pgAviso), nao mais o confirm/alert do Windows. O
+  // caminho de cada um (confirmar e cancelar) roda de verdade no test/redesign-d; aqui fica a conferencia no texto
+  ok(b.includes("if (!String(code || '').trim() || !(await scConfia())) return;") && b.includes("if (!(await scConfia())) return;"), 'arrastar arquivo pede a mesma confirmacao de confianca do link');
+  ok(b.includes("if (!nm || !code.trim() || !(await scConfia())) return;"), 'colar codigo tambem');
+  ok(b.includes("if (e.dataTransfer.files.length > 1) { pgAviso(t('scSoUser')); return; }"), 'soltar varios arquivos avisa em vez de ignorar o resto');
   ok(b.includes('const ja = userScripts.find(x => x.url === r.url); if (ja) {'), 'o mesmo link de novo atualiza em vez de duplicar');
-  ok(b.includes("if (!chk.checked && !window.confirm(t('scReloadAviso'))) { chk.checked = true; return; }"), 'desligar script avisa que recarrega e larga as contas na cidade');
-  ok(b.includes("const rec = mudou && scriptsOn[id] && window.confirm(t('scReloadAviso'));"), 'atualizar tambem');
-  ok(b.includes("(scriptsOn[id] && !rec ? ' ' + t('scValeNoReload') : '')") && s.split("scValeNoReload:'").length - 1 === 3, 'recusou recarregar: o aviso diz que a versao nova so entra no proximo reload (3 idiomas)');
-  ok(b.includes("if (!window.confirm(t('scRemover') + (ativo ? ' ' + t('scReloadAviso') : ''))) return;"), 'remover pergunta sempre');
+  ok(b.includes("texto: t('scReloadAviso'), ok: t('dlgDesligar') }))) { chk.checked = true; return; }"), 'desligar script avisa que recarrega e larga as contas na cidade');
+  ok(b.includes("const rec = mudou && scriptsOn[id] && await pgConfirma({ titulo: t('scReloadT'), texto: t('scReloadAviso')"), 'atualizar tambem');
+  ok(b.includes("(scriptsOn[id] && !rec ? '\\n' + t('scValeNoReload') : '')") && s.split("scValeNoReload:'").length - 1 === 3, 'recusou recarregar: o aviso diz que a versao nova so entra no proximo reload (3 idiomas)');
+  ok(b.includes("texto: ativo ? t('scReloadAviso') : '', ok: t('dlgRemover'), perigo: true }))) return;"), 'remover pergunta sempre');
   ['scReloadAviso', 'scRemover'].forEach((k) => ok(s.split(k + ":'").length - 1 === 3, k + ' nos 3 idiomas'));
   {
     const src = entre(b, '  const saveScripts = ', '\n', false);
     const roda = (tamanho, lsOk) => {
       const gravou = []; let alertou = 0;
       const env = { userScripts: [{ id: 'u1', code: 'x'.repeat(tamanho) }], scriptsOn: { u1: true } };
-      const fn = new Function('env', 'lsSet', 'lsArr', 'window', 't', 'let userScripts = env.userScripts, scriptsOn = env.scriptsOn;\n' + src + '\nconst r = saveScripts(); return { r, userScripts };');
-      const out = fn(env, (k) => { gravou.push(k); return lsOk; }, () => [{ id: 'disco' }], { alert: () => alertou++ }, (k) => k);
+      const fn = new Function('env', 'lsSet', 'lsArr', 'pgAviso', 't', 'let userScripts = env.userScripts, scriptsOn = env.scriptsOn;\n' + src + '\nconst r = saveScripts(); return { r, userScripts };');
+      const out = fn(env, (k) => { gravou.push(k); return lsOk; }, () => [{ id: 'disco' }], () => alertou++, (k) => k); // redesign D: o aviso e o dialogo do app
       return { out, gravou, alertou };
     };
     const okk = roda(1000, true);
@@ -269,13 +271,12 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
   ok(b.includes("if ((huntsCache && Object.keys(movesByName).length && !semOuro) || Date.now() - huntsCacheT < 60e3) return;"), 'creatures.json falhou mas as hunts vieram: o catalogo continua sendo tentado (tierlist/Ditto nao ficam vazios ate reiniciar)');
   ok(b.includes('const semOuro = !!huntsCache && !huntsCache.some(x => +x.gk > 0) && huntsOuroTent < 5;'), 'items.json falhou (gold/h zerado): os precos tambem sao tentados de novo, ate 5 vezes');
   ok(b.includes("const BK_SKIP = ['userScripts', 'scriptsOn', 'webhook', 'curDay']"), 'curDay nao viaja no export/import (importado, mandaria o resumo do dia de outra pessoa pro Discord)');
-  ok(b.includes("if (okC || window.confirm(t('bkNoCopy'))) grava();") && s.split("bkNoCopy:'").length - 1 === 3, 'importar sem conseguir a copia de seguranca pergunta antes (3 idiomas)');
+  ok(b.includes("if (okC || await pgConfirma({ titulo: t('bkNoCopyT'), texto: t('bkNoCopy'), ok: t('dlgImportarMesmo'), perigo: true })) grava();") && s.split("bkNoCopy:'").length - 1 === 3, 'importar sem conseguir a copia de seguranca pergunta antes (3 idiomas)');
   ok(b.includes("lista.map(x => x.name + '@' + x.level).join('|')"), 'cache do Ditto: a lista inteira de hunts entra na chave (trocar uma do meio invalidava nada)');
   ok(b.includes("const discos = comTm ? tmDiscos(movesByName[sp]) : []") && b.includes("if (discos.length) soma = Math.max(...somas);"), 'aba Geral com TM: um disco por vez (o jogo so deixa 1 TM por pokemon), fica a melhor soma');
-  ok(b.includes('(x2.sug.tm ? \' <b style="color:#f2c665;font-size:9px">TM \' + esc(x2.sug.tm) + \'</b>\' : \'\')'), 'linha do Sugerido marca qual TM entrou (tipo e/ou AOE)');
+  ok(b.includes('(x2.sug.tm ? \' <b style="color:var(--gold);font-size:11px">TM \' + esc(x2.sug.tm) + \'</b>\' : \'\')'), 'linha do Sugerido marca qual TM entrou (tipo e/ou AOE)'); // redesign B: #f2c665 virou a variavel --gold
   ok(s.split('golpe extra em área a cada 10 s').length - 1 === 1 && s.includes('extra area hit every 10 s') && s.includes('golpe extra en área cada 10 s'), 'texto da caixinha com TM explica as duas classes (elemental em area a cada 10 s e AoE), 3 idiomas');
   ok(b.includes("(wv.getURL() || '').startsWith('https://poke.idleworld.online/play') && /^[a-z0-9_-]{1,60}$/i.test(snv.slug || '')"), 'Voltar pra hunt so arma na pagina do jogo (manutencao/namelock nao recebem enter-hunt)');
-  ok(b.includes("name: 'JustPokédex: Calculadora de IV'"), 'preset sem travessao');
   ok(b.includes("podadas.forEach(h => { h.drops = []; }); salvaHuntLog();"), 'drops esvaziados vao pro disco na hora (crash no meio nao reanexa)');
 
   console.log(fail ? '\nFALHOU' : '\nTODOS PASSARAM');

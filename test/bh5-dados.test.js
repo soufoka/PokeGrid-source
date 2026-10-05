@@ -142,7 +142,7 @@ function ML() {
     const src = corta('  async function resetSessao() {', '\n  statsEl.querySelector');
     const wv = { executeJavaScript: () => Promise.resolve() };
     const bestVisto = [{ cid: 'c1', b: { n: 'Scyther', iv: 180, q: 1.9 } }];
-    const env = { window: { confirm: () => true }, t: (k) => k, webviews: [wv], off: [false], RESET_SESS: 'RESET', stCache: {}, dhist: [], utBase: [], sessSnap: [], bestVisto, cardsOn: false, refreshStats: () => {}, refreshCards: () => {} };
+    const env = { pgConfirma: async () => true /* redesign D: o dialogo do app no lugar do window.confirm */, t: (k) => k, webviews: [wv], off: [false], RESET_SESS: 'RESET', stCache: {}, dhist: [], utBase: [], sessSnap: [], bestVisto, cardsOn: false, refreshStats: () => {}, refreshCards: () => {} };
     const rs = new Function(...Object.keys(env), src.replace('dhist = []', 'dhist.length = 0') + '\nreturn resetSessao;')(...Object.values(env));
     await rs();
     ok(bestVisto.length === 0, 'Zerar pelo 📊 Painel (Simples fechado): o Scyther da sessao antiga nao volta como Melhor catch (' + bestVisto.length + ')');

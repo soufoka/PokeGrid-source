@@ -11,10 +11,14 @@ Guia curto do que cada coisa faz. Se você só quer resolver um problema pontual
 | **⟳ Atualizar tudo** | Recarrega os painéis ligados, ignorando o cache (resolve tela de login velha presa) |
 | **📊 Painel** | A barra lateral com os números de uma conta por vez (detalhes abaixo) |
 | **🍃 Simples** | Esconde o jogo e mostra só os números das 4 contas. Gasta bem menos do PC |
-| **IV's** | Abre a calculadora de IV. Passe o mouse num pokémon dentro do jogo que ela preenche sozinha |
-| **☰ Opções** | Tudo o mais: Hunt, Tierlist, Ditto, Scripts, Alertas, Venda protegida, Eco, FAQ... |
+| **IVs** | Abre a calculadora de IV do app, sem ligar nada nos Scripts. Passe o mouse num pokémon em qualquer painel, ou clique num anúncio do Mercado, que ela preenche sozinha (detalhes abaixo) |
+| **☰ Opções** | Tudo o mais, em 5 grupos: Ferramentas (Hunt, Tierlist, Ditto, Scripts), Tela (painéis, grade, proporção, Limpar jogo, chat), Sistema (Modo Eco, PC acordado, bandeja, abrir com o Windows, idioma), Avisos e recuperação (Alertas, Venda protegida, Voltar pra hunt, som do shiny, silenciar) e Ajuda e dados (Manual, FAQ, exportar e importar config, Erros). Cada liga/desliga tem uma chave: verde é ligado |
 
-Atalhos de teclado (só quando o foco está no app, não dentro do jogo, e com nenhuma janela do app aberta): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Opções, **M** menu do jogo, **E** Eco, **A** Alertas.
+Atalhos de teclado (só quando o foco está no app, não dentro do jogo, e com nenhuma janela do app aberta): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Opções, **M** também Limpar jogo, **E** Eco, **A** Alertas. O **F2** liga e desliga o Limpar jogo até com o mouse dentro do jogo.
+
+## O topo de cada painel
+
+Ao lado do nome da conta fica o que ela está fazendo, o mesmo status da coluna do 🍃 Simples: **Caçando** (com a hunt e o tempo), **Na cidade**, **⚠ Parada há X min** (10 minutos sem kill), **Time derrotado**, **⚠ Potions p/ ~X h** ou **⚠ Pokébolas p/ ~X h**, **Erro ao carregar** e **Desconectada** (com o botão **Recarregar**), **Na tela de login**, **Aguardando…** e **Desligada**. Verde é farmando, âmbar pede atenção e vermelho parou. Depois vêm o zoom (− e +), o ⟳ que recarrega só aquele painel e o ⛶ que expande.
 
 ## 📊 Painel: a barra lateral
 
@@ -54,6 +58,26 @@ Como a nota é calculada: o dano do melhor golpe segue as regras do próprio jog
 Onde caçar com um Ditto e em que pokémon virar. Escolha **Shiny** ou **Comum**, o **nível do Ditto** e o **nível da conta** (só entram hunts até esse nível; 0 mostra todas). **Meu Ditto…** preenche com um Ditto que esteja no time de uma conta ligada. Qualidade e IV não se escolhem: no jogo eles são fixos e iguais pra todo Ditto (comum 1.4 e 89, shiny 2.0 e 119), e o app usa esses.
 
 **Por hunt** é o ranking das hunts, cada uma com a melhor transformação pra ela; **Por tipo** é a melhor forma de cada elemento e onde farmar com ela. A nota vai de 0 a 100 (100 = a melhor hunt da lista), com o golpe, a efetividade e a folga, como na tierlist. As regras são as do jogo: o Ditto não copia lendários, Mega, Nightmare, bosses de Orre nem Outland; o Shiny só vira espécie com forma shiny; nenhum usa TM. Os debuffs também entram na conta: Shiny Ditto -20% de Ataque e Sp. Atk (e -25% de HP e defesas, que não pesam no ranking), comum -25% de Ataque e defesas. A transformação do comum dura 12 h; a do shiny é permanente. Premissa do cálculo: o transformado usa as bases e os golpes da espécie copiada no nível do próprio Ditto.
+
+## IVs: a calculadora de IV
+
+É do próprio app e funciona sempre. Abra no botão **IVs** e passe o mouse num pokémon em qualquer painel (mochila, caixa e time, depósito, troca, link do chat) ou clique num anúncio do Mercado ou do Remote Mark. O card tem cinco abas, e a última que você usou é a que abre da próxima vez.
+
+No topo do card ficam o sprite do jogo com o selo de nível, os tipos e os selos de qualidade, IV total e poder.
+
+**Leitor** mostra o IV de cada atributo, o potencial e o poder. A barra de cada atributo tem a cor da nota do IV (dourado 28 ou mais, verde 22, azul 15, cinza abaixo), e o melhor e o pior atributo ficam destacados. O jogo não mostra o IV de cada atributo, só os atributos, o nível, a qualidade e o IV total. O card refaz a conta pela fórmula do jogo, com os atributos-base do catálogo do próprio jogo. Em nível baixo dois IV podem dar o mesmo atributo, e aí aparece a faixa (12-13); o IV total da tela fecha a conta quando dá. Mude o **Nível** no card pra ver o poder em outro nível; qualidade, atual e base também recalculam na hora. Ditto mostra só o IV total: no jogo o IV e a qualidade dele são fixos, e os atributos são os da forma copiada, com redução.
+
+**Análise** mostra o melhor e o pior atributo e, pra cada um, quanto falta de IV pra chegar no 32 e quanto isso daria de atributo no nível do card (em faixa quando o IV não é exato). Embaixo vem a efetividade de tipos com a regra da hunt, em que ×2 vira ×2,5, ×4 vira ×5,5 e as resistências dividem por 1,5 (×0,5 vira ×0,33; imunidade continua ×0): as fraquezas, resistências e imunidades do pokémon e contra quais tipos os golpes do tipo dele (STAB) batem forte, fraco ou não afetam.
+
+**Golpes** lista os golpes da espécie por nível, com os que o nível ainda não aprendeu apagados e os de disco marcados como TM. Quando o pokémon do card é o líder (⚔) do painel de onde ele veio e esse painel está numa hunt, aparecem em cima o golpe que ele está usando e o TM elemental, com os acertos e o dano médio em % da vida do selvagem, medidos pelo app. Enquanto não há medição, essa parte não aparece.
+
+**Comparar** põe o pokémon do card lado a lado com os fixados: nível, qualidade, IV total, poder e o IV e o atributo de cada stat, com a diferença em verde quando o fixado tem mais e em vermelho quando tem menos. Pra fixar, use o 📌 no topo do card (até 3; eles continuam fixados quando você fecha o app). O ✕ na coluna tira o fixado.
+
+**Histórico** guarda os últimos 20 pokémons lidos, de qualquer painel, com a cor da conta. Clique num pra abrir no card. **Limpar histórico** apaga a lista.
+
+O campo **🔍 Buscar espécie** sugere espécies do catálogo do jogo enquanto você digita (Enter abre a primeira). A espécie escolhida abre no card sem leitura: digite o nível, a qualidade e os atributos que o jogo mostra e o IV sai pela mesma conta. Antes disso o card já mostra as bases, os tipos, os golpes e a efetividade.
+
+O ⏸ no topo trava o card no pokémon atual: os próximos que você passar o mouse vão só pro histórico, e o cabeçalho mostra "travado" até você clicar de novo. **Copiar texto** copia um resumo pra colar no Discord (nome, nível, qualidade, tipos, IV total e por atributo, poder), e **Copiar JSON** copia os dados do card.
 
 ## Proteções
 

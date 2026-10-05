@@ -191,7 +191,7 @@ const conta = (gph, extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', 
     const H = monta();
     const cap = (n, iv, q) => ({ n, iv, q, sh: false, t: Date.now() });
     const pinta = async (cl, cid) => { H.stCache[0] = { t: Date.now(), d: conta(1000, { catchLog: cl, cid: cid || 'c1' }) }; await H.refreshCards(true); await H.refreshCards(true); return H.cardsEl.innerHTML; }; // a 1a passada do harness pode pintar so o aviso de espera
-    const mostra = (h, nome, iv) => h.includes(nome + '</span> <span style="color:#55e6d3">' + iv + '/192');
+    const mostra = (h, nome, iv) => h.includes(nome + '</span> <span style="color:var(--iv)">' + iv + '/192'); // redesign B: #55e6d3 virou a variavel --iv
     H.cardsSet(true);
     let h = await pinta([cap('Kabutops', 180, 1.7), cap('Scyther', 120, 1.1), cap('Paras', 90, 1.0)]);
     ok(mostra(h, 'Kabutops', 180), 'o melhor da lista aparece');

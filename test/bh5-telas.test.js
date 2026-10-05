@@ -71,7 +71,7 @@ function monta(opts = {}) {
   };
   const exporta = '\n;return { refreshCards, cardsSet: (v) => { cardsOn = v; }, stCache, get cardsEl() { return cardsEl; }, t, nf, nc, ncs, esc, aggCard, renderAggregate, renderStats, refreshStats, statsEl, setStatsIdx: (v) => { statsIdx = v; }, setStatsOpen: (v) => { statsOpen = v; },'
     + ' renderSettings, loadCatalog, get cfg() { return cfg; }, carregaHunts, get huntsCache() { return huntsCache; }, get movesByName() { return movesByName; }, renderTier, webviews, off, utBase, setHuntSort: (v) => { huntSort = v; }, get huntPkSel() { return huntPkSel; },'
-    + ' get huntStats() { return huntStats; }, setCardsCfgOpen: (v) => { cardsCfgOpen = v; }, cardsCfg, ivRender, setIv: (d, i) => { ivDados = d; ivFonte = i; ivAberto = true; }, atualizaScript, get userScripts() { return userScripts; }, stSane, I18N, calTexto };';
+    + ' get huntStats() { return huntStats; }, setCardsCfgOpen: (v) => { cardsCfgOpen = v; }, cardsCfg, ivRender, setIv: (d, i) => { ivAberto = true; ivRecebe(i, d); }, atualizaScript, get userScripts() { return userScripts; }, stSane, I18N, calTexto };';
   const fn = new Function('window', 'document', 'localStorage', 'navigator', 'location', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'innerWidth', 'innerHeight', 'addEventListener', 'getComputedStyle', 'AudioContext', 'MutationObserver', 'FileReader', 'fetch', 'performance', 'prompt', code + exporta);
   const noop = () => 0;
   const sT = (f, ms) => { tos.push({ f, ms }); if (ms === PRAZO) realST(() => { try { f(); } catch {} }, 5); return 1e6 + tos.length; };
@@ -108,6 +108,10 @@ const colunas = (h, i) => { const m = new RegExp('<tr data-i="' + i + '">([\\s\\
 const depois = (h, marca) => { const i = h.indexOf(marca); return i < 0 ? '' : h.slice(i); };
 // texto que o usuario le: sem tags e sem data-* (chave interna), com os title (tooltip)
 const texto = (h) => h.replace(/\sdata-[\w-]+="[^"]*"/g, '').replace(/title="([^"]*)"/g, '> $1 <').replace(/<[^>]*>/g, ' ');
+// redesign D: confirmacao e aviso sao o dialogo do app (pgConfirma/pgAviso), nao o confirm/alert do Windows. No DOM falso:
+// o dialogo aberto (titulo, texto sem as tags, botoes; null se fechado) e responder como o usuario, clicando no botao dele
+const dialogo = (H) => { const g = (id) => H.byId.get(id); return g('dlgOverlay') && g('dlgOverlay').classList.contains('show') ? { tit: g('dlgTit').textContent, txt: g('dlgTxt').innerHTML.replace(/<[^>]+>/g, ''), ok: g('dlgOk').textContent, aviso: !!g('dlgNo').hidden } : null; };
+const responde = (H, sim) => H.byId.get(sim ? 'dlgOk' : 'dlgNo').click();
 
 // HUNTS_JS real com a fixture: hunts, especies, golpes e precos
 let RCAT = null;
@@ -149,7 +153,7 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
       const via = i ? 'push' : 'leitura direta';
       ok(/^Scizor Lv300$/.test(c[1] || ''), 'conta ' + (i + 1) + ' (' + via + '): Pokemon mostra o lider "' + c[1] + '" (era "—")');
       ok(c[7] === '11', 'conta ' + (i + 1) + ': Capturas 11 do analyzer (' + c[7] + ')');
-      ok(/^Kabutops 180\/192 ×1\.70$/.test(c[9] || ''), 'conta ' + (i + 1) + ': Melhor catch "' + c[9] + '" (era "—")');
+      ok(/^Kabutops 180\/192 ×1,70$/.test(c[9] || '') /* redesign B: virgula em pt */, 'conta ' + (i + 1) + ': Melhor catch "' + c[9] + '" (era "—")');
       ok(/^Rattata \d\d:\d\d/.test(c[10] || ''), 'conta ' + (i + 1) + ': Ultimo catch "' + c[10] + '" (era "—")');
     }
   });
@@ -173,7 +177,8 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     h = H.statsEl.querySelector('.st-body').innerHTML;
     const card2 = (/<span class="acn">Treinador 2<\/span>[\s\S]*?<\/div><div class="ac2">([\s\S]*?)<\/div><\/div>/.exec(h) || [])[1] || '';
     ok(r3 === 'terminou' && ['Conta1', 'Conta3', 'Conta4'].every((n) => h.includes('<span class="acn">' + n + '</span>')), 'aba Σ: desenha os cartoes das outras contas (' + r3 + ')');
-    ok(card2.includes(H.t('statsWaiting')) && !card2.includes(H.t('statsOff')), 'e o painel parado aparece "' + H.t('statsWaiting') + '", nao desligado');
+    // redesign C: sem leitura, o cartao do Σ diz o estado da conta pelo statusConta (a mesma pilula da coluna Status do Simples)
+    ok(card2.includes('<span class="cd-st neutro">' + H.t('cdWaiting') + '</span>') && !card2.includes(H.t('statsOff')), 'e o painel parado aparece "' + H.t('cdWaiting') + '" como no Simples, nao desligado');
     ok(h.includes('>+855K</div><div class="kl">gold / h'), 'o total de gold/h e o das 3 que responderam (777.777 + 33.000 + 44.000)');
     H.setStatsIdx(1);
     const r4 = await corre(H.refreshStats(), 1500);
@@ -231,7 +236,7 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
       const rot = ['stShinyLife', 'stShinyLifeAll', 'acLife'].map((k) => H.t(k));
       ok(rot.every((x) => bola.test(x) && !/found|enc\.|encontrad|\bvida\b|lifetime|—/i.test(x)), '[' + lang + '] rotulos falam de bolas: ' + rot.join(' | '));
       H.renderStats(clone(d));
-      ok(H.statsEl.querySelector('.st-body').innerHTML.includes('<span class="l">' + rot[0] + '</span><span class="v" style="color:#f2c665">✨ 62</span>'), '[' + lang + '] Painel > Sessao: "' + rot[0] + '" = 62');
+      ok(H.statsEl.querySelector('.st-body').innerHTML.includes('<span class="l">' + rot[0] + '</span><span class="v" style="color:var(--gold)">✨ 62</span>' /* redesign B: --gold */), '[' + lang + '] Painel > Sessao: "' + rot[0] + '" = 62');
       ok(H.aggCard('#c07bf5', 'Ash', clone(d)).includes('✨62 ' + rot[2] + '</span>'), '[' + lang + '] Σ > cartao da conta: "✨62 ' + rot[2] + '"');
     }
   });
@@ -295,7 +300,7 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
   await secao('T7: hunt oculta (✕) sai do quadro do Ditto e da lista da hunt-alvo (baixa)', async () => {
     const R = await catalogo();
     const d = conta({ hunt: 'Bug Cave', team: [{ id: 'd1', name: 'Ditto', level: 300, q: 2, ivt: 119, dt: true, shiny: true, ld: true }] });
-    const quadro = (H) => [...depois(H.cardsEl.innerHTML, H.t('cdDittoH')).matchAll(/→ [^<]+ <span style="color:#7d8590">· ([^<]+?)(?: Lv\d+)?<\/span>/g)].map((m) => m[1]);
+    const quadro = (H) => [...depois(H.cardsEl.innerHTML, H.t('cdDittoH')).matchAll(/→ [^<]+ <span style="color:var\(--mut\)">· ([^<]+?)(?: Lv\d+)?<\/span>/g)].map((m) => m[1]);
     const abre = async (ls) => { const H = monta({ exec: rota(R), ls: Object.assign({ huntScope: 'todas' }, ls) }); await vez(); await carrega(H); H.stCache[0] = { t: Date.now(), d: clone(d) }; H.cardsSet(true); H.setHuntSort('sug'); await H.refreshCards(true); return H; };
     const H = await abre({});
     const alvo = quadro(H)[0];
@@ -313,7 +318,7 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     H.cardsSet(true);
     await H.refreshCards(true); await vezes(2); // 1a passada busca o depot de cada painel
     await H.refreshCards(true);
-    const item = (id) => { const h = depois(H.cardsEl.innerHTML, 'data-s="inv"'); const m = new RegExp('<div class="cd-row" title="([^"]*)"><span class="rn">#' + id + '</span><span style="color:#f2c665">([^<]*)<').exec(h); return m ? m[2] + ' [' + m[1] + ']' : null; };
+    const item = (id) => { const h = depois(H.cardsEl.innerHTML, 'data-s="inv"'); const m = new RegExp('<div class="cd-row" title="([^"]*)"><span class="rn">#' + id + '</span><span>([^<]*)<' /* redesign B: quantidade neutra */).exec(h); return m ? m[2] + ' [' + m[1] + ']' : null; };
     ok(item(201) === '100 [Ash (depot): 50 · Misty (depot): 50]', '4 paineis ligados, 2 logados: o depot dos que estao no login nao entra (' + item(201) + ')');
     H.off[1] = true; H.off[2] = true; H.off[3] = true; // desliga os paineis 2, 3 e 4
     await H.refreshCards(true);
@@ -329,7 +334,7 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     const selDe = (H) => (/<select id="cdHuntPk"[^>]*>([\s\S]*?)<\/select>/.exec(H.cardsEl.innerHTML) || [])[1] || '';
     const escolhido = (H) => (/<option value="[^"]*" selected>([^<]*)<\/option>/.exec(selDe(H)) || [])[1] || '(nenhum)';
     const valorDe = (H, nome) => (new RegExp('<option value="([^"]*)"[^>]*>[^<]*' + nome).exec(selDe(H)) || [])[1];
-    const golpe = (H) => (/<br><span style="font-size:10px;color:#8b949e">(?:⚔|🔮) (.+?)(?: <b| ×)/.exec(depois(H.cardsEl.innerHTML, 'id="cdHuntPk"')) || [])[1];
+    const golpe = (H) => (/<br><span style="font-size:11px;color:var\(--mut\)">(?:⚔|🔮) (.+?)(?: <b| ×)/.exec(depois(H.cardsEl.innerHTML, 'id="cdHuntPk"')) || [])[1]; // 11px: piso de fonte (redesign etapa A)
     const time = (H, team) => { H.stCache[0] = { t: Date.now(), d: conta({ hunt: 'Bug Cave', team: clone(team) }) }; return H.refreshCards(true); };
     const abre = async (ls) => { const H = monta({ exec: rota(R), ls: Object.assign({ huntScope: 'todas' }, ls) }); await vez(); await carrega(H); H.cardsSet(true); H.setHuntSort('sug'); return H; };
     const H = await abre({});
@@ -429,14 +434,16 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
       await S.refreshCards(true);
       const h = S.cardsEl.innerHTML;
       ok(sobra(lang, h).length === 0, '[' + lang + '] Simples sem texto em portugues' + (sobra(lang, h).length ? ' (sobrou ' + sobra(lang, h) + ')' : ''));
-      ok(h.includes('>' + W.bl + ' ~2h</span>'), '[' + lang + '] Status: estoque acabando "' + W.bl + ' ~2h"');
+      ok(new RegExp('<span class="cd-st av"[^>]*>⚠ ' + W.balls + (lang === 'en' ? ' for' : ' para') + ' ~2h</span>').test(h), '[' + lang + '] Status: estoque acabando "⚠ ' + W.balls + (lang === 'en' ? ' for' : ' para') + ' ~2h" (redesign B: antes "' + W.bl + ' ~2h" colado no "caçando")');
       ok(h.includes('Pikachu <b style="color:#b06cff">' + W.rare + '</b>'), '[' + lang + '] Capturas: "Pikachu ' + W.rare + '"');
       ok(h.includes('title="' + S.t('cdOrreTip').replace('{t}', +orre.tr || 0) + '">ORRE') && !/já com/.test(S.t('cdOrreTip')), '[' + lang + '] tooltip ORRE: "' + S.t('cdOrreTip').replace('{t}', +orre.tr || 0) + '"');
       ok(h.includes('<span>' + W.gd + ' · 2d</span>'), '[' + lang + '] Tendencia: "' + W.gd + ' · 2d"');
       // card de IV e botao Scripts
-      S.setIv({ nome: 'Scizor', qualidade: 1.55, ivTotal: 120, ivMax: 192, nivel: 80, percentual: 62.5 }, 0);
+      // o JSON do leitor do app (o mesmo que chega pelo console do painel): Scizor Nv 80 x1.55, stats da formula do jogo
+      S.setIv({ nome: 'Scizor', shiny: false, ditto: false, tipos: ['BUG', 'STEEL'], ativo: false, time: false, nivel: 80, qualidade: 1.55, ivTotal: 122, stats: { hp: 146, atk: 216, def: 159, spa: 85, spd: 154, vel: 101 }, poder: 1335, fonte: 'tooltip' }, 0);
       S.ivRender();
-      ok(S.byId.get('ivCard').innerHTML.includes('>' + W.epic + '</span> ×1.55'), '[' + lang + '] card de IV: "' + W.epic + ' ×1.55"');
+      const q155 = lang === 'en' ? '×1.55' : '×1,55'; // decimal no formato do idioma (redesign etapa A)
+      ok(S.byId.get('ivCard').innerHTML.includes('>' + W.epic + '</span> ' + q155), '[' + lang + '] card de IV: "' + W.epic + ' ' + q155 + '"');
       ok(S.byId.get('scriptsBtn').title === S.t('scBtnTitle') && !/painéis/.test(S.byId.get('scriptsBtn').title), '[' + lang + '] tooltip do botao Scripts: "' + S.byId.get('scriptsBtn').title + '"');
     }
     const P = monta(); await vez();
@@ -470,7 +477,7 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
       let erro = null; try { t1.f(); } catch (e) { erro = e.message; }
       const corpo = H.document.getElementById('tlBody').innerHTML, n = (corpo.match(/tl-row/g) || []).length;
       if (v === 'fire') ok(!erro && n > 5, 'tlEl "fire": ' + n + ' linhas');
-      else ok(!erro && corpo.includes('cd-empty') && !corpo.includes('⏳'), 'tlEl "' + v + '": abre vazio, sem quebrar (' + (erro || 'ok') + ')');
+      else ok(!erro && corpo.includes('cd-empty') && !corpo.includes('<svg'), 'tlEl "' + v + '": abre vazio, sem quebrar e sem ficar na ampulheta (' + (erro || 'ok') + ')'); // redesign C: o "carregando" e o icone da ampulheta
     }
   });
 
@@ -480,13 +487,17 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     const H = monta({ ls: { userScripts: JSON.stringify([{ id: 'u1', name: 'X', code: '// v1', url }]), scriptsOn: JSON.stringify({ u1: true }) }, api: { fetchUserScript: async () => ({ ok: true, url, code: novo }) } }); await vez();
     novo = '// ==UserScript==\n// @version 2\n// ==/UserScript==\n//' + 'x'.repeat(4.3 * 1024 * 1024);
     await H.atualizaScript('u1');
-    ok(H.alerts.length === 1 && H.alerts[0] === H.t('scGrande'), 'avisa so que nao coube (' + H.alerts.map((a) => String(a).slice(0, 40)).join(' | ') + ')');
-    ok(H.confirms.length === 0 && H.webviews.every((w) => !w.recarregou), 'nao pergunta se recarrega nem recarrega painel');
+    // redesign D: o aviso e o dialogo do app (o confirm/alert do Windows nao e mais chamado)
+    let d = dialogo(H);
+    ok(d && d.aviso && d.txt === H.t('scGrande'), 'avisa so que nao coube (' + (d ? d.txt.slice(0, 40) : 'nenhum dialogo') + ')');
+    responde(H, true);
+    ok(!dialogo(H) && H.confirms.length === 0 && H.alerts.length === 0 && H.webviews.every((w) => !w.recarregou), 'nao pergunta se recarrega nem recarrega painel');
     ok(H.userScripts[0].code === '// v1' && JSON.parse(H.store.get('userScripts'))[0].code === '// v1', 'o script continua o de antes, na memoria e no disco');
     novo = '// ==UserScript==\n// @version 2\n// ==/UserScript==\nconsole.log(2)';
-    H.alerts.length = 0; H.confirms.length = 0;
-    await H.atualizaScript('u1');
-    ok(H.alerts.length === 1 && H.alerts[0].startsWith(H.t('scAtualizado') + ' v2') && JSON.parse(H.store.get('userScripts'))[0].code === novo, 'atualizacao que cabe continua: "' + H.alerts[0] + '"');
+    const p = H.atualizaScript('u1'); await vezes(3);
+    responde(H, true); await p; // "Recarregar paineis" (o confirm antigo devolvia true)
+    d = dialogo(H);
+    ok(d && d.aviso && d.txt.startsWith(H.t('scAtualizado') + ' v2') && JSON.parse(H.store.get('userScripts'))[0].code === novo, 'atualizacao que cabe continua: "' + (d ? d.txt : 'nenhum dialogo') + '"');
   });
 
   await secao('SH13: selo de versao nova manda o instalador pros downloads do instalador e o codigo-fonte pro repositorio dele (baixa)', async () => {

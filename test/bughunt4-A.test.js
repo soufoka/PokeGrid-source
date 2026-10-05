@@ -398,7 +398,8 @@ const HIST = () => new Function('lsObj', 'lsSet', 'lsGet', corta('  let histDay 
     const wv = { executeJavaScript: (c) => { ordem.push(c === 'RESET' ? 'reset' : 'outro'); return Promise.resolve(); } };
     const stCache = { 0: { t: Date.now(), d: { ok: true, a: { gph: 999 } } }, 1: { t: Date.now(), d: { ok: true } } };
     let lida = null, forca = null;
-    const env = { window: { confirm: () => true }, t: (k) => k, webviews: [wv, wv], off: [false, false], RESET_SESS: 'RESET', stCache, dhist: [1], utBase: [1], sessSnap: [1], bestVisto: [], cardsOn: true,
+    // redesign D: a confirmacao e o dialogo do app (pgConfirma), nao mais o window.confirm; aqui o usuario confirma
+    const env = { pgConfirma: async () => true, t: (k) => k, webviews: [wv, wv], off: [false, false], RESET_SESS: 'RESET', stCache, dhist: [1], utBase: [1], sessSnap: [1], bestVisto: [], cardsOn: true,
       refreshStats: () => {}, refreshCards: (f) => { forca = f; lida = Object.keys(stCache).map((k) => Date.now() - stCache[k].t >= 30000); ordem.push('redesenho'); } };
     const rs = new Function(...Object.keys(env), src.replace('dhist = []', 'dhist.length = 0') + '\nreturn resetSessao;')(...Object.values(env));
     await rs();

@@ -315,7 +315,9 @@ const rotDe = (H, def) => (def[1] ? H.t(def[1]) : def[2]);
       'Scripts: titulo com a peca, Atualizar com o icone e o remover com a lixeira (' + diz(H, up) + ', ' + diz(H, del) + ')');
     H.byId('accounts').onclick();
     const row = (H.byId('accRows').children[0] || {}).innerHTML || '', b1 = (/<button class="acc-del"[^>]*>[\s\S]*?<\/button>/.exec(row) || [])[0] || '', b2 = (/<button class="acc-wipe"[^>]*>[\s\S]*?<\/button>/.exec(row) || [])[0] || '';
-    ok(confere(H, b1, 'lixeira', '') && b1.includes('aria-label="' + t('accClear') + '"') && confere(H, b2, 'vassoura', '') && b2.includes('aria-label="' + t('accWipe') + '"'), 'Treinadores: 🗑 e 🧹 viraram a lixeira e a vassoura, com aria-label');
+    ok(confere(H, b1, 'lixeira', '') && b1.includes('aria-label="' + t('accClear') + '"') && confere(H, b2, 'vassoura', t('accWipeBtn')) && b2.includes('title="' + t('accWipe') + '"') && row.indexOf('acc-wipe') < row.indexOf('acc-del'),
+      'Treinadores: o Limpar cache com a vassoura E o texto (so o icone ninguem achava e clicavam na lixeira), antes da lixeira, que segue so icone com aria-label');
+    ok(['pt', 'en', 'es'].every((k) => H.I18N[k].accWipeBtn && !/—/.test(H.I18N[k].accWipeBtn)) && !/accounts game/.test(H.I18N.en.accWipe), 'rotulo do Limpar cache nos 3 idiomas (' + ['pt', 'en', 'es'].map((k) => H.I18N[k].accWipeBtn).join(' | ') + ')');
     H.festaShiny({ n: 'Furious Scyther', sid: 10506, acc: 'RedFire', dot: '#c07bf5', iv: 152, q: 1.86, t: Date.now() });
     const sp = (H.byId('shinyParty').children[0] || {}).innerHTML || '', spx = (/<button class="sp-x"[^>]*>[\s\S]*?<\/button>/.exec(sp) || [])[0] || '';
     ok(confere(H, spx, 'fechar', '') && spx.includes('aria-label="' + t('spClose') + '"') && sp.includes('✨ ' + t('spTitle') + ' ✨'), 'aviso de shiny: o ✕ e o icone fechar (a festa de ✨ no titulo e conteudo e fica)');

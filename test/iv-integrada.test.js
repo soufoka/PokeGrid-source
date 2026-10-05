@@ -934,6 +934,17 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     }
   });
 
+  await secao('qualidade com 2 casas no tooltip: o card acha a de verdade e fecha o IV de cada atributo (Tyranitar Nv 149 x1,71)', async () => {
+    const H = await comCatalogo();
+    const tyr = { nome: 'Tyranitar', shiny: false, ditto: false, tipos: ['ROCK', 'DARK'], ativo: true, time: true, nivel: 149, qualidade: 1.71, ivTotal: 140,
+      stats: { hp: 386, atk: 452, def: 370, spa: 240, spd: 361, vel: 250 }, poder: 3513, fonte: 'tooltip' };
+    H.ivRecebe(0, tyr); H.ivRender();
+    const h = H.html(), ivs = [...h.matchAll(/<span class="iv-st-iv">([^<]*)<span>\/32<\/span><\/span>/g)].map((m) => m[1]);
+    ok(!h.includes(H.t('ivcNoFit')), 'sem o aviso de que os atributos nao fecham (com 1,71 exato so o SpA fechava)');
+    ok(ivs.slice(0, 6).join() === '28,32,26,5,29,20', 'IV de cada atributo exato: ' + ivs.slice(0, 6).join(' '));
+    ok(h.includes(H.nf(3513)) && !h.includes('≈' + H.nf(3528)), 'poder no nivel do card igual ao do jogo (3.513), nao o ≈3.528 da qualidade arredondada');
+  });
+
   console.log(fail ? '\nFALHOU' : '\nTUDO OK');
   process.exit(fail);
 })().catch((e) => { console.log('FAIL excecao no teste: ' + ((e && e.stack) || e)); process.exit(1); });

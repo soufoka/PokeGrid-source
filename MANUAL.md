@@ -7,7 +7,7 @@ Guia curto do que cada coisa faz. Se você só quer resolver um problema pontual
 | Botão | O que faz |
 |---|---|
 | **▶ Logar equipe** | Loga de uma vez, com as senhas salvas, as contas que estão fora do jogo. Conta que já está farmando não sai do jogo, a não ser que você tenha trocado o e-mail ou a senha dela no 👤 Treinadores |
-| **👤 Treinadores** | Cadastra e-mail e senha de cada conta. O 🗑 limpa o formulário; o 🧹 apaga os dados do jogo daquela conta (resolve conta bugada, a senha continua salva) |
+| **👤 Treinadores** | Cadastra e-mail e senha de cada conta. O **Limpar cache** de cada conta apaga os dados do jogo dela (resolve conta bugada, a senha continua salva); a lixeira só limpa os campos do formulário, e nada muda até você clicar em Salvar |
 | **⟳ Atualizar tudo** | Recarrega os painéis ligados, ignorando o cache (resolve tela de login velha presa) |
 | **📊 Painel** | A barra lateral com os números de uma conta por vez (detalhes abaixo) |
 | **🍃 Simples** | Esconde o jogo e mostra só os números das 4 contas. Gasta bem menos do PC |
@@ -65,7 +65,7 @@ Onde caçar com um Ditto e em que pokémon virar. Escolha **Shiny** ou **Comum**
 
 No topo do card ficam o sprite do jogo com o selo de nível, os tipos e os selos de qualidade, IV total e poder.
 
-**Leitor** mostra o IV de cada atributo, o potencial e o poder. A barra de cada atributo tem a cor da nota do IV (dourado 28 ou mais, verde 22, azul 15, cinza abaixo), e o melhor e o pior atributo ficam destacados. O jogo não mostra o IV de cada atributo, só os atributos, o nível, a qualidade e o IV total. O card refaz a conta pela fórmula do jogo, com os atributos-base do catálogo do próprio jogo. Em nível baixo dois IV podem dar o mesmo atributo, e aí aparece a faixa (12-13); o IV total da tela fecha a conta quando dá. Mude o **Nível** no card pra ver o poder em outro nível; qualidade, atual e base também recalculam na hora. Ditto mostra só o IV total: no jogo o IV e a qualidade dele são fixos, e os atributos são os da forma copiada, com redução.
+**Leitor** mostra o IV de cada atributo, o potencial e o poder. A barra de cada atributo tem a cor da nota do IV (dourado 28 ou mais, verde 22, azul 15, cinza abaixo), e o melhor e o pior atributo ficam destacados. O jogo não mostra o IV de cada atributo, só os atributos, o nível, a qualidade e o IV total. O card refaz a conta pela fórmula do jogo, com os atributos-base do catálogo do próprio jogo. Em nível baixo dois IV podem dar o mesmo atributo, e aí aparece a faixa (12-13); o IV total da tela fecha a conta quando dá. A qualidade que o jogo mostra vem arredondada em 2 casas: quando ela não fecha os atributos, o card acha a de verdade pelos próprios atributos e pelo Poder do jogo. Mude o **Nível** no card pra ver o poder em outro nível; qualidade, atual e base também recalculam na hora. Ditto mostra só o IV total: no jogo o IV e a qualidade dele são fixos, e os atributos são os da forma copiada, com redução.
 
 **Análise** mostra o melhor e o pior atributo e, pra cada um, quanto falta de IV pra chegar no 32 e quanto isso daria de atributo no nível do card (em faixa quando o IV não é exato). Embaixo vem a efetividade de tipos com a regra da hunt, em que ×2 vira ×2,5, ×4 vira ×5,5 e as resistências dividem por 1,5 (×0,5 vira ×0,33; imunidade continua ×0): as fraquezas, resistências e imunidades do pokémon e contra quais tipos os golpes do tipo dele (STAB) batem forte, fraco ou não afetam.
 

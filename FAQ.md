@@ -91,7 +91,7 @@ Ajudam quando você deixa o jogo à vista (com o 🍃 Simples ligado quase não 
 - Modo de batalha: 🃏 Cartas. Na hunt, troca o mapa com personagens andando por herói e inimigos sem animação; nas cidades o jogo continua em 3D.
 - Limite de FPS: 30, se você desligou o ⚡ Modo Eco. Com ele ligado o app já segura em 15.
 
-Com o 🧼 Limpar jogo ligado, o menu de ícones do jogo só aparece quando o mouse passa por cima. O F2 liga e desliga o Limpar jogo, até com o mouse dentro do jogo. Cada painel guarda a própria configuração, então repita nas contas que você usa. O 🧹 do Treinadores apaga essa configuração junto com os outros dados do jogo.
+Com o 🧼 Limpar jogo ligado, o menu de ícones do jogo só aparece quando o mouse passa por cima. O F2 liga e desliga o Limpar jogo, até com o mouse dentro do jogo. Cada painel guarda a própria configuração, então repita nas contas que você usa. O **Limpar cache** do Treinadores apaga essa configuração junto com os outros dados do jogo.
 
 ### O chat do jogo some quando eu abro
 O app esconde o chat do jogo por padrão, pra sobrar tela: a chave **💬 Esconder chat** (☰ Opções, grupo Tela) vem ligada. Desligue e o chat aparece em todos os painéis. Até a 1.5.26, abrir pelo botão 💬 Chat do próprio jogo não adiantava: o app fechava de novo na mesma hora. Desde a 1.5.27 esse botão abre o chat naquele painel, até você mexer na chave do app ou ligar o 🍃 Simples.

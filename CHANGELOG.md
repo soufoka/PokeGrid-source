@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.33
+
+- **Depósito cheio aparece.** Quando o Depósito e a Bolsa enchem, o jogo pausa o Auto-Catch e só avisa no auto-helper, que o 🧼 Limpar jogo deixa invisível: a conta seguia caçando sem capturar e o aviso passava batido. Agora esse aviso do jogo fica à vista mesmo com o Limpar jogo, e o topo do painel, o 🍃 Simples e a aba Σ mostram **⚠ Depósito cheio · captura pausada**. Venda ou solte Pokémon que as capturas voltam.
+  *Box full shows up: when the Box and Bag fill up, the game pauses Auto-Catch and only warns in the auto-helper, which Clean game keeps invisible, so the account kept hunting without catching and nobody noticed. The game's warning now stays visible even with Clean game on, and the panel header, the Simple view and the Σ tab show ⚠ Box full · catching paused. Sell or release Pokémon and catching resumes.*
+
 ## 1.5.32
 
 - **IV de cada atributo volta a fechar.** O jogo mostra a qualidade arredondada em 2 casas (×1,71 quando ela é 1,7062), e o card fazia a conta com o número arredondado: em muitos pokémon nenhum IV inteiro fechava os atributos, aparecia o aviso de que eles não fecham e todo atributo ficava em 1-32. Agora, quando a qualidade da tela não fecha, o card procura a de verdade dentro da meia casa do arredondamento, usando também o Poder que o jogo mostra, e acha o IV exato de cada atributo. O poder projetado em outro nível também passa a usar a qualidade de verdade.

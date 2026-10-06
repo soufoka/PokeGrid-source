@@ -375,6 +375,20 @@ const comCatalogo = async (ls) => { const R = await catalogo(); const H = monta(
   });
 
   Date.now = realNow;
+  await secao('deposito e bolsa cheios: cacando com o Auto-Catch pausado vira aviso no cabecalho; o Limpar jogo deixa o aviso do jogo a vista', async () => {
+    const alerta = {}; let H = null;
+    H = monta({ exec: lendo(() => H, alerta) }); await vezes(3);
+    const W = H.webviews, T = H.t;
+    W.forEach((w) => { w.emit('did-start-loading'); w.emit('did-stop-loading'); });
+    push(H, 0, conta({ cid: 'c0', hunt: 'Pinsir', ahCheio: true, a: { seconds: 3600, gph: 100000, xph: 1e6, kph: 500 } }));
+    push(H, 1, conta({ cid: 'c1', hunt: 'Pinsir', ahCheio: 'sim', a: { seconds: 3600, gph: 100000, xph: 1e6, kph: 500 } }));
+    const s0 = H.statusConta(0), s1 = H.statusConta(1);
+    ok(s0.cls === 'av' && s0.txt === T('stDepCheio') && s0.sub === T('stDepCheioSub'), 'deposito cheio: ambar "' + s0.txt + ' · ' + s0.sub + '"');
+    ok(s1.cls === 'ok', 'valor forjado (nao true) nao liga o aviso');
+    ok(['pt', 'en', 'es'].every((L) => H.I18N[L].stDepCheio && H.I18N[L].stDepCheioSub && !/—/.test(H.I18N[L].stDepCheio + H.I18N[L].stDepCheioSub)), 'texto nos 3 idiomas, sem travessao');
+    ok(/\.ah-panel\.pg-ah-cheio\{opacity:1 !important\}/.test(code), 'Limpar jogo: o auto-helper marcado como cheio fica a vista');
+  });
+
   console.log(fail ? '\nFALHOU' : '\nTODOS PASSARAM');
   process.exit(fail);
 })();

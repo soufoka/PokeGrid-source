@@ -518,6 +518,27 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     if (!mj.includes("'" + REL + "'")) console.log('AVISO o main.js so deixa a janela abrir os links do LINKS (will-navigate/setWindowOpenHandler) e ' + REL + ' nao esta la: ate entrar, o clique no selo do instalador nao abre nada');
   });
 
+  await secao('deposito e bolsa cheios: o READ_STATE ve o aviso do auto-helper, marca o painel e o Simples avisa', async () => {
+    const m = mundo({ '/api/characters/me': { character: { id: 9, name: 'Walter', level: 300, gold: 5000 } } });
+    await m.busca('/api/characters/me');
+    m.msg({ type: 'pokes', list: [{ id: 1, name: 'Pinsir', level: 300, team: true, slot: 0, leader: true }] });
+    m.msg({ type: 'field-init', slug: 'bug_cave' });
+    for (let k = 0; k < 20; k++) { m.tick(5000); m.msg({ type: 'field-kill', xpGained: 100, loot: [] }); }
+    // o auto-helper do jogo com os avisos dele (o de cheio e o unico com a contagem "(n/max)")
+    m.run("this.__ahw = ['⚠️ Depósito e Bolsa cheios (300/300). O Auto-Catch está pausado, venda ou solte Pokémon pra voltar a capturar.']; this.__ahp = { cls: new Set(), classList: { toggle(c, f) { f ? __ahp.cls.add(c) : __ahp.cls.delete(c); } }, querySelectorAll(q) { return q === '.ah-warn' ? __ahw.map((x) => ({ textContent: x })) : []; } }; this.document = { querySelector(q) { return q === '.ah-panel' ? __ahp : null; } };");
+    const d1 = m.run(READ_STATE), marcou = m.run("__ahp.cls.has('pg-ah-cheio')");
+    m.run("__ahw = ['⚠️ Escolha uma pokébola pra ativar.']");
+    const d2 = m.run(READ_STATE), desmarcou = !m.run("__ahp.cls.has('pg-ah-cheio')");
+    ok(d1.ahCheio === true && marcou && d2.ahCheio === false && desmarcou, 'cheio: o READ_STATE ve o aviso com a contagem e marca o painel (pg-ah-cheio); o "escolha uma pokebola" nao conta e a marca sai');
+    m.run("__ahw = ['⚠️ Depósito e Bolsa cheios (300/300).']");
+    const H = monta({ ls: { count: '1' } }); await vez();
+    H.stCache[0] = push(H, m);
+    H.cardsSet(true);
+    await H.refreshCards(true);
+    const c0 = colunas(H.cardsEl.innerHTML, 0) || [];
+    ok((c0[11] || '').includes(H.t('stDepCheio')), 'Simples: a coluna Status avisa "' + H.t('stDepCheio') + '" (' + (c0[11] || '?') + ')');
+  });
+
   Date.now = realNow;
   console.log(fail ? '\nFALHOU' : '\nTODOS PASSARAM');
   process.exit(fail);

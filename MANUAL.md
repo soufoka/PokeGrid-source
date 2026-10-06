@@ -18,7 +18,7 @@ Atalhos de teclado (só quando o foco está no app, não dentro do jogo, e com n
 
 ## O topo de cada painel
 
-Ao lado do nome da conta fica o que ela está fazendo, o mesmo status da coluna do 🍃 Simples: **Caçando** (com a hunt e o tempo), **Na cidade**, **⚠ Parada há X min** (10 minutos sem kill), **Time derrotado**, **⚠ Potions p/ ~X h** ou **⚠ Pokébolas p/ ~X h**, **Erro ao carregar** e **Desconectada** (com o botão **Recarregar**), **Na tela de login**, **Aguardando…** e **Desligada**. Verde é farmando, âmbar pede atenção e vermelho parou. Depois vêm o zoom (− e +), o ⟳ que recarrega só aquele painel e o ⛶ que expande.
+Ao lado do nome da conta fica o que ela está fazendo, o mesmo status da coluna do 🍃 Simples: **Caçando** (com a hunt e o tempo), **Na cidade**, **⚠ Parada há X min** (10 minutos sem kill), **Time derrotado**, **⚠ Potions p/ ~X h** ou **⚠ Pokébolas p/ ~X h**, **Erro ao carregar** e **Desconectada** (com o botão **Recarregar**), **⚠ Depósito cheio** (o jogo pausou o Auto-Catch: venda ou solte Pokémon), **Na tela de login**, **Aguardando…** e **Desligada**. Verde é farmando, âmbar pede atenção e vermelho parou. Depois vêm o zoom (− e +), o ⟳ que recarrega só aquele painel e o ⛶ que expande.
 
 ## 📊 Painel: a barra lateral
 

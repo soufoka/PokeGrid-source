@@ -38,7 +38,7 @@ O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gast
 - **Hunts**: o ranking. Ordene por **Sugerido** e escolha o atacante em **"caçar com"**. Golpe de TM só entra na conta se aquele pokémon aprendeu o disco. Com Ditto no time, aparece a melhor transformação por elemento, respeitando o que cada Ditto pode copiar (o Shiny só vira espécie com forma shiny) e sem TM, que Ditto não aprende
 - **Capturas / Shinies**: histórico com filtros por conta, IV, qualidade e período
 - **Times & IV**: o time de cada conta com IV, qualidade e poder, e o poder projetado no nível que você escolher (até 3000)
-- **Inventário**: soma a mochila **e o depósito** das 4 contas
+- **Inventário**: soma a mochila **e o depósito** das 4 contas. O ✕ de cada item tira ele da lista (fica salvo), e o **mostrar ocultos** embaixo traz os escondidos de volta, apagados, com o botão de voltar a mostrar
 - **Tendência**: gráficos de gold/h e XP/h, e de gold/dia dos últimos 30 dias
 
 ## 🏆 Tierlist (Opções, ou tecla G)

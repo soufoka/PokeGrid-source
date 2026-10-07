@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.35
+
+- **Ocultar item no Inventário global.** No 🍃 Simples, cada item do Inventário global ganhou um ✕ que tira ele da lista, como já dava pra fazer com as hunts no Ranking. A escolha fica salva; o **mostrar ocultos (N)** embaixo da lista mostra os escondidos apagados, com o botão de voltar a mostrar.
+  *Hide items in the Global inventory: in the Simple view, each item now has an ✕ that removes it from the list, like hunts in the Ranking. The choice is saved; "show hidden (N)" below the list shows them dimmed, with a button to show them again.*
+
 ## 1.5.34
 
 - **Calculadora de IV no Mercado.** O título do anúncio passou a vir com o nível colado ("Cyndaquil Lv.15"), e o card não achava a espécie no catálogo: bases zeradas, aviso de espécie fora do catálogo e nenhum IV. Agora o nível sai do nome e a conta volta a fechar.

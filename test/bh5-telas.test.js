@@ -325,6 +325,21 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     ok(item(201) === '50 [Ash (depot): 50]' && item(204) === '3 [Ash: 3]', 'so o painel 1 ligado: bag e depot so dele (' + item(201) + ' | ' + item(204) + ')');
   });
 
+  await secao('Inventario global: o x oculta o item (fica salvo), o rodape mostra quantos estao ocultos e traz de volta', async () => {
+    const sec = (H) => depois(H.cardsEl.innerHTML, 'data-s="inv"');
+    const tem = (H, id) => new RegExp('<span class="rn">#' + id + '</span>').test(sec(H));
+    const H1 = monta({ exec: () => Promise.resolve(null) }); await vez();
+    H1.stCache[0] = { t: Date.now(), d: conta({ cid: 'c1', name: 'Ash', invMap: { 204: 3, 205: 9 } }) };
+    H1.cardsSet(true); await H1.refreshCards(true);
+    ok(tem(H1, 204) && tem(H1, 205) && /data-inv="205"/.test(sec(H1)) && !/cdShowHiddenInv/.test(sec(H1)), 'sem nada oculto: os 2 itens com o x de ocultar e sem rodape');
+    const H2 = monta({ exec: () => Promise.resolve(null), ls: { invHidden: JSON.stringify({ 205: 1 }) } }); await vez();
+    H2.stCache[0] = { t: Date.now(), d: conta({ cid: 'c1', name: 'Ash', invMap: { 204: 3, 205: 9 } }) };
+    H2.cardsSet(true); await H2.refreshCards(true);
+    ok(tem(H2, 204) && !tem(H2, 205) && sec(H2).includes(H2.t('cdInvShowHidden').replace('{n}', 1)), 'oculto (salvo em invHidden): o 205 sai da lista e o rodape diz "' + H2.t('cdInvShowHidden').replace('{n}', 1) + '"');
+    ok(code.includes("querySelectorAll('.cd-hide[data-inv]')") && code.includes("querySelectorAll('.cd-hide[data-h]')") && code.includes("lsSet('invHidden'"), 'o x do inventario grava invHidden e o das hunts so pega as hunts (data-h): um nao mexe no outro');
+    ok(['pt', 'en', 'es'].every((L) => H1.I18N[L].cdInvHide && H1.I18N[L].cdInvShowHidden.includes('{n}') && H1.I18N[L].cdInvHideHidden && !/—/.test(H1.I18N[L].cdInvHide + H1.I18N[L].cdInvShowHidden + H1.I18N[L].cdInvHideHidden)), 'textos nos 3 idiomas, sem travessao');
+  });
+
   await secao('T9: o Pokemon escolhido no Sugerido segue o mesmo Pokemon quando o time e reordenado (baixa)', async () => {
     const R = await catalogo();
     const golpesScz = new Set(R.mv.scizor.a.map((g) => g[0]));

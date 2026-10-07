@@ -4748,10 +4748,12 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
     const decimal = (s) => { const m = /\d+(?:[.,]\d+)?/.exec(s); return m ? +m[0].replace(',', '.') : null; };
     // badge de tipo (.pp-type): o title é o tipo canônico (FIRE), o texto é o traduzido
     const tipos = (el) => (el ? [...el.querySelectorAll('.pp-type')] : []).map((b) => String(b.getAttribute('title') || '').toUpperCase()).filter((x) => TIPOS.includes(x)).slice(0, 2);
-    // nome: " ✨" no fim é shiny; " (Ditto)" (na troca, " ⚠️ (Ditto transformado)") é Ditto transformado; "Ditto" é o próprio
+    // nome: " ✨" no fim é shiny; " (Ditto)" (na troca, " ⚠️ (Ditto transformado)") é Ditto transformado; "Ditto" é o próprio.
+    // No Mercado o nome vem com o nível colado ("Cyndaquil Lv.15"): sai, senão a espécie não acha o catálogo (bases 0, sem IV)
+    const NV = /\s*(?:lv|lvl|nv|n[ií]vel|level)\.?\s*\d+$/i;
     const nome = (s) => {
       let n = s, shiny = false, ditto = false;
-      if (/✨$/.test(n)) { shiny = true; n = n.replace(/\s*✨$/, ''); }
+      for (let k = 0; k < 2; k++) { if (/✨$/.test(n)) { shiny = true; n = n.replace(/\s*✨$/, ''); } n = n.replace(NV, ''); }
       const m = /\s*(?:⚠️?\s*)?\(Ditto[^)]*\)$/i.exec(n);
       if (m) { ditto = true; n = n.slice(0, m.index); }
       if (/\bditto\b/i.test(n)) ditto = true;
@@ -5179,7 +5181,7 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
   const ivInt = (v, max) => (Number.isInteger(v) && v >= 0 && v <= max ? v : null);
   function ivSane(p, manual) {
     if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
-    const nome = typeof p.nome === 'string' ? p.nome.trim() : '', nivel = ivInt(p.nivel, 9999);
+    const nome = typeof p.nome === 'string' ? p.nome.trim().replace(/\s*(?:lv|lvl|nv|n[ií]vel|level)\.?\s*\d+$/i, '').trim() : '', nivel = ivInt(p.nivel, 9999); // sem o nivel colado no nome (Mercado: "Cyndaquil Lv.15")
     const s = p.stats && typeof p.stats === 'object' && !Array.isArray(p.stats) ? p.stats : null;
     if (!nome || nome.length > 40 || !s || !nivel || !(p.fonte === 'tooltip' || p.fonte === 'mercado' || (manual === true && p.fonte === 'manual'))) return null;
     const stats = {};

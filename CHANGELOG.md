@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.34
+
+- **Calculadora de IV no Mercado.** O título do anúncio passou a vir com o nível colado ("Cyndaquil Lv.15"), e o card não achava a espécie no catálogo: bases zeradas, aviso de espécie fora do catálogo e nenhum IV. Agora o nível sai do nome e a conta volta a fechar.
+  *IV calculator in the Market: the listing title now comes with the level attached ("Cyndaquil Lv.15") and the card could not find the species in the catalog, so the bases were zero and no IV showed. The level is now removed from the name and the math works again.*
+
 ## 1.5.33
 
 - **Depósito cheio aparece.** Quando o Depósito e a Bolsa enchem, o jogo pausa o Auto-Catch e só avisa no auto-helper, que o 🧼 Limpar jogo deixa invisível: a conta seguia caçando sem capturar e o aviso passava batido. Agora esse aviso do jogo fica à vista mesmo com o Limpar jogo, e o topo do painel, o 🍃 Simples e a aba Σ mostram **⚠ Depósito cheio · captura pausada**. Venda ou solte Pokémon que as capturas voltam.

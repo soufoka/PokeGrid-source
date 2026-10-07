@@ -196,7 +196,7 @@ function anuncio(lang, P) {
     h('div', 'mkt2-sechead', h('span', 'mkt2-sechead-gem', '◆'), titulo),
     h('div', 'mkt2-details-body',
       h('div', 'mkt2-hero', h('div', 'mkt2-hero-glow'), h('img', '', { src: '/x.png', alt: '' }), P.shiny ? h('span', 'mkt2-hero-shiny', '✨') : null),
-      h('div', 'mkt2-details-name', P.name),
+      h('div', 'mkt2-details-name', P.name, P.nomeNv ? h('span', 'mkt2-details-lv', ' Lv.' + P.level) : null), // o jogo hoje cola o nivel no titulo
       h('div', 'mkt2-card-badges mkt2-details-badges', h('span', 'mkt2-badge', P.item ? kindBall : kindPk)),
       h('div', 'mkt2-statlist',
         !P.item ? h('div', 'mkt2-stat', h('span', '', '⚡ ', nivel), h('b', '', P.level)) : null,
@@ -943,6 +943,21 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     ok(!h.includes(H.t('ivcNoFit')), 'sem o aviso de que os atributos nao fecham (com 1,71 exato so o SpA fechava)');
     ok(ivs.slice(0, 6).join() === '28,32,26,5,29,20', 'IV de cada atributo exato: ' + ivs.slice(0, 6).join(' '));
     ok(h.includes(H.nf(3513)) && !h.includes('≈' + H.nf(3528)), 'poder no nivel do card igual ao do jogo (3.513), nao o ≈3.528 da qualidade arredondada');
+  });
+
+  await secao('Mercado com o nivel colado no nome ("Cyndaquil Lv.15"): a especie acha o catalogo e o IV sai', async () => {
+    const CYN = Object.assign(pk('Cyndaquil', 15, 1.52, [28, 25, 30, 22, 27, 23]), { nomeNv: true });
+    const H = await comCatalogo();
+    const pg = pagina(); pg.roda(H.IV_LEITOR);
+    const card = cardMkt(CYN);
+    pg.body.appendChild(h('div', 'win-window', h('div', 'mkt2-main', h('div', 'mkt2-grid', card), anuncio('pt', CYN))));
+    await vezes(2); pg.clica(card.querySelector('.mkt2-card-name')); pg.timers(); await vezes(2);
+    const lido = pg.ultimo() || {};
+    ok(lido.nome === 'Cyndaquil' && lido.nivel === 15 && lido.fonte === 'mercado', 'o leitor tira o "Lv.15" do nome: ' + JSON.stringify({ nome: lido.nome, nivel: lido.nivel }));
+    ok(H.ivSane({ ...lido, nome: 'Cyndaquil Lv.15' }).nome === 'Cyndaquil' && H.ivSane({ ...lido, nome: 'Mr. Mime Nv 30' }).nome === 'Mr. Mime', 'o app corta o nivel colado no nome mesmo se ele chegar (Lv.15, Nv 30)');
+    H.ivRecebe(0, lido); H.ivRender();
+    const htm = H.html();
+    ok(!htm.includes(H.t('ivcNoSpecies')) && !htm.includes(H.t('ivcNoFit')), 'sem "especie fora do catalogo" e sem "nao fecham": as bases vieram do catalogo');
   });
 
   console.log(fail ? '\nFALHOU' : '\nTUDO OK');

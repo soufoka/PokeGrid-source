@@ -300,7 +300,7 @@ const cardKpi = (html, rotulo) => { const m = new RegExp('<div class="k">' + rot
 const cardAviso = (html) => { const m = /<div class="iv-av">([^<]*)<\/div>|<div class="iv-carr" role="status"><span class="iv-pb"[^>]*><\/span><span>([^<]*)<\/span>|<div class="iv-pot iv-pot-dt">[\s\S]*?<div class="iv-pot-d">([^<]*)<\/div>/.exec(html); return m ? m[1] || m[2] || m[3] : ''; };
 const cardSprite = (html) => { const m = /<img class="iv-spr"[^>]*src="([^"]+)"/.exec(html); return m ? m[1] : ''; };
 const cardPot = (html) => { const m = /<div class="iv-pot" style="--c:#[0-9a-f]+"><div class="iv-ring"[^>]*><span><b>(\d+)%<\/b><small>[^<]*<\/small><\/span><\/div><div class="iv-pot-tx"><div class="iv-pot-t">([^<]*)<\/div>/.exec(html); return m ? [+m[1], m[2]] : null; };
-const cardGolpes = (html) => [...html.matchAll(/<div class="iv-mv( off)?"[^>]*>(?:<span class="iv-tp"[^>]*>[^<]*<\/span>)?<span class="mv-n">([^<]*)<\/span><span class="mv-lv"[^>]*>([^<]*)<\/span>/g)].map((m) => ({ off: !!m[1], n: m[2], lv: m[3] }));
+const cardGolpes = (html) => [...html.matchAll(/<div class="iv-mv( off)?"[^>]*>(?:<span class="iv-tp"[^>]*>[^<]*<\/span>)?(?:<span class="tl-cat[^"]*"[^>]*>[^<]*<\/span>)?<span class="mv-n">([^<]*)<\/span><span class="mv-lv"[^>]*>([^<]*)<\/span>/g)].map((m) => ({ off: !!m[1], n: m[2], lv: m[3] }));
 const cardInput = (html, id) => { const m = new RegExp('id="' + id + '"[^>]*value="([^"]*)"').exec(html); return m ? m[1] : null; };
 const SPR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
 // botoes do card: o app tem UM ouvinte de clique no card, e o botao diz o que fazer (data-a, data-v). O helper confere que o
@@ -585,7 +585,7 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
   const tabela = (html) => { const m = /<table class="iv-cmp">([\s\S]*?)<\/table>/.exec(html); return m ? m[1].split('<tr').slice(1).map((r) => [...r.matchAll(/<t[dh]([^>]*)>([\s\S]*?)<\/t[dh]>/g)].map((c) => ({ st: c[1], h: c[2], tx: c[2].replace(/<[^>]+>/g, '').trim() }))) : []; };
   const efet = (html) => { const o = {}; for (const m of html.matchAll(/<div class="iv-ef"><span>([^<]*)<\/span>(.*?)<\/div>/g)) o[m[1]] = [...m[2].matchAll(/>([A-Z]+)<\/span><b[^>]*>×([\d.,]+)<\/b>/g)].map((x) => x[1] + ' ' + x[2].replace(',', '.')); return o; }; // o card escreve no formato do idioma (2,5 em pt): aqui compara o valor
   const potStat = (html) => [...html.matchAll(/<span class="iv-st-n">(\w+)<\/span><\/div><div class="iv-bar iv-bar2">.*?<\/div><span class="iv-st-iv">([^<]*)<span>\/32<\/span><\/span><div class="iv-st-l">([^<]*)<\/div>/g)].map((m) => [m[1], m[2], m[3]]);
-  const usoDe = (html) => [...html.matchAll(/<div class="iv-mv iv-uso">(?:<span class="iv-tp"[^>]*>([A-Z]*)<\/span>)?<span class="mv-n">([^<]*)<\/span>(<span class="mv-lv">TM<\/span>)?<span class="mv-p">([^<]*)<\/span><\/div>/g)].map((m) => [m[1] || '', m[2], !!m[3], m[4]]);
+  const usoDe = (html) => [...html.matchAll(/<div class="iv-mv iv-uso">(?:<span class="iv-tp"[^>]*>([A-Z]*)<\/span>)?(?:<span class="tl-cat[^"]*"[^>]*>[^<]*<\/span>)?<span class="mv-n">([^<]*)<\/span>(<span class="mv-lv">TM<\/span>)?<span class="mv-p">([^<]*)<\/span><\/div>/g)].map((m) => [m[1] || '', m[2], !!m[3], m[4]]);
   const histLinhas = (html) => [...html.matchAll(new RegExp('<button class="iv-hi" data-a="hist" data-v="(\\d+)"[^>]*><span class="iv-dot" style="background:(#[0-9a-f]+)[^"]*"><\\/span>' + SPW + '<span class="mv-n">([^<]*)<\\/span><span class="mv-lv">[^<]* (\\d+)<\\/span>', 'g'))].map((m) => ({ j: +m[1], cor: m[2], nome: m[3], nv: +m[4] }));
   const STK = { hp: 'hp', atk: 'atk', def: 'def', spa: 'spAtk', spd: 'spDef', vel: 'speed' };
 
@@ -958,6 +958,20 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     H.ivRecebe(0, lido); H.ivRender();
     const htm = H.html();
     ok(!htm.includes(H.t('ivcNoSpecies')) && !htm.includes(H.t('ivcNoFit')), 'sem "especie fora do catalogo" e sem "nao fecham": as bases vieram do catalogo');
+  });
+
+  await secao('Golpes: cada golpe com FIS ou ESP (a etiqueta da Tierlist); golpe de status, sem poder, fica sem etiqueta', async () => {
+    const R = await catalogo();
+    const conta = (sp) => { const L = (R.mv[sp] || {}).a || []; return { fis: L.filter((g) => +g[1] > 0 && g[3] === 'P').length, esp: L.filter((g) => +g[1] > 0 && g[3] === 'S').length, st: L.filter((g) => !(+g[1] > 0)).length }; };
+    const status = Object.keys(R.mv).find((k) => { const c = conta(k); return c.st > 0 && c.fis + c.esp > 0 && R.bs[k] && !/\s/.test(k); });
+    for (const sp of ['charizard', status]) {
+      const H = await comCatalogo({ ls: { ivAba: 'golpes' } });
+      const nome = sp[0].toUpperCase() + sp.slice(1);
+      H.ivRecebe(0, esperado(pk(nome, 60, 1.3, [20, 20, 20, 20, 20, 20]))); H.ivRender();
+      const h = H.html(), c = conta(sp);
+      const fis = (h.match(/<span class="tl-cat" title=/g) || []).length, esp = (h.match(/<span class="tl-cat esp"/g) || []).length;
+      ok(c.fis + c.esp > 0 && fis === c.fis && esp === c.esp, nome + ': ' + fis + ' FIS e ' + esp + ' ESP no card, como no catalogo (' + c.fis + ' fisicos, ' + c.esp + ' especiais, ' + c.st + ' de status sem etiqueta)');
+    }
   });
 
   console.log(fail ? '\nFALHOU' : '\nTUDO OK');

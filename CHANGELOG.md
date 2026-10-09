@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.36
+
+- **Físico ou especial nos golpes.** Na aba Golpes da calculadora de IV, cada golpe ganhou a etiqueta FÍS (físico) ou ESP (especial) ao lado do tipo, a mesma da Tierlist, também no golpe em uso. Golpe de status, sem poder, fica sem etiqueta.
+  *Physical or special on moves: in the IV calculator Moves tab, each move now shows PHY or SPE next to its type, the same tag as the Tierlist, the move in use included. Status moves, with no power, get no tag.*
+
 ## 1.5.35
 
 - **Ocultar item no Inventário global.** No 🍃 Simples, cada item do Inventário global ganhou um ✕ que tira ele da lista, como já dava pra fazer com as hunts no Ranking. A escolha fica salva; o **mostrar ocultos (N)** embaixo da lista mostra os escondidos apagados, com o botão de voltar a mostrar.

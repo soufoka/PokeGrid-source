@@ -510,6 +510,7 @@
   #ivCard .iv-mvs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   #ivCard .iv-mv { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; padding: 7px 9px 8px; border: 1px solid var(--bd); border-radius: 9px; background: var(--sf2); font-size: 12px; overflow: hidden; }
   #ivCard .iv-mv .iv-tp { padding: 2px 7px; flex: none; }
+  #ivCard .iv-mv .tl-cat { flex: none; } /* FIS/ESP: a etiqueta da Tierlist, sem encolher no cartao */
   #ivCard .iv-mv .mv-n { flex: 1 1 auto; min-width: 0; color: var(--tx); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #ivCard .iv-mv .mv-lv { color: var(--mut); font-size: 11px; font-variant-numeric: tabular-nums; flex: none; }
   #ivCard .iv-mv[data-tm] .mv-lv { color: var(--gold); font-weight: 700; }
@@ -5087,10 +5088,12 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
   }
   function ivGolpesHtml(d, c) {
     const golpes = (c.mv && Array.isArray(c.mv.a) ? c.mv.a : []).filter(Array.isArray)
-      .map(g => ({ n: String(g[0] || ''), p: +g[1] || 0, ty: String(g[2] || ''), nv: +g[5] || 0, tm: !!g[6] }))
+      .map(g => ({ n: String(g[0] || ''), p: +g[1] || 0, ty: String(g[2] || ''), cat: String(g[3] || ''), nv: +g[5] || 0, tm: !!g[6] }))
       .filter(g => g.n).sort((a, b) => (a.tm - b.tm) || (a.nv - b.nv));
+    // fisico ou especial (pedido de usuario), com a mesma etiqueta da Tierlist; golpe sem poder e de status (o catalogo junta com o especial): sem etiqueta
+    const cat = (g) => (!g || !g.p ? '' : g.cat === 'P' ? '<span class="tl-cat" title="' + t('tlFisTip') + '">' + t('tlFis') + '</span>' : '<span class="tl-cat esp" title="' + t('tlEspTip') + '">' + t('tlEsp') + '</span>');
     const u = ivUso(d, c), pmax = Math.max(1, ...golpes.filter(g => !g.tm).map(g => g.p)); // a barra do poder e relativa ao golpe mais forte da lista (o TM passa e fica cheia)
-    const usa = (x, tm) => { const g = golpes.find(g2 => g2.n.toLowerCase() === String(x.m).toLowerCase()); return '<div class="iv-mv iv-uso">' + (g && g.ty ? ivTp(g.ty) : '') + '<span class="mv-n">' + esc(x.m) + '</span>' + (tm ? '<span class="mv-lv">TM</span>' : '')
+    const usa = (x, tm) => { const g = golpes.find(g2 => g2.n.toLowerCase() === String(x.m).toLowerCase()); return '<div class="iv-mv iv-uso">' + (g && g.ty ? ivTp(g.ty) : '') + cat(g) + '<span class="mv-n">' + esc(x.m) + '</span>' + (tm ? '<span class="mv-lv">TM</span>' : '')
       + '<span class="mv-p">' + t('ivcHits').replace('{n}', nf(x.n)) + (x.hp > 0 ? ' · ' + t('ivcDmg').replace('{p}', nf(x.hp)) : '') + '</span></div>'; };
     return (u ? '<div class="iv-sec">' + ico('espadas') + '<span>' + t('ivcInUse').replace('{h}', () => esc(u.hunt)) + '</span></div><div class="iv-usos">' + (u.mv ? usa(u.mv, false) : '') + (u.tm ? usa(u.tm, true) : '') + '</div>' : '')
       + (golpes.length ? '<div class="iv-sec">' + ico('espadas') + '<span>' + t('ivcMoves') + '</span></div><div class="iv-mvs">'
@@ -5098,7 +5101,7 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
           const trava = !g.tm && g.nv > c.proj, n = g.n.toLowerCase(); // o nível escolhido no card ainda não aprendeu: fica apagado
           const emUso = u && [u.mv, u.tm].some(x => x && String(x.m).toLowerCase() === n); // o golpe em uso tambem marcado na lista
           return '<div class="iv-mv' + (trava ? ' off' : '') + '"' + (trava ? ' title="' + t('ivcMoveLocked') + ' ' + g.nv + '"' : g.tm ? ' title="' + t('ivcMoveTm') + '" data-tm="1"' : '') + (emUso ? ' data-uso="1"' : '') + '>'
-            + (g.ty ? ivTp(g.ty) : '')
+            + (g.ty ? ivTp(g.ty) : '') + cat(g)
             + '<span class="mv-n">' + esc(g.n) + '</span>'
             + '<span class="mv-lv"' + (trava ? ' style="color:var(--neg)"' : '') + '>' + (g.tm ? 'TM' : t('ivcMoveLv') + ' ' + g.nv) + '</span>'
             + '<span class="mv-p" title="' + t('ivcMovePower') + '">' + (g.p ? nf(g.p) : '–') + '</span>'

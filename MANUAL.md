@@ -90,5 +90,6 @@ O ⏸ no topo trava o card no pokémon atual: os próximos que você passar o mo
 - **A opção marcada não mudou nada?** Provavelmente é uma seção que precisa de configuração (Fixados e Alvo shiny). Elas agora dizem isso na tela
 - **Os avisos de combate sumiram** ("X derrotado! +XP"): é o **🧼 Limpar jogo**. Desligue-o pra vê-los de novo
 - **Não consigo trocar a pokébola**: é o **🧼 Limpar jogo** escondendo o Auto-Helper. Passe o mouse no canto que ele aparece
+- **O Hunt Analyzer do jogo sumiu**: também é o **🧼 Limpar jogo** (desde a 1.5.37). Passe o mouse onde a janela fica que ela aparece, ou desligue o Limpar jogo com o F2
 - **O ouro da sessão**: desde a 1.5.16 vem do próprio servidor do jogo, então é o mesmo número do Hunt Analyzer (menos as Rare Pokemon Picture, se **Considerar preço dos itens no Mercado** estiver marcado, que é o padrão do jogo)
 - **Conta travada quando saio do PC**: corrigido na 1.5.16; atualize

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.37
+
+- **Hunt Analyzer some com o 🧼 Limpar jogo.** A janela do Hunt Analyzer do jogo agora some junto com o resto que o Limpar jogo esconde e aparece quando o mouse passa por cima, como o auto-helper e o menu de ícones.
+  *Hunt Analyzer hides with Clean game: the game's Hunt Analyzer window now hides with everything else Clean game hides and shows on hover, like the auto-helper and the icon menu.*
+
 ## 1.5.36
 
 - **Físico ou especial nos golpes.** Na aba Golpes da calculadora de IV, cada golpe ganhou a etiqueta FÍS (físico) ou ESP (especial) ao lado do tipo, a mesma da Tierlist, também no golpe em uso. Golpe de status, sem poder, fica sem etiqueta.

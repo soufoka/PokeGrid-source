@@ -273,6 +273,7 @@ const FIXADO = JSON.stringify([{ d: Object.assign({}, SCIZOR, { nome: 'Kabutops'
   await secao('menu de icones do jogo: so o Limpar jogo esconde (e o hover mostra); F2 e M ligam e desligam o Limpar jogo', async () => {
     ok(!/id="dock"/.test(html) && !/dockScript|dockBtn|__dockHide/.test(code), 'saiu o botao "Menu do jogo", que escondia o menu de vez (display none, sem volta no hover)');
     ok(/nav\.game-dock\{opacity:0 !important/.test(code) && /nav\.game-dock:hover\{opacity:1 !important\}/.test(code) && !/game-dock[^\n]{0,80}display/.test(code), 'com o Limpar jogo o menu fica transparente e aparece ao passar o mouse; nada mais da display none nele');
+    ok(/\.ha-window,nav\.game-dock\{opacity:0 !important/.test(code) && /\.ha-window:hover,nav\.game-dock:hover\{opacity:1 !important\}/.test(code) && code.includes('o menu do jogo e o Hunt Analyzer aparecem ao passar o mouse'), 'o Hunt Analyzer do jogo (.ha-window) tambem some com o Limpar jogo e aparece ao passar o mouse, e a dica do Limpar jogo diz isso');
     // o F2 que vai pra pagina do jogo: avisa o app pelo console, uma vez por aperto
     const f2 = (/const F2_SCRIPT = `([^`]*)`/.exec(code) || [])[1] || '';
     const ouv = [], logs = [], w = {};

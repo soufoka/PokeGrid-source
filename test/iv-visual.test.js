@@ -181,7 +181,7 @@ function monta(opts = {}) {
     pokeAPI: { loadCreds: async () => [], saveCreds: async () => true, logError() {}, notify() {}, webhook: async () => true, onHotkey() {}, onJanela() {}, onAutoStart() {}, getAutoStart: async () => ({ on: false, suportado: true }), setAwake: async () => false, setMinToTray: async () => true, saveBackup: async () => true, appVersion: '1.5.31' },
     PokeGridIvMath: require(path.join(RAIZ, 'src/domain/iv-math.js')) };
   const opc = (n) => 'typeof ' + n + ' !== "undefined" ? ' + n + ' : null';
-  const exporta = '\n;return { ivRecebe, ivRender, IV_LEITOR, carregaHunts, t, nf, I18N, setAberto: (v) => { ivAberto = v; }, setAba: (v) => { ivAba = v; }, get basesByName() { return basesByName; }, set catalogoVazio(v) { basesByName = {}; movesByName = {}; huntsCacheT = Date.now(); }, get ivHist() { return ivHist; }, ICO, ico, stSane, stCache,'
+  const exporta = '\n;return { ivRecebe, ivRender, IV_LEITOR, carregaHunts, t, nf, I18N, setAberto: (v) => { ivAberto = v; }, setAba: (v) => { ivAba = v; }, get basesByName() { return basesByName; }, set catalogoVazio(v) { basesByName = {}; movesByName = {}; huntsCacheT = Date.now(); }, get ivHist() { return ivHist; }, ICO, ico, stSane, stCache, jsonP,'
     + ' ivSprSane: ' + opc('ivSprSane') + ', ivSprHtml: ' + opc('ivSprHtml') + ', ivSprRecebe: ' + opc('ivSprRecebe') + ', get ivSprMem() { return ' + opc('ivSprMem') + '; }, get ivSprRuim() { return ' + opc('ivSprRuim') + '; } };';
   const fn = new Function('window', 'document', 'localStorage', 'navigator', 'location', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'innerWidth', 'innerHeight', 'addEventListener', 'getComputedStyle', 'AudioContext', 'MutationObserver', 'FileReader', 'fetch', 'performance', 'prompt', code + exporta);
   const noop = () => 0;
@@ -191,7 +191,7 @@ function monta(opts = {}) {
   return Object.assign(api, {
     byId, store, ivEl, html: () => ivEl.innerHTML,
     // o console-message REAL do painel i, ligado no ivRecebe e no ivSprRecebe desta janela
-    canal: (i = 0) => { const f = new Function('i', 'dlgT', 'stSane', 'stCache', 'dtPush', 'ivRecebe', 'ivSprRecebe', 'Date', 'return ' + CM)(i, [0, 0, 0, 0], api.stSane, api.stCache, () => {}, api.ivRecebe, api.ivSprRecebe || (() => {}), Date); return (m) => f({ message: m }); }
+    canal: (i = 0) => { const f = new Function('i', 'dlgT', 'stSane', 'stCache', 'dtPush', 'ivRecebe', 'ivSprRecebe', 'Date', 'jsonP', 'return ' + CM)(i, [0, 0, 0, 0], api.stSane, api.stCache, () => {}, api.ivRecebe, api.ivSprRecebe || (() => {}), Date, api.jsonP); return (m) => f({ message: m }); }
   });
 }
 const HUNTS_JS = tpl('const HUNTS_JS = ');

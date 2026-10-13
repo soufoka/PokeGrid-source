@@ -93,7 +93,8 @@ console.log('\n--- hunt parou de mandar field com o socket vivo ---');
   a.anda(18);
   ok(a.tipos() === 'enter', 'passou de 10 min sem kill e sem field: tentativa 1 (' + a.tipos() + ')');
   const eh = enterHunts(m);
-  ok(eh.length === 1 && eh[0].slug === 'rota_x' && Object.keys(eh[0]).join() === 'type,slug', 'manda o mesmo {type:enter-hunt, slug} que o jogo manda ao reconectar: ' + JSON.stringify(eh[0]));
+  // desde o patch de 09/10/2026 o jogo manda resume em todo enter-hunt: true ao reentrar na hunt que ja mandou field-init
+  ok(eh.length === 1 && eh[0].slug === 'rota_x' && Object.keys(eh[0]).join() === 'type,slug,resume' && eh[0].resume === true, 'manda o mesmo {type:enter-hunt, slug, resume:true} que o jogo manda ao reconectar: ' + JSON.stringify(eh[0]));
   ok(/^hunt rota_x parada \(10 min sem kill, \d+s sem field, socket aberto\), tentativa 1\/3: mandando enter-hunt/.test(a.acoes[0].msg), 'linha do 🐞 Erros: ' + a.acoes[0].msg);
   a.anda(54);
   ok(a.tipos() === 'enter', 'da 60 s pro enter-hunt pegar');
@@ -235,9 +236,11 @@ console.log('\n--- VOLTA com a tela na cidade: o socket reconecta ---');
   {
     const m = posVolta();
     ok(tipos(m, 0) === 'set-city:cerulean,enter-hunt:rota_x', 'reload: o set-city da montagem sai normal (ainda sem marca) e o VOLTA manda enter-hunt (' + tipos(m, 0) + ')');
+    const ev = m.sent.find((x) => x.type === 'enter-hunt');
+    ok(ev && ev.resume === false, 'o enter-hunt do VOLTA e entrada nova, como o 1o do jogo depois de montar a hunt: resume false (' + JSON.stringify(ev) + ')');
     const i0 = m.reconecta(); m.tick(50); m.pagina({ type: 'set-city', slug: 'cerulean' });
     const s0 = m.sent.slice(i0);
-    ok(s0.length === 1 && Object.keys(s0[0]).join() === 'type,slug' && tipos(m, i0) === 'enter-hunt:rota_x', 'socket reabriu e a tela remandou set-city: sai o enter-hunt que o jogo manda ao reconectar dentro da hunt (' + tipos(m, i0) + ')');
+    ok(s0.length === 1 && Object.keys(s0[0]).join() === 'type,slug,resume' && s0[0].resume === true && tipos(m, i0) === 'enter-hunt:rota_x', 'socket reabriu e a tela remandou set-city: sai o enter-hunt que o jogo manda ao reconectar dentro da hunt, com resume true (' + JSON.stringify(s0[0]) + ')');
     ok(m.run(READ_ALERTS).inH === 'rota_x', 'e a hunt segue valendo pro destrava');
     m.msg({ type: 'field-init', slug: 'rota_x' }); m.tick(600e3);
     const i1 = m.reconecta(); m.tick(2900); m.pagina({ type: 'set-city', slug: 'cerulean' });
@@ -304,7 +307,7 @@ console.log('\n--- ligacao no vigia e no dom-ready ---');
   ok(vig.includes("window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': ' + dv.msg)"), 'toda acao vira linha no 🐞 Erros');
   ok(vig.includes('w.executeJavaScript(ENTRA_JS(r.inH))') && vig.includes('w.executeJavaScript(RSF_JS)') && /dv\.ac === 'reload'\) \{ try \{ w\.reload\(\); \}/.test(vig), 'executa enter-hunt, o clique e o reload');
   ok(vig.includes('servidor reiniciou, o jogo diz sessao parada desde'), 'restart-freeze fica no log mesmo sem acao');
-  ok(s.includes("Date.now() - ((rec[i] && rec[i].t) || 0) < 120e3") && s.indexOf('wv.executeJavaScript(VOLTA_JS(snv.slug))') > s.indexOf('Date.now() - ((rec[i] && rec[i].t) || 0) < 120e3'), 'dom-ready: depois de um reload do destrava o VOLTA arma sem exigir kill nos ultimos 10 min');
+  ok(s.includes("Date.now() - ((rec[i] && rec[i].t) || 0) < 120e3") && s.indexOf('wv.executeJavaScript(VOLTA_JS(snv.slug, snv.cid))') > s.indexOf('Date.now() - ((rec[i] && rec[i].t) || 0) < 120e3'), 'dom-ready: depois de um reload do destrava o VOLTA arma sem exigir kill nos ultimos 10 min');
   ['voltaTitle'].forEach((k) => ok((s.match(new RegExp(k + ":'[^']*(6 h)[^']*'", 'g')) || []).length === 3, k + ' explica o destrava nos 3 idiomas'));
   ok(!/voltaTitle:'[^']*—/.test(s), 'sem travessao');
 }

@@ -30,6 +30,8 @@ Na **engrenagem ⚙** do topo dela você escolhe **quais seções aparecem** e a
 
 **🎯 Alvo shiny.** Serve para acompanhar a caçada de um shiny específico. Na engrenagem, em "Alvo shiny", busque a espécie. A seção passa a mostrar se ele **já apareceu**, se foi **capturado** e **quantas bolas** você gastou nele. Sem escolher a espécie, a seção fica vazia explicando isso (antes ela sumia, e parecia que a opção não funcionava).
 
+Na seção **Time**, clique num pokémon pra colocar ele na frente: ele vira o líder que caça. Na hunt, depois de cada troca o jogo segura a próxima por alguns segundos, e enquanto isso os outros ficam apagados com os segundos que faltam.
+
 ## 🍃 Simples: o painel de todas as contas
 
 O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gastando pouco do PC. Minimizar ou mandar pra bandeja faz o mesmo com os jogos sozinho, e ao abrir a janela eles voltam. Seções principais:
@@ -46,6 +48,8 @@ O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gast
 Ranking de todas as espécies do jogo por elemento, nota de 0 a 100.
 
 No topo, **XP/h** ou **Gold/h** escolhe o que a nota mede. Gold/h é kills/h do modelo vezes o loot esperado por kill a preço de NPC (o mesmo preço que o Hunt Analyzer do jogo usa), sem captura, supply nem bônus de loot; em hunt onde o valor vem de drop raro, a média demora a aparecer. O chip **🎯 Pokémon** inverte a pergunta: escolha um Pokémon do seu time (vem com o nível, a qualidade, o IV e os TMs dele) ou digite o nome de qualquer um, e a lista mostra as melhores hunts pra ele até o seu nível, com kills/h, XP/h e gold/h estimados em cada linha. Com um Ditto, cada hunt mostra também a forma certa pra ela.
+
+O chip **Hunts por tipo** (a lupa) é pro Tipo do Dia do jogo, o bônus de XP e de drop por tipo que muda todo dia. Escolha o tipo dos selvagens e a lista mostra as hunts desse tipo (1º ou 2º tipo) até o seu nível, da que mais rende pra que menos. Cada linha traz o melhor pokémon pra usar no seu nível, com kills/h, XP/h e gold/h estimados, e o melhor do time das contas ligadas, com os TMs que ele tem. O bônus vale igual em todas as hunts da lista, então não muda a ordem.
 
 Escolha **seu nível** no topo da tierlist (vai até 3000): só entram as hunts que você alcança e só as espécies que dá pra ter nesse nível, caçando ou evoluindo. Cada pokémon é avaliado no nível de cada hunt, pra comparação entre espécies ser justa. A caixinha **com TM** conta os TMs como o jogo faz: o TM elemental é um golpe extra em área que dispara sozinho a cada 10 s (só do próprio tipo, poder 300) e o AoE TM faz o golpe normal acertar todos os selvagens do quadro; os dois convivem no mesmo pokémon. Fica desligada por padrão porque TM é item. A densidade da hunt (selvagens por salva) vem das suas medições; sem medição, 2. O golpe **físico** enfrenta a defesa física de cada hunt, o **especial** a defesa especial, e a **vida** do defensor segura o ritmo. A aba **Geral** compara todos os elementos juntos, e nela a nota é o rendimento somado em todas as hunts (quem rende em todo lugar vale mais que quem só brilha numa fraqueza ×4).
 

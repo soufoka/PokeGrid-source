@@ -230,7 +230,7 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
     ok(!/[^\r]\n/.test(bat), 'Abrir PokeGrid.bat todo em CRLF (com LF o cmd erra goto e blocos)');
     ok(bat.split('\r\n').filter((l) => /^\s+echo /i.test(l)).every((l) => !/[()]/.test(l)), 'Abrir PokeGrid.bat sem parenteses nos echo dentro de bloco');
     // 27/09/2026: o motivo real da falha rolava pra fora da janela. A saida vai pra tela e pro instalacao.log, recriado a cada tentativa.
-    ok(/set PG_TEE=node -e "[^"\r\n]*createWriteStream\('instalacao\.log'/.test(bat) && bat.includes('call npm install --no-audit --no-fund 2>&1 | %PG_TEE%') && bat.includes('node -e "require(\'electron\')" 2>&1 | %PG_TEE%') && /" > instalacao\.log\r\n/.test(bat), 'Abrir PokeGrid.bat copia npm install e download do Electron pra tela e pro instalacao.log');
+    ok(/set PG_TEE=node -e "[^"\r\n]*createWriteStream\('instalacao\.log'/.test(bat) && bat.includes('call npm ci --ignore-scripts --no-audit --no-fund 2>&1 | %PG_TEE%') && bat.includes('node -e "require(\'electron\')" 2>&1 | %PG_TEE%') && /" > instalacao\.log\r\n/.test(bat), 'Abrir PokeGrid.bat copia o npm ci (lock travado, sem script de pacote) e o download do Electron pra tela e pro instalacao.log');
     const achas = ['Cannot find module', 'fetch failed', 'expected checksum', 'os error 32', 'native binding'].map((p) => bat.lastIndexOf('/c:"' + p + '"'));
     ok(achas.every((i, k) => i > iConfere && (k === 0 || i > achas[k - 1])), 'Abrir PokeGrid.bat le o motivo no log: dependencia < rede < checksum < arquivo travado < extrator barrado (o ultimo vence)');
     ok(bat.includes('echo A instalacao nao terminou. %PG_MOTIVO%') && /instalacao\.log no Discord/.test(bat), 'Abrir PokeGrid.bat diz o motivo provavel e pede o instalacao.log no Discord');
@@ -249,8 +249,8 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
   }
   if (naRaiz.includes('iniciar.sh')) {
     // instalacao interrompida deixava a pasta node_modules sem o Electron; com Node velho o erro falava de sandbox
-    const sh = fs.readFileSync(path.join(RAIZ, 'iniciar.sh'), 'utf8'), iSemPath = sh.indexOf('if [ ! -f node_modules/electron/path.txt ]; then\n');
-    ok(iSemPath > 0 && !sh.includes('[ ! -d node_modules ]') && iSemPath < sh.indexOf('a>22||a===22&&b>=12') && sh.indexOf('a>22||a===22&&b>=12') < sh.indexOf('\n  npm install\n') && !sh.includes('\r'), 'iniciar.sh reinstala quando falta o path.txt do Electron, confere o Node 22.12 antes e segue em LF');
+    const sh = fs.readFileSync(path.join(RAIZ, 'iniciar.sh'), 'utf8'), iSemPath = sh.indexOf('if [ ! -f node_modules/electron/path.txt ] || ');
+    ok(iSemPath > 0 && !sh.includes('[ ! -d node_modules ]') && iSemPath < sh.indexOf('a>22||a===22&&b>=12') && sh.indexOf('a>22||a===22&&b>=12') < sh.indexOf('\n  npm ci --ignore-scripts --no-audit --no-fund\n') && !sh.includes('\r'), 'iniciar.sh reinstala quando falta o path.txt do Electron (ou ele e de outra versao), confere o Node 22.12 antes, usa npm ci e segue em LF');
   }
 }
 try { fs.rmSync(path.join(RAIZ, '.teste-tmp'), { recursive: true, force: true }); } catch {}

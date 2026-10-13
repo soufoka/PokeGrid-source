@@ -6,14 +6,16 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 # path.txt e o ultimo arquivo que o Electron grava. Sem ele a instalacao nem comecou ou ficou pela metade (so olhar a
 # pasta node_modules nao bastava: interrompida, ela existia sem o Electron), e o npm install refaz o que faltou.
-if [ ! -f node_modules/electron/path.txt ]; then
+# Electron diferente do que o package.json pede (zip novo extraido por cima da pasta antiga) tambem reinstala
+if [ ! -f node_modules/electron/path.txt ] || ! node -e "process.exit(require('./node_modules/electron/package.json').version===require('./package.json').devDependencies.electron?0:1)" 2>/dev/null; then
   # O Electron 43 pede Node 22.12 ou mais novo: com Node velho o download falhava e o aviso la embaixo falava de sandbox
   if ! node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||a===22&&b>=12?0:1)"; then
     echo "O Node.js deste PC e antigo: o PokeGrid precisa da versao 22.12 ou mais nova. Instale a LTS em https://nodejs.org"
     exit 1
   fi
   echo "Instalando o necessario. Na primeira vez isso pode levar alguns minutos..."
-  npm install
+  # npm ci: so o package-lock.json (versao e hash travados) e sem script de pacote
+  npm ci --ignore-scripts --no-audit --no-fund
 fi
 echo "Abrindo o PokeGrid..."
 # O erro do Electron precisa aparecer: descartar o stderr escondia a causa quando o app

@@ -64,7 +64,9 @@ const Modulo = require('module');
 const res0 = Modulo._resolveFilename;
 Modulo._resolveFilename = function (p, ...x) { if (p === 'electron') return 'electron-principal'; if (p === 'https') return 'https-principal'; return res0.call(this, p, ...x); };
 require.cache['electron-principal'] = { id: 'electron-principal', filename: 'electron-principal', loaded: true, exports: eletron };
-require.cache['https-principal'] = { id: 'https-principal', filename: 'https-principal', loaded: true, exports: { get: () => ({ on() { return this; } }) } };
+require.cache['https-principal'] = { id: 'https-principal', filename: 'https-principal', loaded: true, exports: { get: () => ({ on() { return this; } }),
+  // webhook: guarda o que iria pro Discord e responde 204
+  request: (u, _o, cb) => ({ on() { return this; }, setTimeout() {}, end(b) { R.webhook = { u: String(u), body: JSON.parse(b) }; cb({ statusCode: 204, resume() {} }); } }) } };
 
 const tmps = [];
 function abre() {
@@ -157,6 +159,39 @@ try {
     ok(r2.length === 1 && w.mostras === 1 && w.isVisible(), 'sem o ready-to-show: a rede mostra a janela');
   }
 
+  console.log('--- painel novo (<webview>): so do jogo, numa das 4 particoes, sem preload nem Node ---');
+  {
+    const x = abre();
+    const wc = Object.assign(x.janelas[0].webContents, { getType: () => 'window' });
+    dispara(x.app['web-contents-created'], {}, wc);
+    // o que o Electron 43 entrega (medido num app isolado): params com src e partition, e as preferencias do painel
+    const anexa = (params) => {
+      let barrou = false;
+      const wp = { nodeIntegration: true, preload: 'C:\\x\\mal.js', webSecurity: false, contextIsolation: false, sandbox: false, backgroundThrottling: false };
+      dispara(wc.ev['will-attach-webview'], { preventDefault() { barrou = true; } }, wp, Object.assign({ src: 'https://poke.idleworld.online/login?ref=CJNKGPB', partition: 'persist:conta1' }, params));
+      return { barrou, wp };
+    };
+    const bom = anexa({});
+    ok(!bom.barrou && bom.wp.backgroundThrottling === false, 'o painel do app (login do jogo, persist:conta1, backgroundThrottling=no) passa com as opcoes dele');
+    ok(bom.wp.nodeIntegration === false && bom.wp.contextIsolation === true && bom.wp.sandbox === true && bom.wp.webSecurity === true && !('preload' in bom.wp), 'Node, preload, isolamento e webSecurity ficam fixos, mesmo se a interface pedir o contrario');
+    ok(['https://exfil.example/', 'https://poke.idleworld.online.evil.com/', 'file:///C:/x/a.html', 'about:blank', ''].every((src) => anexa({ src }).barrou), 'outro site, dominio parecido, arquivo local ou vazio: recusado');
+    ok(['', 'persist:conta5', 'persist:outra', 'conta1'].every((partition) => anexa({ partition }).barrou) && [2, 3, 4].every((n) => !anexa({ partition: 'persist:conta' + n }).barrou), 'so as particoes das 4 contas passam');
+    ok(/painel recusado: https:\/\/exfil\.example/.test(relatorio(x)), 'a recusa vai pro relatorio de erros');
+  }
+
+  console.log('--- webhook: so a mencao do comeco notifica (o resto do texto vem do jogo) ---');
+  {
+    const x = abre();
+    const URL_WH = 'https://discord.com/api/webhooks/1/abc';
+    // o https falso responde na hora: o corpo enviado fica em R.webhook antes de a chamada voltar
+    const manda = (txt) => { R.webhook = null; x.ipc['webhook:send'](null, URL_WH, txt); return R.webhook ? R.webhook.body : { allowed_mentions: {} }; };
+    let b = manda('<@111111111111111111> ✨ Conta: shiny <@222222222222222222> Pikachu capturado');
+    ok(JSON.stringify(b.allowed_mentions.users) === '["111111111111111111"]' && b.allowed_mentions.parse.length === 0, 'mencao configurada (no comeco) notifica; um <@id> no nome que veio do jogo nao (' + JSON.stringify(b.allowed_mentions) + ')');
+    b = manda('✨ <@333333333333333333>: shiny Pikachu visto');
+    ok(Array.isArray(b.allowed_mentions.users) && b.allowed_mentions.users.length === 0, 'sem mencao configurada, nenhum ID do texto vira notificacao');
+    ok(x.ipc['webhook:send'](null, 'https://exfil.example/api/webhooks/1/a', 'x') === false, 'URL fora do Discord continua recusada');
+  }
+
   console.log('--- painel caido: recarrega com recuo crescente, zerado quando carrega ---');
   {
     const x = abre();
@@ -168,8 +203,11 @@ try {
     for (let i = 0; i < 8; i++) esperas.push(cai());
     ok(esperas.every((v, i) => i === 0 || v > esperas[i - 1] || v === 60000) && esperas[0] === 1500 && esperas[7] === 60000, 'quedas seguidas: espera cresce ate 1 min -> ' + esperas.map((v) => v / 1000 + 's').join(' '));
     ok(wv.recargas === 8, 'e recarrega toda vez');
-    dispara(wv.ev['did-finish-load']);
-    ok(cai() === 1500, 'carregou (did-finish-load): a proxima queda volta a esperar 1,5 s');
+    dispara(wv.ev['did-finish-load']); agora += 5e3;
+    ok(cai() === 60000, 'carregou e caiu 5 s depois (userscript travando, vigia de 20 s): o recuo NAO zera (antes recarregava a cada 1,5 s pra sempre)');
+    ok(cai() === 60000, 'caiu de novo sem carregar: a carga anterior ja foi usada e nao zera de novo');
+    dispara(wv.ev['did-finish-load']); agora += 61e3;
+    ok(cai() === 1500, 'carregou e ficou de pe 1 min: a proxima queda volta a esperar 1,5 s');
   }
 } finally {
   Modulo._resolveFilename = res0;

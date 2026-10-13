@@ -199,7 +199,7 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
     ok(antigo.bagOrder[0] === 'Loot', 'perfil antigo: a ordem que o usuario arrastou e preservada');
     ok(antigo.bagOrder.indexOf('Berries') < antigo.bagOrder.indexOf('Outros') && antigo.bagOrder.indexOf('Held') < antigo.bagOrder.indexOf('Outros'), 'e as categorias novas entram ANTES de Outros: ' + antigo.bagOrder.slice(-4).join(', '));
     ok(antigo.bagOrder.length === BAGCATS.length && new Set(antigo.bagOrder).size === BAGCATS.length, 'sem duplicar nem perder categoria');
-    ok(b.includes("if (BK_SKIP.includes(k2) || typeof o[k2] !== 'string') return;"), 'importar ignora valor que nao e texto (viraria "[object Object]")');
+    ok(b.includes("if (BK_SKIP.includes(k2) || typeof o[k2] !== 'string' || (k2 === 'sellguard' && o[k2] === '0')) return;"), 'importar ignora valor que nao e texto (viraria "[object Object]") e arquivo de outra pessoa nunca desliga a Venda protegida');
   }
 
   console.log('\n--- main.js: baixar userscript ---');

@@ -13,9 +13,12 @@ rem e o app nao abria nunca. Com tudo no lugar o npm install leva segundos; abri
 set "PG_FALTA="
 if not exist "node_modules\electron\path.txt" set "PG_FALTA=1"
 if not exist "node_modules\electron\dist\electron.exe" set "PG_FALTA=1"
+rem Electron diferente do que o package.json pede (zip novo extraido por cima da pasta antiga): reinstala, senao o
+rem Electron velho, sem os consertos de seguranca da versao nova, ficava pra sempre. So com o Node instalado.
+where node >nul 2>nul && (node -e "process.exit(require('./node_modules/electron/package.json').version===require('./package.json').devDependencies.electron?0:1)" 2>nul || set "PG_FALTA=1")
 if defined PG_FALTA (
   echo Instalando o necessario. Na primeira vez isso pode levar alguns minutos...
-  call npm install
+  call npm ci --ignore-scripts --no-audit --no-fund
 )
 echo Abrindo o PokeGrid...
 rem O erro precisa aparecer: descartar o stderr escondia a causa quando o app nao abria. O proprio app ja

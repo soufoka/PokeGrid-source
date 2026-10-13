@@ -181,9 +181,14 @@
       return qMax >= qMin ? { union, quality: (qMin + qMax) / 2 } : null;
     };
     const window = qualityProbes(lo, hi, observed, bases, level);
+    // O jogo sorteia a qualidade com 3 casas (rollQuality: floor(x*1000)/1000). Primeiro os valores de 3 casas da janela: a de
+    // 2 casas da tela sozinha as vezes fechava os 6 atributos com IVs errados e o card dizia "exato" (0,75% das leituras, medido
+    // com o sorteio do proprio jogo). Sem valor de 3 casas que feche (qualidade digitada com mais casas), a janela continua.
+    const grade = [];
+    for (let k = Math.ceil(lo * 1000 - 1e-9); k <= Math.floor(hi * 1000 + 1e-9); k++) grade.push(k / 1000);
     const tenta = useTotal => {
-      probes = [quality];
-      const exato = collect(useTotal);
+      probes = grade;
+      const exato = grade.length ? collect(useTotal) : null;
       if (exato) return exato;
       probes = window;
       return collect(useTotal);

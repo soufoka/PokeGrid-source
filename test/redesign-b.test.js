@@ -280,8 +280,8 @@ const comCatalogo = async (ls) => { const R = await catalogo(); const H = monta(
     ok(/background: #e6edf3;/.test(regra('#ivCard .iv-aba.on::after')) && /var\(--tabc/.test(regra('#stats .st-tab.on::after')), 'aba ativa do card de IV sublinhada em #e6edf3 (as abas do 📊 seguem na cor da conta)');
     const gear = regra('#stats .st-head .st-gear.on'), on = regra('button.on');
     ok(!vermelho.test(gear) && /color: #aff5b4;/.test(on) && (!gear || /#aff5b4/.test(gear)), 'engrenagem do Resumo ligada na cor do "ligado" (' + (gear || 'herda o ' + on) + ')');
-    ok(/background: #e6edf3; border-color: #e6edf3; color: #0d1117;/.test(regra('#tlChips button.on, #dtCtl button.on')) && code.includes("(tlEl === ty ? ' class=\"on\"' : ' style=\"color:' + tipoTx(ty) + '\"')"),
-      'filtro escolhido da Tierlist e do Ditto invertido como Paineis/idioma (sem o vermelho; o escolhido nao leva a cor do tipo por cima)');
+    ok(/background: #e6edf3; border-color: #e6edf3; color: #0d1117;/.test(regra('#tlChips button.on, #dtCtl button.on, #tlPkCtl button[data-he].on')) && code.includes("(tlEl === ty ? ' class=\"on\"' : ' style=\"color:' + tipoTx(ty) + '\"')"),
+      'filtro escolhido da Tierlist, do Ditto e do tipo das Hunts por tipo invertido como Paineis/idioma (sem o vermelho; o escolhido nao leva a cor do tipo por cima)');
     ok(/color: #e3b341; background: rgba\(210,153,34,\.14\); border: 1px solid rgba\(210,153,34,\.5\);/.test(regra('#ivCard .iv-av')) && /color: #f2c665;/.test(regra('#stats .drop .dg')) && /background: #f2c665;/.test(regra('#stats .vip'))
       && !/#e0b458|#d9a441|#f0c040/i.test(css), 'aviso do card de IV em ambar; os dourados da interface viraram um so (o gold), o VIP segue dourado');
   });

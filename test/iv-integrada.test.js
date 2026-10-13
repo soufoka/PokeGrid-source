@@ -258,7 +258,7 @@ function monta(opts = {}) {
     pokeAPI: { loadCreds: async () => [], saveCreds: async () => true, logError() {}, notify() {}, webhook: async () => true, onHotkey() {}, onJanela() {}, onAutoStart() {}, getAutoStart: async () => ({ on: false, suportado: true }), setAwake: async () => false, setMinToTray: async () => true, saveBackup: async () => true, appVersion: '1.5.31' },
     PokeGridIvMath: require(path.join(RAIZ, 'src/domain/iv-math.js'))
   };
-  const exporta = '\n;return { ivRecebe, ivRender, ivRecalcula, ivSane, IV_LEITOR, carregaHunts, t, nf, I18N, setAberto: (v) => { ivAberto = v; }, get ivDados() { return ivDados; }, get basesByName() { return basesByName; }, get scriptsOn() { return scriptsOn; }, allScripts, stSane, stCache, get ivHist() { return ivHist; }, get ivFix() { return ivFix; }, get ivTrava() { return ivTrava; }, get ivAba() { return ivAba; }, ico: typeof ico !== "undefined" ? ico : () => "?" };';
+  const exporta = '\n;return { ivRecebe, ivRender, ivRecalcula, ivSane, IV_LEITOR, carregaHunts, t, nf, I18N, setAberto: (v) => { ivAberto = v; }, get ivDados() { return ivDados; }, get basesByName() { return basesByName; }, get scriptsOn() { return scriptsOn; }, allScripts, stSane, stCache, jsonP, get ivHist() { return ivHist; }, get ivFix() { return ivFix; }, get ivTrava() { return ivTrava; }, get ivAba() { return ivAba; }, ico: typeof ico !== "undefined" ? ico : () => "?" };';
   const fn = new Function('window', 'document', 'localStorage', 'navigator', 'location', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'innerWidth', 'innerHeight', 'addEventListener', 'getComputedStyle', 'AudioContext', 'MutationObserver', 'FileReader', 'fetch', 'performance', 'prompt', code + exporta);
   const noop = () => 0;
   const api = fn(window, document, localStorage, opts.nav || { clipboard: { writeText: async () => {} } }, { reload() {} }, noop, noop, noop, noop, 1600, 900, noop, () => ({}), function () {}, function () { return { observe() {}, disconnect() {} }; }, function () {}, () => new Promise(() => {}), { now: () => Date.now() }, () => null);
@@ -267,7 +267,7 @@ function monta(opts = {}) {
     byId, store, execs, ivEl,
     html: () => ivEl.innerHTML,
     // o console-message REAL de um painel, ligado no ivRecebe e no stCache (push __PGST__ pelo stSane real) desta janela
-    canal: (i = 0) => { const f = new Function('i', 'dlgT', 'stSane', 'stCache', 'dtPush', 'ivRecebe', 'Date', 'return ' + CM)(i, [0, 0, 0, 0], api.stSane, api.stCache, () => {}, api.ivRecebe, Date); return (m) => f({ message: m }); },
+    canal: (i = 0) => { const f = new Function('i', 'dlgT', 'stSane', 'stCache', 'dtPush', 'ivRecebe', 'Date', 'jsonP', 'return ' + CM)(i, [0, 0, 0, 0], api.stSane, api.stCache, () => {}, api.ivRecebe, Date, api.jsonP); return (m) => f({ message: m }); },
     // digitar num campo do card (o onchange chama o ivRecalcula)
     digita: (id, v) => { ivEl.querySelector('#' + id).value = String(v); api.ivRecalcula(); }
   });
@@ -416,12 +416,15 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     ok(ivs.some((x) => x.includes('-')) && dentro, 'faixa onde nao da exato, e o IV de verdade dentro dela: ' + ivs.join(' ') + ' (verdade ' + PIKA5.growth.join('/') + ')');
     ok(ivs.join() === '8-17,18-27,5-14,30-32,10-19,20-29', 'Nv 5: ' + ivs.join(' '));
     ok(cardKpi(html, H.t('ivcPower').replace('{n}', 5)).startsWith('≈') && !cardAviso(html), 'poder pela formula marcado como aproximado (' + cardKpi(html, H.t('ivcPower').replace('{n}', 5)) + '), sem aviso');
-    // no Nv 20 cada stat fica entre dois IV; o IV total do jogo (72) so fecha com 12 em tudo
+    // no Nv 20 cada stat fica entre dois IV. Desde 12/10/2026 a busca usa as qualidades de 3 casas da janela (o jogo sorteia
+    // assim): 1,005 tambem aparece como x1,00 e fecha os mesmos atributos e o total 72 com 13/12/12/12/12/11, entao os dados
+    // nao dao 12 exato; o card mostra faixa com o IV de verdade dentro
     const PIKA20 = pk('Pikachu', 20, 1.0, [12, 12, 12, 12, 12, 12]);
     await leva(H, tipInv('pt', PIKA20, {}));
-    ok(cardIvs(H.html()).join() === '12,12,12,12,12,12' && !cardKpi(H.html(), H.t('ivcPower').replace('{n}', 20)).startsWith('≈'), 'com o IV total do tooltip (72): exato, pela restricao do total');
+    const dentro12 = (v) => v.every((x) => { const [a, b] = x.split('-').map(Number); return a <= 12 && 12 <= (b || a); });
+    ok(dentro12(cardIvs(H.html())) && cardKpi(H.html(), H.t('ivcIvTotal')) === '72/192', 'com o IV total do tooltip (72): o 12 de verdade dentro de cada faixa e o total 72 (' + cardIvs(H.html()).join(' ') + ')');
     await leva(H, tipInv('pt', Object.assign({}, PIKA20, { ivTotal: null }), {}));
-    ok(cardIvs(H.html()).every((x) => x === '12-13') && cardKpi(H.html(), H.t('ivcIvTotal')) === '?/192', 'o mesmo pokemon sem o IV no tooltip: faixa 12-13 em tudo e total "?" (' + cardIvs(H.html()).join(' ') + ')');
+    ok(dentro12(cardIvs(H.html())) && cardIvs(H.html()).some((x) => x.includes('-')) && cardKpi(H.html(), H.t('ivcIvTotal')) === '?/192', 'o mesmo pokemon sem o IV no tooltip: faixa com o 12 dentro e total "?" (' + cardIvs(H.html()).join(' ') + ')');
   });
 
   await secao('card: shiny, Mega, Orre e numeros com ponto de milhar', async () => {
@@ -486,7 +489,7 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     H.digita('ivNv', '60');
     html = H.html();
     const no60 = poderJogo(statsJogo('Pikachu', 60, 1.2, PIKA40.growth), 1.2);
-    ok(cardIvs(html).join() === '20,20,20,20,20,20' && cardKpi(html, H.t('ivcPower').replace('{n}', 60)) === H.nf(no60) && (() => { const g2 = golpesDe(H); return g2.length === 11 && g2.every((x) => !x.off); })(), 'nivel 60 no card: o IV fica, o poder vai pro do Nv 60 pela formula do jogo (' + H.nf(no60) + ') e os golpes destravam');
+    ok(cardIvs(html).join() === '20,20,20,20,20,20' && cardKpi(html, H.t('ivcPower').replace('{n}', 60)) === '≈' + H.nf(no60) && /* outro nivel: a qualidade de verdade so e conhecida na janela, entao e estimativa */ (() => { const g2 = golpesDe(H); return g2.length === 11 && g2.every((x) => !x.off); })(), 'nivel 60 no card: o IV fica, o poder vai pro do Nv 60 pela formula do jogo (' + H.nf(no60) + ') e os golpes destravam');
     H.digita('ivA_atk', '50');
     html = H.html();
     ok(cardIvs(html)[1] !== '20', 'atual de Atk mudado: o IV de Atk recalcula (' + cardIvs(html)[1] + ')');
@@ -705,7 +708,7 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     H.ivRecalcula();
     html = H.html();
     ok(cardIvs(html).join() === SCIZOR.growth.join() && !cardAviso(html), 'digitou Nv 80, qualidade 1.55 e os 6 atributos do jogo: IV exato pelo iv-math (' + cardIvs(html).join('/') + ')');
-    ok(cardKpi(html, H.t('ivcIvTotal')) === '122/192' && cardKpi(html, H.t('ivcPower').replace('{n}', 80)) === H.nf(SCIZOR.power) && !!cardPot(html), 'IV total 122 da soma, poder do jogo pela formula (' + cardKpi(html, H.t('ivcPower').replace('{n}', 80)) + ') e o potencial');
+    ok(cardKpi(html, H.t('ivcIvTotal')) === '122/192' && cardKpi(html, H.t('ivcPower').replace('{n}', 80)) === '≈' + H.nf(SCIZOR.power) && !!cardPot(html), 'IV total 122 da soma, poder do jogo pela formula com o aproximado da entrada manual (' + cardKpi(html, H.t('ivcPower').replace('{n}', 80)) + ') e o potencial');
     clica(H, 'fixa');
     ok(H.ivFix.length === 1 && H.ivFix[0].ed.atuais.atk === SCIZOR.stats.atk && H.ivFix[0].ed.nivel === 80, 'fixar o da busca guarda o que foi digitado');
     const H2 = await comCatalogo({ ls: { ivFix: H.store.get('ivFix'), ivAba: 'comparar' } });

@@ -121,7 +121,10 @@ const entre = (a, fim, incl) => { const i = b.indexOf(a); if (i < 0) throw new E
   ok(comTmRows.some((r) => r.sg.tm), 'ligando "com TM", os golpes de TM entram e vem marcados: ' + comTmRows.filter((r) => r.sg.tm).slice(0, 3).map((r) => r.sp + ' (' + r.sg.nome + ')').join(', '));
   ok(api.tierCalc(600, false) !== comTmRows, 'e o cache nao mistura as duas visoes');
   const raichu = n3000.find((r) => r.base === 'raichu');
-  ok(!n3000.some((r) => r.base === 'alolan raichu' || r.sp === r.base && /^nightmare alolan/.test(r.sp)), 'forma com dois prefixos (Nightmare Alolan Raichu) cai na base em vez de virar linha propria' + (raichu ? ' [raichu: ' + raichu.sp + ']' : ''));
+  // 12/10/2026: so cai na base quem tem o mesmo tipo. Nightmare Alolan Raichu e Eletrico/Psiquico e o Raichu e Eletrico: virava
+  // "Raichu" com o tipo errado e tirava o Raichu de verdade da lista de Eletrico
+  const tipoDe = (sp) => String((R.mv[sp] || {}).t);
+  ok(!n3000.some((r) => r.base === 'alolan raichu') && n3000.every((r) => !r.base || tipoDe(r.base) === tipoDe(r.sp)), 'forma com prefixo so cai na base com o mesmo tipo; a regional de tipo diferente fica com o nome dela' + (raichu ? ' [raichu: ' + raichu.sp + ']' : ''));
 
   console.log('\n--- Ditto: quem pode ser copiado, igual ao jogo de hoje ---');
   const comum = api.dittoRegras({ sp: 'ditto', level: 100, q: 0, ivt: 0 });

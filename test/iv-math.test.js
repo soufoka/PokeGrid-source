@@ -63,4 +63,19 @@ assert.equal(semPoder.exact, true);
 const digitada = normalizeIvs({ ...tyranitar, power: undefined, quality: 1.7062 }); // mais casas: vale a precisao dela
 assert.deepEqual(digitada.values, ivsTyranitar);
 
-console.log("IV math: 11 checks passed");
+// 12/10/2026: o jogo sorteia a qualidade com 3 casas (rollQuality). Slaking real 1,425 aparece como x1,43, e com 1,43 os 6
+// atributos fechavam num IV so, ERRADO (23/22/27/32/5/14), com o card dizendo exato. As qualidades de 3 casas vem primeiro.
+const slaking = {
+  level: 20,
+  quality: 1.43,
+  ivTotal: 123,
+  power: 353,
+  observedStats: { hp: 55, atk: 54, def: 41, spa: 42, spd: 20, speed: 36 },
+  species: { baseStats: { hp: 150, atk: 160, def: 100, spa: 95, spd: 65, speed: 100 } }
+};
+const verdadeSlaking = { hp: 24, atk: 21, def: 27, spa: 31, spd: 6, speed: 14 };
+const sl = normalizeIvs(slaking);
+assert.ok(Object.keys(verdadeSlaking).every((k) => sl.ranges[k][0] <= verdadeSlaking[k] && verdadeSlaking[k] <= sl.ranges[k][1]), "o IV de verdade dentro de cada faixa: " + JSON.stringify(sl.ranges));
+assert.ok(!sl.exact || JSON.stringify(sl.values) === JSON.stringify(verdadeSlaking), "nunca exato com IV errado");
+
+console.log("IV math: 13 checks passed");

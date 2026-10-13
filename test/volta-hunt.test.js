@@ -15,16 +15,16 @@ while ((m = re.exec(s))) { if (m[1].length > b.length) b = m[1]; }
 try { new Function(b); ok(true, 'index parseia'); } catch (e) { ok(false, 'parse: ' + e.message); }
 
 // o construtor real do script injetado
-const iv = b.indexOf('const VOLTA_JS = (slug) =>');
+const iv = b.indexOf('const VOLTA_JS = (slug, cid) =>');
 const VOLTA_JS = new Function(b.slice(iv, b.indexOf('\n', iv)) + '\nreturn VOLTA_JS;')();
 
 // roda o script num "jogo" falso: relogio controlado, socket que anota o que saiu, ticks de 12s
 const roda = (slug, o = {}) => {
   const enviados = []; let agora = 1000; let tick = null; let parou = false;
   const sock = { readyState: o.sockAbreNoTick ? 0 : (o.sockState == null ? 1 : o.sockState), send: (x) => enviados.push(JSON.parse(x)) };
-  const P = o.semColetor ? undefined : { sock, sess: { kills: 0 } };
+  const P = o.semColetor ? undefined : { sock, sess: { kills: 0 }, api: o.me === undefined ? {} : { '/api/characters/me': { character: { id: o.me } } } };
   const win = { __poke: P, __pgVolta: o.jaRodou ? 1 : undefined };
-  const ret = new Function('window', 'Date', 'setInterval', 'clearInterval', 'return ' + VOLTA_JS(slug))(
+  const ret = new Function('window', 'Date', 'setInterval', 'clearInterval', 'return ' + VOLTA_JS(slug, o.cid))(
     win, { now: () => agora }, (fn, ms) => { tick = { fn, ms }; return 1; }, () => { parou = true; });
   if (o.fiDepois && P) P.fiT = agora + 5000; // a conta entrou numa hunt sozinha depois de armar
   let n = 0; const enviosPorTick = [];
@@ -33,6 +33,9 @@ const roda = (slug, o = {}) => {
     if (o.sockAbreNoTick && n >= o.sockAbreNoTick) sock.readyState = 1;
     if (o.killsNoTick && P) P.sess.kills += o.killsNoTick(n);
     if (o.fiNoTick === n && P) P.fiT = agora - 5000; // o servidor confirmou a entrada (field-init) antes desse tick
+    if (o.viajaNoTick === n && P) P.sess.saiuT = agora - 3000; // o usuario escolheu outro lugar no mapa (o coletor carimba saiuT)
+    if (o.desligaNoTick === n) win.__pgVoltaOff = 1; // o usuario desligou o Voltar pra hunt
+    if (o.meNoTick === n && P) P.api['/api/characters/me'] = { character: { id: o.meDepois } }; // o /me chegou
     tick.fn(); enviosPorTick.push(enviados.length);
   }
   return { ret, enviados, espera: tick ? tick.ms : null, ticks: n, enviosPorTick };
@@ -69,6 +72,23 @@ ok(roda('orre_x', { semColetor: true }).ret === 'sem-coletor', 'sem coletor na p
 const dup = roda('orre_x', { jaRodou: true });
 ok(dup.ret === 'ja' && dup.enviados.length === 0, 'uma vez por carga de pagina: a segunda chamada nao arma de novo');
 
+console.log('\n--- para quando voce viaja, desliga a opcao ou a conta do painel e outra (12/10/2026) ---');
+{
+  const viaja = roda('orre_x', { viajaNoTick: 2 });
+  ok(viaja.enviados.length === 1 && viaja.ticks === 2, 'voce escolheu outro lugar depois do 1o envio: para e nao manda a hunt por cima da viagem (' + viaja.enviados.length + ' envio)');
+  const desliga = roda('orre_x', { desligaNoTick: 1 });
+  ok(desliga.enviados.length === 0, 'desligou o Voltar pra hunt antes do 1o tiro: nada sai (antes o envio ja armado seguia)');
+  const outra = roda('orre_x', { cid: 'c-a', me: 'c-b' });
+  ok(outra.enviados.length === 0 && outra.ticks === 1, 'outra conta logada no painel (Sair do jogo e entrou com outra): nao manda a hunt da conta de antes');
+  const mesma = roda('orre_x', { cid: 'c-a', me: 'c-a', killsNoTick: (n) => (n >= 2 ? 1 : 0) });
+  ok(mesma.enviados.length === 1, 'a mesma conta: manda como antes');
+  const semMe = roda('orre_x', { cid: 'c-a', meNoTick: 3, meDepois: 'c-a', killsNoTick: (n) => (n >= 4 ? 1 : 0) });
+  ok(semMe.enviosPorTick[0] === 0 && semMe.enviosPorTick[1] === 0 && semMe.enviados.length === 1, 'o /me ainda nao chegou: espera e manda quando confirma a conta (' + semMe.enviosPorTick.join(',') + ')');
+  const semCid = roda('orre_x', { killsNoTick: (n) => (n >= 2 ? 1 : 0) });
+  ok(semCid.enviados.length === 1, 'foto da sessao sem o id da conta: segue como antes');
+  ok(b.includes("w.executeJavaScript('window.__pgVoltaOff=1;window.__poke&&(window.__poke.vSlug=null)')"), 'desligar a opcao avisa as paginas abertas (o envio ja armado para no proximo tick)');
+}
+
 console.log('\n--- o slug nao vira injecao de codigo ---');
 {
   const hostil = "x'});alert(1);({a:'";
@@ -84,7 +104,7 @@ ok(b.includes("let voltaHuntOn = lsGet('voltaHunt') === '1';"), 'DESLIGADO por p
 ok(b.includes('Date.now() - ((snv.s && snv.s.lastKillT) || 0) < 600e3') && b.includes('S.kills++;S.lastKillT=Date.now();'),
   'so se houve KILL DE VERDADE nos ultimos 10 min: o carimbo vem do coletor e viaja na foto da sessao (o lastKT antigo era renovado sem kill)');
 ok(b.includes('Date.now() - snv.t < 600e3'), 'e a foto da sessao tem menos de 10 min (e so e tirada de conta viva)');
-ok(b.indexOf('wv.executeJavaScript(VOLTA_JS(snv.slug))') > b.indexOf('coletor de estado + sessao'), 'injetado DEPOIS do coletor (precisa do window.__poke)');
+ok(b.indexOf('wv.executeJavaScript(VOLTA_JS(snv.slug, snv.cid))') > b.indexOf('coletor de estado + sessao'), 'injetado DEPOIS do coletor (precisa do window.__poke)');
 ok(b.includes("m.type==='field-init'){const sl=m.slug||'';P.fiT=Date.now();"), 'o coletor carimba a hora do field-init');
 ok(b.includes('recarregou farmando, volta pra hunt'), 'fica registrado no relatorio de erros quando age');
 

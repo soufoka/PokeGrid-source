@@ -305,8 +305,9 @@ function painel(url, resposta) {
     const base = fs.mkdtempSync(path.join(os.tmpdir(), 'pgbat-'));
     const bin = path.join(base, 'bin');
     fs.mkdirSync(bin);
-    // npm falso: registra a chamada; o install repoe a dependencia que a instalacao interrompida perdeu
-    fs.writeFileSync(path.join(bin, 'npm-falso.js'), "const fs=require('fs'),p=require('path');const a=process.argv.slice(2);fs.appendFileSync(p.join(__dirname,'log.txt'),'npm '+a[0]+'\\n');if(a[0]==='install'){const d=p.join(process.cwd(),'node_modules','@electron','get');fs.mkdirSync(d,{recursive:true});fs.writeFileSync(p.join(d,'package.json'),'{\"name\":\"@electron/get\",\"main\":\"index.js\"}');fs.writeFileSync(p.join(d,'index.js'),'');}");
+    // npm falso: registra a chamada; o ci (desde 12/10/2026 os lancadores usam npm ci --ignore-scripts) repoe a dependencia que a
+    // instalacao interrompida perdeu e poe o Electron na versao do package.json, como o lock de verdade
+    fs.writeFileSync(path.join(bin, 'npm-falso.js'), "const fs=require('fs'),p=require('path');const a=process.argv.slice(2);fs.appendFileSync(p.join(__dirname,'log.txt'),'npm '+a[0]+'\\n');if(a[0]==='ci'){const e=p.join(process.cwd(),'node_modules','electron','package.json');fs.writeFileSync(e,JSON.stringify(Object.assign(JSON.parse(fs.readFileSync(e,'utf8')),{version:'43.7.7'})));const d=p.join(process.cwd(),'node_modules','@electron','get');fs.mkdirSync(d,{recursive:true});fs.writeFileSync(p.join(d,'package.json'),'{\"name\":\"@electron/get\",\"main\":\"index.js\"}');fs.writeFileSync(p.join(d,'index.js'),'');}");
     fs.writeFileSync(path.join(bin, 'npm.cmd'), '@"' + process.execPath + '" "%~dp0npm-falso.js" %*\r\n');
     fs.writeFileSync(path.join(bin, 'node-velho.js'), "Object.defineProperty(process,'versions',{value:Object.assign({},process.versions,{node:'20.10.0'})});");
     // electron falso: o require precisa do @electron/get e, com ele, "baixa" o programa (grava o exe e o path.txt)
@@ -316,8 +317,8 @@ function painel(url, resposta) {
       const dir = path.join(base, 'Pasta (' + (++n) + ') do PokeGrid');
       const nm = path.join(dir, 'node_modules');
       fs.mkdirSync(path.join(nm, 'electron'), { recursive: true });
-      fs.writeFileSync(path.join(dir, 'package.json'), '{"name":"pokegrid","version":"0.0.0"}'); // o .bat so roda dentro da pasta do app
-      fs.writeFileSync(path.join(nm, 'electron', 'package.json'), '{"name":"electron","main":"index.js"}');
+      fs.writeFileSync(path.join(dir, 'package.json'), '{"name":"pokegrid","version":"0.0.0","devDependencies":{"electron":"43.7.7"}}'); // o .bat so roda dentro da pasta do app
+      fs.writeFileSync(path.join(nm, 'electron', 'package.json'), '{"name":"electron","version":"43.7.7","main":"index.js"}');
       fs.writeFileSync(path.join(nm, 'electron', 'index.js'), electronFalso);
       monta(nm);
       const txt = fs.readFileSync(bat, 'latin1').replace(/start "" "node_modules\\electron\\dist\\electron\.exe" \./, 'echo ABRIRIA O PROGRAMA').replace(/node "node_modules\\electron\\cli\.js" \./, 'echo ABRIRIA O PROGRAMA');
@@ -335,14 +336,19 @@ function painel(url, resposta) {
       const r1 = roda(abrir, (nm) => { comGet(nm); fs.writeFileSync(path.join(nm, 'electron', 'path.txt'), 'electron.exe'); });
       ok(r1.exe && r1.out.includes('ABRIRIA O PROGRAMA') && !r1.out.includes('nao terminou'), 'antivirus levou o electron.exe depois de instalado (path.txt ficou): baixa de novo e abre' + (r1.exe ? '' : ' -> ' + r1.out.trim().split('\n').slice(-3).join(' | ')));
       const r2 = roda(abrir, () => {});
-      ok(r2.npm.includes('npm install') && r2.exe && r2.out.includes('ABRIRIA O PROGRAMA'), 'instalacao interrompida sem o @electron/get: roda o npm install de novo e completa (antes: Cannot find module em toda abertura)' + (r2.exe ? '' : ' -> ' + r2.out.trim().split('\n').slice(-3).join(' | ')));
+      ok(r2.npm.includes('npm ci') && r2.exe && r2.out.includes('ABRIRIA O PROGRAMA'), 'instalacao interrompida sem o @electron/get: roda o npm ci de novo e completa (antes: Cannot find module em toda abertura)' + (r2.exe ? '' : ' -> ' + r2.out.trim().split('\n').slice(-3).join(' | ')));
       const r3 = roda(abrir, (nm) => { comGet(nm); comExe(nm); });
       ok(r3.npm.length === 0 && r3.out.includes('ABRIRIA O PROGRAMA'), 'tudo instalado: nem chama o npm, so abre');
+      const velho = (nm) => fs.writeFileSync(path.join(nm, 'electron', 'package.json'), '{"name":"electron","version":"43.1.1","main":"index.js"}');
+      const r7 = roda(abrir, (nm) => { comGet(nm); comExe(nm); velho(nm); });
+      ok(r7.npm.join(',') === 'npm ci' && r7.out.includes('ABRIRIA O PROGRAMA'), 'zip novo extraido por cima da pasta antiga (Electron 43.1.1, o package.json pede 43.7.7): reinstala e abre (antes abria o Electron velho pra sempre) (' + r7.npm.join(',') + ')');
       const r4 = roda(abrir, () => {}, { NODE_OPTIONS: '--require "' + path.join(bin, 'node-velho.js').replace(/\\/g, '/') + '"' });
       ok(r4.out.includes('Node.js deste PC e antigo') && r4.npm.length === 0 && !r4.out.includes('Confira a internet'), 'Node 20 antigo: diz pra atualizar o Node em vez de mandar conferir a internet (baixa)');
       if (iniciar) {
         const r5 = roda(iniciar, (nm) => { comGet(nm); fs.writeFileSync(path.join(nm, 'electron', 'path.txt'), 'electron.exe'); });
-        ok(r5.npm.join(',') === 'npm install' && r5.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: sem o electron.exe roda o npm install e abre pelo cli.js do Electron (' + r5.npm.join(',') + ')');
+        ok(r5.npm.join(',') === 'npm ci' && r5.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: sem o electron.exe roda o npm ci e abre pelo cli.js do Electron (' + r5.npm.join(',') + ')');
+        const r8 = roda(iniciar, (nm) => { comGet(nm); comExe(nm); velho(nm); });
+        ok(r8.npm.join(',') === 'npm ci' && r8.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: Electron velho na pasta tambem reinstala (' + r8.npm.join(',') + ')');
         const r6 = roda(iniciar, (nm) => { comGet(nm); comExe(nm); });
         ok(r6.npm.length === 0 && r6.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: tudo instalado, nem chama o npm, so abre pelo cli.js');
       }

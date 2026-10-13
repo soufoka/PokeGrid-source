@@ -20,9 +20,13 @@ rem de instalado. Nos dois casos o bloco abaixo refaz o que faltou. O .bat nao t
 set "PG_FALTA="
 if not exist "node_modules\electron\path.txt" set "PG_FALTA=1"
 if not exist "node_modules\electron\dist\electron.exe" set "PG_FALTA=1"
+rem Electron diferente do que o package.json pede (zip novo extraido por cima da pasta antiga): reinstala, senao o
+rem Electron velho, sem os consertos de seguranca da versao nova, ficava pra sempre. So com o Node instalado.
+where node >nul 2>nul && (node -e "process.exit(require('./node_modules/electron/package.json').version===require('./package.json').devDependencies.electron?0:1)" 2>nul || set "PG_FALTA=1")
 rem O cmd nao tem tee: este node copia a saida da instalacao pra tela e pro instalacao.log, porque o motivo real de uma
 rem falha rolava pra fora da janela. Sem terminal a barra de download some, entao um ponto a cada 5 s mostra que nao travou.
-set PG_TEE=node -e "const w=require('fs').createWriteStream('instalacao.log',{flags:'a'}).on('error',()=>{});let p=0;process.stdin.on('data',d=>{if(p)process.stdout.write('\n');p=0;process.stdout.write(d);w.write(d)}).on('end',()=>{if(p)process.stdout.write('\n')});setInterval(()=>{p=1;process.stdout.write('.')},5000).unref()"
+rem No arquivo a pasta do usuario vira ~: o log vai pro Discord e o caminho C:\Users\<nome> costuma ser o nome da pessoa.
+set PG_TEE=node -e "const h=require('os').homedir(),h2=h.split('\\').join('\\\\'),sd=new (require('string_decoder').StringDecoder)('utf8'),w=require('fs').createWriteStream('instalacao.log',{flags:'a'}).on('error',()=>{});let p=0;process.stdin.on('data',d=>{if(p)process.stdout.write('\n');p=0;process.stdout.write(d);w.write(sd.write(d).split(h2).join('~').split(h).join('~'))}).on('end',()=>{if(p)process.stdout.write('\n')});setInterval(()=>{p=1;process.stdout.write('.')},5000).unref()"
 if defined PG_FALTA (
   where npm >nul 2>nul || (
     echo.
@@ -41,11 +45,11 @@ if defined PG_FALTA (
     pause
     exit /b
   )
-  rem Sempre, nao so sem node_modules: com tudo instalado leva segundos, e repoe dependencia que faltou numa instalacao
-  rem interrompida. Antes o require abaixo falhava com Cannot find module em toda abertura.
+  rem npm ci: instala exatamente o package-lock.json, com versao e hash de cada pacote travados, sem rodar script de pacote
+  rem nenhum, e refaz o node_modules do zero, o que tambem repoe dependencia que faltou numa instalacao interrompida.
   echo Instalando o necessario. Na primeira vez isso pode levar alguns minutos...
   node -p "'PokeGrid '+require('./package.json').version+', Node '+process.version+' '+process.arch+', Windows '+require('os').release()" > instalacao.log
-  call npm install --no-audit --no-fund 2>&1 | %PG_TEE%
+  call npm ci --ignore-scripts --no-audit --no-fund 2>&1 | %PG_TEE%
   rem O Electron 43 so baixa o programa dele na primeira vez que alguem pede o caminho: e isto que pede.
   rem Se a internet cair no meio, abrir de novo baixa tudo outra vez.
   echo Baixando o Electron, uns 100 MB, so desta vez. Nao feche esta janela...

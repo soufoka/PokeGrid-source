@@ -65,6 +65,8 @@ function pagina(url, http = 200) {
   Object.assign(win, { WebSocket: FakeWS, document, HTMLInputElement, Event, atob: (b) => Buffer.from(b, 'base64').toString('binary'),
     fetch: (u) => Promise.resolve(resp(String(u).includes('characters/me') ? (est.meOk ? { character: { id: est.cid } } : { message: 'Unauthorized' }) : {})) });
   win.window = win;
+  // a pagina sabe onde esta (o vigia do login para ao sair do /login, o chat nao mexe no login)
+  Object.defineProperty(win, 'location', { get: () => { try { const u = new URL(p.url); return { pathname: u.pathname, href: p.url }; } catch { return { pathname: '', href: p.url }; } } });
   vm.createContext(Object.assign(win, { Date: DateF, JSON, Math, Object, Array, String, Number, Reflect, Promise, Error, isFinite, Set, Map,
     setInterval: (f, ms) => { ivs.push({ f, ms, prox: relogio.now + ms }); return ivs.length; }, clearInterval: (id) => { if (ivs[id - 1]) ivs[id - 1].morto = 1; },
     setTimeout: (f, ms) => { tos.push({ f, quando: relogio.now + (ms || 0) }); return 0; }, clearTimeout() {} }));
@@ -153,13 +155,15 @@ function app(o = {}) {
 }
 const tipos = (p, i0 = 0) => p.sent.slice(i0).filter((x) => /^(enter-hunt|leave-hunt|set-city)$/.test(x.type)).map((x) => x.type + ':' + (x.slug || '')).join(',');
 const farm = (w) => () => { w.pg.msg({ type: 'field', seq: 1 }); w.pg.msg({ type: 'field-kill', xpGained: 10, loot: [] }); };
+// o jogo pede o /me ao carregar (o coletor guarda): o VOLTA confere a conta por ele
+const pedeMe = async (w) => { w.pg.run("fetch('/api/characters/me')"); await espera(); };
 async function farmando(a, w, seg = 120) {
-  w.pg.abreSocket(); w.pg.envia({ type: 'set-city', slug: 'cerulean' }); w.pg.envia({ type: 'enter-hunt', slug: 'rota_x' });
+  await pedeMe(w); w.pg.abreSocket(); w.pg.envia({ type: 'set-city', slug: 'cerulean' }); w.pg.envia({ type: 'enter-hunt', slug: 'rota_x' });
   w.pg.msg({ type: 'field-init', slug: 'rota_x' }); w.pg.msg({ type: 'inventory', items: [] });
   await a.anda(seg, farm(w));
 }
 // reload (Atualizar, vigia de 60 s, crash, troca de idioma): documento novo que nasce em Cerulean e manda set-city ao montar
-async function recarrega(a, w) { navega(w, PLAY); await espera(); w.pg.abreSocket(); const i0 = w.pg.sent.length; w.pg.envia({ type: 'set-city', slug: 'cerulean' }); w.pg.msg({ type: 'inventory', items: [] }); return i0; }
+async function recarrega(a, w) { navega(w, PLAY); await espera(); await pedeMe(w); w.pg.abreSocket(); const i0 = w.pg.sent.length; w.pg.envia({ type: 'set-city', slug: 'cerulean' }); w.pg.msg({ type: 'inventory', items: [] }); return i0; }
 const umTiro = (w) => { relogio.now += 12000; w.pg.timers(); }; // so o primeiro tiro do VOLTA (12 s): sem o field-init do servidor ele repetiria
 const voltaDispara = (w) => { relogio.now += 12000; w.pg.timers(); relogio.now += 24000; w.pg.timers(); }; // os tiros do VOLTA (12 s, ate 3)
 
@@ -280,6 +284,8 @@ const voltaDispara = (w) => { relogio.now += 12000; w.pg.timers(); relogio.now +
     ok(tipos(w.pg, i0) === '', 'field-lost: espera 1 s, como o jogo');
     relogio.now += 1000; w.pg.timers();
     ok(tipos(w.pg, i0) === 'enter-hunt:rota_x', 'e remanda o enter-hunt da hunt do VOLTA (' + tipos(w.pg, i0) + ')');
+    const fl = w.pg.sent.slice(i0).find((x) => x.type === 'enter-hunt');
+    ok(fl && fl.resume === true, 'com resume true, como o jogo depois de field-lost numa hunt que ja mandou field-init (' + JSON.stringify(fl) + ')');
     i0 = w.pg.sent.length;
     w.pg.envia({ type: 'enter-hunt', slug: 'rota_y' }); w.pg.msg({ type: 'field-init', slug: 'rota_y' }); w.pg.msg({ type: 'field-lost' }); relogio.now += 1000; w.pg.timers();
     ok(tipos(w.pg, i0) === 'enter-hunt:rota_y', 'a tela foi pra outra hunt (o jogo cuida do field-lost dela): o coletor nao manda a hunt velha (' + tipos(w.pg, i0) + ')');

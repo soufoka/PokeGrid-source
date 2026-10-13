@@ -204,6 +204,20 @@ const abreFora = (url) => {
   shell.openExternal(url);
 };
 app.on('web-contents-created', (_e, contents) => {
+  // Painel novo: a interface so cria <webview> do jogo numa das 4 particoes. Um XSS na janela principal podia criar um com
+  // preload proprio, sem webSecurity, em outra particao ou de outro site (checklist de seguranca do Electron). As opcoes
+  // perigosas saem fixas e o resto e recusado. Medido no Electron 43: o params traz src e partition, e o Node ja vem
+  // desligado nos paineis porque a janela principal nao tem Node; aqui ele fica desligado mesmo se isso mudar.
+  contents.on('will-attach-webview', (ev, wp, params) => {
+    delete wp.preload;
+    Object.assign(wp, { nodeIntegration: false, nodeIntegrationInSubFrames: false, nodeIntegrationInWorker: false, contextIsolation: true, sandbox: true, webSecurity: true, allowRunningInsecureContent: false });
+    let doJogo = false;
+    try { doJogo = new URL(params.src).origin === new URL(GAME).origin; } catch {}
+    if (!doJogo || !/^persist:conta[1-4]$/.test(String(params.partition || ''))) {
+      ev.preventDefault();
+      logErro('painel', 'painel recusado: ' + String(params.src).slice(0, 80) + ' / ' + String(params.partition).slice(0, 30));
+    }
+  });
   if (contents.getType() !== 'webview') return;
   contents.setWindowOpenHandler(({ url }) => { abreFora(url); return { action: 'deny' }; });
   // compara a ORIGEM, nao o prefixo: 'https://poke.idleworld.online.evil.com' comeca igual e
@@ -216,10 +230,15 @@ app.on('web-contents-created', (_e, contents) => {
   contents.on('will-redirect', guarda);
   // watchdog: se o processo do painel morrer (crash/OOM), recarrega sozinho. Recuo crescente (1,5 s, 3 s, 6 s... ate 1 min):
   // painel que cai de novo antes de terminar de carregar nao fica recarregando a cada 1,5 s pra sempre. Carregou, zera.
-  let quedas = 0;
-  contents.on('did-finish-load', () => { quedas = 0; });
+  // Zera so se a carga ficou de pe 1 min: zerar no did-finish-load deixava o painel que cai logo depois de carregar (userscript
+  // travando, derrubado pelo vigia de 20 s) recarregando a cada 1,5 s pra sempre. A carga usada se gasta: queda antes de a
+  // proxima carregar nao zera de novo.
+  let quedas = 0, carregouT = 0;
+  contents.on('did-finish-load', () => { carregouT = Date.now(); });
   contents.on('render-process-gone', (_ev, d) => {
     if (d.reason !== 'clean-exit') {
+      if (carregouT && Date.now() - carregouT >= 60000) quedas = 0;
+      carregouT = 0;
       const espera = Math.min(1500 * 2 ** quedas++, 60000);
       logErro('painel', 'processo do painel caiu: ' + d.reason + (d.exitCode != null ? ' (exit ' + d.exitCode + ')' : '') + ', recarrega em ' + espera / 1000 + ' s');
       setTimeout(() => { try { contents.reload(); } catch {} }, espera);
@@ -349,9 +368,10 @@ ipcMain.handle('webhook:send', (_e, url, text) => {
   try {
     const u = new URL(String(url));
     if (u.protocol !== 'https:' || !/^(?:(?:ptb|canary)\.)?discord(?:app)?\.com$/.test(u.hostname) || !u.pathname.startsWith('/api/webhooks/')) return false; // ptb. e canary.: a URL que o Discord PTB/Canary copia
-    // Mencao: so os IDs de usuario que JA estao no texto (o app so poe o que voce configurou).
-    // parse: [] segue barrando @everyone/@here e cargos, mesmo se o nome de uma conta tentar.
-    const ids = (String(text).match(/<@(\d{5,20})>/g) || []).map(x => x.replace(/\D/g, '')).slice(0, 5);
+    // Mencao: so a do COMECO do texto, que e onde o app poe a que voce configurou. O resto traz nome de conta e de pokemon
+    // vindos do jogo: um "<@id>" ali aparece escrito, sem notificar ninguem (antes todo ID do texto entrava na lista).
+    // parse: [] segue barrando @everyone/@here e cargos.
+    const m0 = /^<@(\d{5,20})>/.exec(String(text)), ids = m0 ? [m0[1]] : [];
     const body = JSON.stringify({ content: String(text).slice(0, 1900), allowed_mentions: { parse: [], users: ids } });
     // resolve com o status de verdade: sem isso o botao Testar dava OK ate com webhook apagado
     return new Promise((pronto) => {

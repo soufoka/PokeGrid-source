@@ -105,7 +105,9 @@
     if (p > 0 && sum > 0) {
       const plo = (p - 0.5) / sum;
       const phi = (p + 0.5) / sum;
-      if (plo < hi && phi > lo) { lo = Math.max(lo, plo); hi = Math.min(hi, phi); }
+      // <= : qualidade de verdade terminada em 5 na 3a casa (1,575 aparece 1,57) poe a janela do poder colada na borda da tela;
+      // com < ela era ignorada, sobravam varias qualidades e o poder no nivel lido saia 1 ou 2 fora, sem o ≈
+      if (plo <= hi && phi >= lo) { lo = Math.max(lo, plo); hi = Math.min(hi, phi); }
     }
     return [Math.max(1e-6, lo), hi];
   }

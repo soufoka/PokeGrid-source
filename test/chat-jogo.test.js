@@ -61,7 +61,10 @@ ok(cliques.length === 1, 'o ouvinte do botao do jogo entra uma vez so, por mais 
   ok(cena('/login', { placeholder: 'Código de 6 dígitos', autocomplete: 'one-time-code' }) === '', 'tela de login com o campo do 2FA na metade de baixo: nada some');
   ok(cena('/login', { placeholder: 'Mensagem' }) === '', 'na tela de login nada e tratado como chat, nem campo com cara de chat');
   ok(cena('/play', { placeholder: '000000', autocomplete: 'one-time-code' }) === '', 'no jogo, o 2FA da Minha Conta na metade de baixo: nao e chat, nao some');
-  ok(cena('/play', { placeholder: '' }) === 'none', 'no jogo, o chat sem placeholder conhecido continua achado pelo campo da metade de baixo');
+  // 13/10/2026: o segundo passe (qualquer campo de texto na metade de baixo) saiu. Com o chat do jogo minimizado (sem .chat-box),
+  // ele achava o campo da janela de troca ou da config do Auto-Helper arrastada e escondia a janela inteira no lugar do chat
+  ok(cena('/play', { placeholder: '' }) === '', 'no jogo, campo sem placeholder de chat na metade de baixo (janela de troca, config do Auto-Helper): nao e chat, nao some');
+  ok(cena('/play', { placeholder: 'Falar em Mundo...' }) === 'none', 'e o chat de verdade segue achado pelo placeholder (ou pela .chat-box)');
 }
 
 console.log(fail ? '\nFALHOU' : '\nTODOS PASSARAM');

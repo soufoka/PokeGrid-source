@@ -137,7 +137,7 @@ const S1 = (on, extra) => ({ ls: { userScripts: JSON.stringify([{ id: 'u1', name
     const chamadas = [...janela.matchAll(/\b(?:window\.)?(?:confirm|alert)\(/g)].map((m) => janela.slice(Math.max(0, m.index - 20), m.index + 30).replace(/\s+/g, ' '));
     ok(guarda.includes('window.confirm(T[0]') && guarda.includes("['alert', 'confirm', 'prompt'].forEach") && !chamadas.length,
       'window.confirm/alert na janela: ' + chamadas.length + (chamadas.length ? ' (ex.: ' + chamadas.slice(0, 2).join(' | ') + ')' : '') + '; a guarda de venda, injetada no jogo, segue com o confirm dela');
-    ok(code.includes("'#overlay.show, #scOverlay.show, #tlOverlay.show, #dtOverlay.show, #dlgOverlay.show'"), 'com o dialogo aberto os atalhos de letra ficam quietos (R recarregava os paineis por tras dele)');
+    ok(code.includes("'#overlay.show, #scOverlay.show, #tlOverlay.show, #dtOverlay.show, #ocOverlay.show, #dlgOverlay.show'"), 'com o dialogo aberto os atalhos de letra ficam quietos (R recarregava os paineis por tras dele)');
   });
 
   await secao('o dialogo: alertdialog modal rotulado e descrito, Cancelar e a acao a direita, texto com quebra de linha, por cima de tudo', async () => {

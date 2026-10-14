@@ -147,7 +147,7 @@ const FIXADO = JSON.stringify([{ d: Object.assign({}, SCIZOR, { nome: 'Kabutops'
   await secao('barra do topo: Logar equipe em destaque, o resto discreto, na ordem combinada', async () => {
     const tb = bloco('topbar'), semMenu = tb.replace(bloco('menuWrap'), '<div id="menuWrap">');
     const seq = [...semMenu.matchAll(/<(?:button|span|div)\b[^>]*?(?:\sid="(\w+)"|\sclass="(logo|tb-fill|tb-sep)")/g)].map((m) => m[1] || m[2]).filter((x) => x !== 'topbar' && x !== 'appVer');
-    const quer = ['logo', 'loginAll', 'reloadAll', 'tb-fill', 'statsBtn', 'cardsBtn', 'ivsBtn', 'tb-sep', 'accounts', 'menuWrap', 'tb-sep', 'donTop', 'refBtn'];
+    const quer = ['logo', 'loginAll', 'reloadAll', 'tb-fill', 'statsBtn', 'cardsBtn', 'ivsBtn', 'ocBtn', 'tb-sep', /* 14/10/2026: Onde cacar, ferramenta de todo dia (o Tipo do Dia muda todo dia) */ 'accounts', 'menuWrap', 'tb-sep', 'donTop', 'refBtn'];
     ok(seq.join() === quer.join(), 'ordem: ' + seq.join(' '));
     const prim = [...tb.matchAll(/<button\b[^>]*class="[^"]*\bprimary\b[^"]*"[^>]*>/g)].map((m) => (/id="(\w+)"/.exec(m[0]) || [])[1]);
     const ghost = regra('#topbar > button:not(.primary):not(.on), #menuBtn'), don = regra('#topbar > #donTop'), cor = regra('#donTop .ico');

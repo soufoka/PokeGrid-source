@@ -66,15 +66,15 @@ function pagina(url, http = 200) {
     fetch: (u) => Promise.resolve(resp(String(u).includes('characters/me') ? (est.meOk ? { character: { id: est.cid } } : { message: 'Unauthorized' }) : {})) });
   win.window = win;
   // a pagina sabe onde esta (o vigia do login para ao sair do /login, o chat nao mexe no login)
-  Object.defineProperty(win, 'location', { get: () => { try { const u = new URL(p.url); return { pathname: u.pathname, href: p.url }; } catch { return { pathname: '', href: p.url }; } } });
-  vm.createContext(Object.assign(win, { Date: DateF, JSON, Math, Object, Array, String, Number, Reflect, Promise, Error, isFinite, Set, Map,
+  Object.defineProperty(win, 'location', { get: () => { try { const u = new URL(p.url); return { pathname: u.pathname, href: p.url, host: u.host }; } catch { return { pathname: '', href: p.url, host: '' }; } } });
+  vm.createContext(Object.assign(win, { Date: DateF, JSON, Math, Object, Array, String, Number, Reflect, Promise, Error, isFinite, Set, Map, URL,
     setInterval: (f, ms) => { ivs.push({ f, ms, prox: relogio.now + ms }); return ivs.length; }, clearInterval: (id) => { if (ivs[id - 1]) ivs[id - 1].morto = 1; },
     setTimeout: (f, ms) => { tos.push({ f, quando: relogio.now + (ms || 0) }); return 0; }, clearTimeout() {} }));
   return Object.assign(p, {
     campos,
     run: (code) => vm.runInContext(code, win),
     // o GameSocketProvider abre o socket depois do coletor (que embrulha window.WebSocket)
-    abreSocket() { if (p.ws) p.ws.readyState = 3; p.ws = vm.runInContext('new WebSocket("wss://x")', win); p.ws.ls.open.forEach((f) => f({})); },
+    abreSocket() { if (p.ws) p.ws.readyState = 3; p.ws = vm.runInContext('new WebSocket("wss://poke.idleworld.online/ws?token=x&v=2")', win); p.ws.ls.open.forEach((f) => f({})); },
     msg: (x) => p.ws.ls.message.forEach((f) => f({ data: JSON.stringify(x) })),
     fecha: (code) => { p.ws.readyState = 3; p.ws.ls.close.forEach((f) => f({ code })); }, // o servidor fecha o socket com um codigo
     envia: (x) => vm.runInContext('window.__poke.sock.send(' + JSON.stringify(JSON.stringify(x)) + ')', win), // o proprio jogo mandando

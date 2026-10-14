@@ -128,7 +128,7 @@ function painel(url, resposta) {
     const row = { title: '', querySelectorAll: (q) => (q === 'button' ? btns : []), querySelector: (q) => (q === 'span' ? lbl : null) };
     const I = { count: 'Paineis', countTitle: 'Quantas contas' };
     // redesign C: o rotulo entra pelo rotulo() (icone do app + texto); aqui ele so anota o que recebeu
-    const env = { document: { getElementById: (id) => (id === 'countRow' ? row : null) }, grid, webviews, off: [false, false, false, false], lastLogin: [0, 0, 0, 0], alertedBalls: [], criarPainel,
+    const env = { document: { getElementById: (id) => (id === 'countRow' ? row : null) }, grid, webviews, off: [false, false, false, false], lastLogin: [0, 0, 0, 0], alertedBalls: [], criarPainel, accounts: [{}, {}, {}, {}],
       t: (k) => I[k] || k, lsSet() {}, ajustaProporcao() {}, setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout() {}, rotulo: (el, ic, tx) => { el.ico = ic; el.textContent = tx; } };
     const nomes = Object.keys(env);
     const api = new Function(...nomes, 'let count = 4;' + entre("  const countRow = document.getElementById('countRow');", '\n  function toggleExpand') + '\nreturn { build, n: () => count };')(...nomes.map((k) => env[k]));
@@ -264,7 +264,9 @@ function painel(url, resposta) {
       app, ipcMain: { handle: (c, fn) => { reg.ipc[c] = fn; }, on() {}, removeHandler() {} },
       BrowserWindow: Object.assign(function () { reg.janelas++; return qq; }, { getAllWindows: () => [], fromWebContents: () => qq }),
       session: { fromPartition: () => ({ setPermissionRequestHandler: (fn) => reg.perm.push(fn) }), defaultSession: qq },
-      Menu: { buildFromTemplate: (t2) => ({ items: t2 }), setApplicationMenu() {} }
+      Menu: { buildFromTemplate: (t2) => ({ items: t2 }), setApplicationMenu() {} },
+      // desde 13/10/2026 cada webhook novo passa por um dialogo do sistema: aqui o usuario libera (foi ele que colou)
+      dialog: { showMessageBox: () => Promise.resolve({ response: 0 }) }
     }, { get: (t, k) => (k in t ? t[k] : qq) });
     const httpsF = { get: () => ({ on() { return this; } }), request: (u, _o, cb) => { reg.req.push(u.hostname); return { on() { return this; }, setTimeout() {}, destroy() {}, end() { cb({ statusCode: 204, resume() {} }); } }; } };
     Modulo._resolveFilename = function (p, ...r) { if (p === 'electron') return 'electron-b'; if (p === 'https') return 'https-b'; return res0.call(this, p, ...r); };
@@ -279,14 +281,18 @@ function painel(url, resposta) {
       ok(pede('clipboard-sanitized-write') === true, 'botao Copiar do jogo (Recovery Key, 2FA, Pix, indicacao): escrita no clipboard liberada (MEDIA)');
       ok(['clipboard-read', 'media', 'notifications', 'geolocation', 'openExternal', 'midi'].every((p) => pede(p) === false), 'o resto segue negado, inclusive LER o clipboard');
       const wh = reg.ipc['webhook:send'];
-      const envia = async (u) => { reg.req.length = 0; const r = await wh(null, u, 'oi'); return r === true && reg.req.length === 1; };
-      ok(await envia('https://ptb.discord.com/api/webhooks/1/x') && await envia('https://canary.discord.com/api/webhooks/1/x'), 'webhook copiado do Discord PTB e do Canary: envia');
-      ok(await envia('https://discord.com/api/webhooks/1/x') && await envia('https://discordapp.com/api/webhooks/1/x'), 'discord.com e discordapp.com: continuam');
+      // desde 14/10/2026 o main so atende a janela principal (o frame principal dela) e so o formato de webhook de verdade (id e token)
+      const fr = {}, EV = { sender: { getType: () => 'window', mainFrame: fr }, senderFrame: fr };
+      const W = '/api/webhooks/123456789012345678/' + 'Ab_-'.repeat(17);
+      const envia = async (u) => { reg.req.length = 0; const r = await wh(EV, u, 'oi'); return r === true && reg.req.length === 1; };
+      ok(await envia('https://ptb.discord.com' + W) && await envia('https://canary.discord.com' + W), 'webhook copiado do Discord PTB e do Canary: envia');
+      ok(await envia('https://discord.com' + W) && await envia('https://discordapp.com' + W) && await envia('https://discord.com' + W + '/') && await envia('https://discord.com' + W + '?thread_id=1234567890123'), 'discord.com e discordapp.com: continuam (e a barra no fim e o ?thread_id= dos foruns)');
       let barrou = true;
-      for (const u of ['https://evil.com/api/webhooks/1/x', 'https://discord.com.evil.com/api/webhooks/1/x', 'https://xptb.discord.com/api/webhooks/1/x', 'https://ptb.evil.com/api/webhooks/1/x', 'http://ptb.discord.com/api/webhooks/1/x', 'https://ptb.discord.com/api/outra/1']) {
-        reg.req.length = 0; const r = await wh(null, u, 'oi'); if (r !== false || reg.req.length) { barrou = false; console.log('     passou: ' + u); }
+      for (const u of ['https://evil.com' + W, 'https://discord.com.evil.com' + W, 'https://xptb.discord.com' + W, 'https://ptb.evil.com' + W, 'http://ptb.discord.com' + W, 'https://ptb.discord.com/api/outra/1',
+        'https://discord.com/api/webhooks/1/x', 'https://discord.com' + W + '?x=1', 'https://discord.com' + W + '#a', 'https://discord.com:8443' + W, 'https://a:b@discord.com' + W, 'https://discord.com' + W + '/slack']) {
+        reg.req.length = 0; const r = await wh(EV, u, 'oi'); if (r !== false || reg.req.length) { barrou = false; console.log('     passou: ' + u); }
       }
-      ok(barrou, 'outros dominios, http e caminho fora de /api/webhooks/ continuam barrados');
+      ok(barrou, 'outros dominios, http, caminho fora de /api/webhooks/ e URL fora do formato (query, #, porta, usuario, id curto) continuam barrados');
       lock = false; reg.janelas = 0; reg.perm.length = 0;
       carrega();
       ok(reg.janelas === 0 && reg.perm.length === 0, 'segunda instancia: sai sem criar janela nem abrir as particoes das contas (baixa)');
@@ -313,7 +319,7 @@ function painel(url, resposta) {
     // electron falso: o require precisa do @electron/get e, com ele, "baixa" o programa (grava o exe e o path.txt)
     const electronFalso = "require('@electron/get');const fs=require('fs'),p=require('path');fs.mkdirSync(p.join(__dirname,'dist'),{recursive:true});fs.writeFileSync(p.join(__dirname,'dist','electron.exe'),'');fs.writeFileSync(p.join(__dirname,'path.txt'),'electron.exe');";
     let n = 0;
-    const roda = (bat, monta, extraEnv) => {
+    const roda = (bat, monta, extraEnv, abreCom = 'echo ABRIRIA O PROGRAMA') => { // abreCom: o que roda no lugar do Electron
       const dir = path.join(base, 'Pasta (' + (++n) + ') do PokeGrid');
       const nm = path.join(dir, 'node_modules');
       fs.mkdirSync(path.join(nm, 'electron'), { recursive: true });
@@ -321,7 +327,7 @@ function painel(url, resposta) {
       fs.writeFileSync(path.join(nm, 'electron', 'package.json'), '{"name":"electron","version":"43.7.7","main":"index.js"}');
       fs.writeFileSync(path.join(nm, 'electron', 'index.js'), electronFalso);
       monta(nm);
-      const txt = fs.readFileSync(bat, 'latin1').replace(/start "" "node_modules\\electron\\dist\\electron\.exe" \./, 'echo ABRIRIA O PROGRAMA').replace(/node "node_modules\\electron\\cli\.js" \./, 'echo ABRIRIA O PROGRAMA');
+      const txt = fs.readFileSync(bat, 'latin1').replace(/start "" "node_modules\\electron\\dist\\electron\.exe" \./, 'echo ABRIRIA O PROGRAMA').replace(/node "node_modules\\electron\\cli\.js" \./, abreCom);
       const alvo = path.join(dir, path.basename(bat));
       fs.writeFileSync(alvo, txt, 'latin1');
       try { fs.unlinkSync(path.join(bin, 'log.txt')); } catch {}
@@ -350,7 +356,12 @@ function painel(url, resposta) {
         const r8 = roda(iniciar, (nm) => { comGet(nm); comExe(nm); velho(nm); });
         ok(r8.npm.join(',') === 'npm ci' && r8.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: Electron velho na pasta tambem reinstala (' + r8.npm.join(',') + ')');
         const r6 = roda(iniciar, (nm) => { comGet(nm); comExe(nm); });
-        ok(r6.npm.length === 0 && r6.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: tudo instalado, nem chama o npm, so abre pelo cli.js');
+        ok(r6.npm.length === 0 && r6.out.includes('ABRIRIA O PROGRAMA') && !r6.out.includes('fechou com erro'), 'iniciar.bat: tudo instalado, nem chama o npm, so abre pelo cli.js');
+        // 14/10/2026: queda do Electron sai com codigo negativo (0xC0000005 = -1073741819) e o "if errorlevel 1" nao via; o Node velho nao era conferido
+        const r9 = roda(iniciar, (nm) => { comGet(nm); comExe(nm); }, null, 'cmd /c exit -1073741819');
+        ok(r9.out.includes('fechou com erro'), 'iniciar.bat: o Electron caiu (codigo negativo): a janela mostra o erro e espera, em vez de fechar calada');
+        const r10 = roda(iniciar, () => {}, { NODE_OPTIONS: '--require "' + path.join(bin, 'node-velho.js').replace(/\\/g, '/') + '"' });
+        ok(r10.out.includes('Node.js deste PC e antigo') && r10.npm.length === 0 && !r10.out.includes('ABRIRIA O PROGRAMA'), 'iniciar.bat: Node 20 antigo diz pra atualizar o Node, sem chamar o npm');
       }
     } finally { try { fs.rmSync(base, { recursive: true, force: true }); } catch {} }
   });

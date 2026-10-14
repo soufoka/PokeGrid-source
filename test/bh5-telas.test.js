@@ -533,19 +533,23 @@ const carrega = async (H) => { desloc += 61e3; H.carregaHunts(); await vezes(2);
     if (!mj.includes("'" + REL + "'")) console.log('AVISO o main.js so deixa a janela abrir os links do LINKS (will-navigate/setWindowOpenHandler) e ' + REL + ' nao esta la: ate entrar, o clique no selo do instalador nao abre nada');
   });
 
-  await secao('deposito e bolsa cheios: o READ_STATE ve o aviso do auto-helper, marca o painel e o Simples avisa', async () => {
+  await secao('deposito e bolsa cheios: o READ_STATE ve pela mensagem do auto-helper, marca o painel e o Simples avisa', async () => {
     const m = mundo({ '/api/characters/me': { character: { id: 9, name: 'Walter', level: 300, gold: 5000 } } });
     await m.busca('/api/characters/me');
     m.msg({ type: 'pokes', list: [{ id: 1, name: 'Pinsir', level: 300, team: true, slot: 0, leader: true }] });
     m.msg({ type: 'field-init', slug: 'bug_cave' });
     for (let k = 0; k < 20; k++) { m.tick(5000); m.msg({ type: 'field-kill', xpGained: 100, loot: [] }); }
-    // o auto-helper do jogo com os avisos dele (o de cheio e o unico com a contagem "(n/max)")
-    m.run("this.__ahw = ['⚠️ Depósito e Bolsa cheios (300/300). O Auto-Catch está pausado, venda ou solte Pokémon pra voltar a capturar.']; this.__ahp = { cls: new Set(), classList: { toggle(c, f) { f ? __ahp.cls.add(c) : __ahp.cls.delete(c); } }, querySelectorAll(q) { return q === '.ah-warn' ? __ahw.map((x) => ({ textContent: x })) : []; } }; this.document = { querySelector(q) { return q === '.ah-panel' ? __ahp : null; } };");
+    // 13/10/2026: o aviso de cheio do jogo (.ah-warn) so existe com a janela do Auto-Helper aberta. Fechada (o normal), a .ah-panel
+    // tem so o botao e o READ_STATE, que lia a tela, nunca via o deposito cheio. Agora vale a conta da mensagem autohelper
+    m.run("this.__ahp = { cls: new Set(), classList: { toggle(c, f) { f ? __ahp.cls.add(c) : __ahp.cls.delete(c); } }, querySelectorAll() { return []; } }; this.document = { querySelector(q) { return q === '.ah-panel' ? __ahp : null; } };");
+    m.msg({ type: 'autohelper', isVip: true, pokeCount: 300, pokeCapacity: 300, balls: [] });
     const d1 = m.run(READ_STATE), marcou = m.run("__ahp.cls.has('pg-ah-cheio')");
-    m.run("__ahw = ['⚠️ Escolha uma pokébola pra ativar.']");
+    m.msg({ type: 'autohelper', isVip: true, pokeCount: 120, pokeCapacity: 300, balls: [] });
     const d2 = m.run(READ_STATE), desmarcou = !m.run("__ahp.cls.has('pg-ah-cheio')");
-    ok(d1.ahCheio === true && marcou && d2.ahCheio === false && desmarcou, 'cheio: o READ_STATE ve o aviso com a contagem e marca o painel (pg-ah-cheio); o "escolha uma pokebola" nao conta e a marca sai');
-    m.run("__ahw = ['⚠️ Depósito e Bolsa cheios (300/300).']");
+    m.msg({ type: 'autohelper', isVip: false, pokeCount: 0, pokeCapacity: 0 });
+    const d3 = m.run(READ_STATE);
+    ok(d1.ahCheio === true && marcou && d2.ahCheio === false && desmarcou && d3.ahCheio === false, 'cheio com a janela do Auto-Helper fechada (sem aviso na tela): o READ_STATE ve pela contagem do jogo e marca o painel; abaixo do teto ou sem teto, nao');
+    m.msg({ type: 'autohelper', isVip: true, pokeCount: 300, pokeCapacity: 300, balls: [] });
     const H = monta({ ls: { count: '1' } }); await vez();
     H.stCache[0] = push(H, m);
     H.cardsSet(true);

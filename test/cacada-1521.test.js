@@ -157,13 +157,15 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
   console.log('\n--- hunt podada so sai da memoria depois que o arquivo confirmou ---');
   {
     const src = entre(b, '        if (!registraHunt.arq) {', '\n        }\n      }\n    } catch {}', false) + '\n        }';
-    const roda = async (resp) => { const pod = [{ id: 1 }, { id: 2 }]; const salvos = []; const reg = {}; let pers = 0;
-      const get = new Function('registraHunt', 'linhasD', 'linhas', 'cab', 'csvLinha', 'pokeAPI', 'podadas', 'salvaHuntLog', 'ini', 'let huntLog = ini;\n' + src + '\nreturn () => huntLog;')(
-        reg, 'd', 'l', 'B;cab', (a) => a.join(';'), { saveBackup: (n) => { salvos.push(n); return n.indexOf('drops') >= 0 ? Promise.resolve(true) : resp(); } }, pod, () => pers++, pod.concat([{ id: 3 }]));
+    const roda = async (resp, lang = 'pt') => { const pod = [{ id: 1 }, { id: 2 }]; const salvos = []; const reg = {}; let pers = 0;
+      const get = new Function('registraHunt', 'linhasD', 'linhas', 'cab', 'csvLinha', 'pokeAPI', 'podadas', 'salvaHuntLog', 'ini', 'lang', 'let huntLog = ini;\n' + src + '\nreturn () => huntLog;')(
+        reg, 'd', 'l', 'B;cab', (a) => a.join(';'), { saveBackup: (n) => { salvos.push(n); return n.indexOf('drops') >= 0 ? Promise.resolve(true) : resp(); } }, pod, () => pers++, pod.concat([{ id: 3 }]), lang);
       await espera(); return { log: get(), salvos, pers, reg }; };
     const bom = await roda(() => Promise.resolve(true));
     ok(bom.log.length === 1 && bom.log[0].id === 3 && bom.pers === 2, 'arquivo gravou: as podadas saem e o log e persistido (2x: drops esvaziados e poda)');
     ok(bom.salvos.join(',') === 'hunts-historico-drops.csv,hunts-historico.csv', 'os drops por item tambem sao arquivados, num CSV proprio');
+    const ing = await roda(() => Promise.resolve(true), 'en');
+    ok(ing.salvos.join(',') === 'hunts-historico-drops-en.csv,hunts-historico-en.csv', 'em ingles (virgula e ponto) o arquivo e outro: trocar o idioma nao mistura separador e decimal no mesmo CSV');
     const ruim = await roda(() => Promise.resolve(false));
     ok(ruim.log.length === 3 && ruim.reg.arq === 0, 'arquivo falhou (CSV aberto no Excel, disco cheio): as hunts FICAM pra proxima tentativa');
     const rej = await roda(() => Promise.reject(new Error('ipc')));
@@ -223,11 +225,11 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
 
   console.log('\n--- cacada 1521b: historico em CSV grava em sequencia, nada se perde nem duplica ---');
   {
-    const src = entre(b, "          (linhasD ? pokeAPI.saveBackup('hunts-historico-drops.csv'", 'salvaHuntLog(); } });', true);
+    const src = entre(b, "          (linhasD ? pokeAPI.saveBackup('hunts-historico-drops' + suf + '.csv'", 'salvaHuntLog(); } });', true);
     const roda = async (okD, okA, semDrops) => {
       const gravou = []; const h1 = { drops: [{ n: 'x' }] }, h2 = { drops: [] }; const st = { salvos: 0 };
       const log = new Function('pokeAPI', 'linhasD', 'linhas', 'cab', 'csvLinha', 'podadas', 'st', 'salvaHuntLog',
-        'let huntLog = [h1(), h2(), { drops: [] }], registraHunt = { arq: 1 };\n'.replace('h1()', 'podadas[0]').replace('h2()', 'podadas[1]') + src + '\nreturn () => ({ huntLog, arq: registraHunt.arq });')(
+        'let huntLog = [h1(), h2(), { drops: [] }], registraHunt = { arq: 1 }, suf = \'\';\n'.replace('h1()', 'podadas[0]').replace('h2()', 'podadas[1]') + src + '\nreturn () => ({ huntLog, arq: registraHunt.arq });')(
         { saveBackup: (nome) => { gravou.push(nome); return Promise.resolve(nome.includes('drops') ? okD : okA); } }, semDrops ? '' : 'd', 'l', 'c', () => 'h', [h1, h2], st, () => { st.salvos++; });
       await espera(); await espera();
       return { gravou, h1, salvos: st.salvos, ...log() };

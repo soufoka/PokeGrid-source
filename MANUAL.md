@@ -11,6 +11,7 @@ Guia curto do que cada coisa faz. Se você só quer resolver um problema pontual
 | **⟳ Atualizar tudo** | Recarrega os painéis ligados, ignorando o cache (resolve tela de login velha presa) |
 | **📊 Painel** | A barra lateral com os números de uma conta por vez (detalhes abaixo) |
 | **🍃 Simples** | Esconde o jogo e mostra só os números das 4 contas. Gasta bem menos do PC |
+| **📍 Onde caçar** | Escolha o elemento e o nível: o app diz em qual hunt caçar e com qual pokémon. Já abre no Tipo do Dia do jogo (detalhes abaixo) |
 | **IVs** | Abre a calculadora de IV do app, sem ligar nada nos Scripts. Passe o mouse num pokémon em qualquer painel, ou clique num anúncio do Mercado, que ela preenche sozinha (detalhes abaixo) |
 | **☰ Opções** | Tudo o mais, em 5 grupos: Ferramentas (Hunt, Tierlist, Ditto, Scripts), Tela (painéis, grade, proporção, Limpar jogo, chat), Sistema (Modo Eco, PC acordado, bandeja, abrir com o Windows, idioma), Avisos e recuperação (Alertas, Venda protegida, Voltar pra hunt, som do shiny, silenciar) e Ajuda e dados (Manual, FAQ, exportar e importar config, Erros). Cada liga/desliga tem uma chave: verde é ligado |
 
@@ -37,19 +38,24 @@ Na seção **Time**, clique num pokémon pra colocar ele na frente: ele vira o l
 O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gastando pouco do PC. Minimizar ou mandar pra bandeja faz o mesmo com os jogos sozinho, e ao abrir a janela eles voltam. Seções principais:
 
 - **Hoje**: gold, XP, kills e capturas do dia, com meta e o botão que exporta as planilhas
+- **Incubadoras**: os ovos do Breeding do jogo em cada conta, com o rank, o % e os abates feitos e pedidos, iguais aos do jogo, e o aviso de ovo pronto pra chocar. Atualiza a cada 30 s. Os mesmos ovos aparecem num card dentro de cada painel do jogo: clique recolhe, arrastar muda de lugar, e cada painel lembra onde o card ficou
 - **Hunts**: o ranking. Ordene por **Sugerido** e escolha o atacante em **"caçar com"**. Golpe de TM só entra na conta se aquele pokémon aprendeu o disco. Com Ditto no time, aparece a melhor transformação por elemento, respeitando o que cada Ditto pode copiar (o Shiny só vira espécie com forma shiny) e sem TM, que Ditto não aprende
 - **Capturas / Shinies**: histórico com filtros por conta, IV, qualidade e período
 - **Times & IV**: o time de cada conta com IV, qualidade e poder, e o poder projetado no nível que você escolher (até 3000)
 - **Inventário**: soma a mochila **e o depósito** das 4 contas. O ✕ de cada item tira ele da lista (fica salvo), e o **mostrar ocultos** embaixo traz os escondidos de volta, apagados, com o botão de voltar a mostrar
 - **Tendência**: gráficos de gold/h e XP/h, e de gold/dia dos últimos 30 dias
 
+## 📍 Onde caçar (barra do topo)
+
+O Tipo do Dia do jogo dá mais XP e mais loot em pokémon de um tipo, e o tipo muda todo dia. Escolha o **elemento** e o **nível**: no topo aparece a resposta, em qual hunt caçar e com qual pokémon, com o golpe e os kills/h e XP/h (ou gold/h) estimados, e o melhor do time das suas contas ligadas pra aquela hunt. Embaixo vêm as outras hunts do elemento, da que mais rende pra que menos.
+
+A janela já abre no Tipo do Dia lido do próprio jogo (o mesmo do chip com o relógio no HUD), com o elemento marcado como **hoje**. Escolher outro vale até o dia virar. Contam as hunts com selvagem do elemento (1º ou 2º tipo) que o nível alcança, e o pokémon indicado é avaliado nesse nível, com qualidade e IV médios; o do seu time usa o nível, a qualidade, o IV e os TMs de verdade. O nível é o mesmo da Tierlist, e **XP/h ou Gold/h** e **com TM** funcionam como lá. O bônus do Tipo do Dia vale igual em todas as hunts, então não muda a ordem.
+
 ## 🏆 Tierlist (Opções, ou tecla G)
 
 Ranking de todas as espécies do jogo por elemento, nota de 0 a 100.
 
 No topo, **XP/h** ou **Gold/h** escolhe o que a nota mede. Gold/h é kills/h do modelo vezes o loot esperado por kill a preço de NPC (o mesmo preço que o Hunt Analyzer do jogo usa), sem captura, supply nem bônus de loot; em hunt onde o valor vem de drop raro, a média demora a aparecer. O chip **🎯 Pokémon** inverte a pergunta: escolha um Pokémon do seu time (vem com o nível, a qualidade, o IV e os TMs dele) ou digite o nome de qualquer um, e a lista mostra as melhores hunts pra ele até o seu nível, com kills/h, XP/h e gold/h estimados em cada linha. Com um Ditto, cada hunt mostra também a forma certa pra ela.
-
-O chip **Hunts por tipo** (a lupa) é pro Tipo do Dia do jogo, o bônus de XP e de drop por tipo que muda todo dia. Escolha o tipo dos selvagens e a lista mostra as hunts desse tipo (1º ou 2º tipo) até o seu nível, da que mais rende pra que menos. Cada linha traz o melhor pokémon pra usar no seu nível, com kills/h, XP/h e gold/h estimados, e o melhor do time das contas ligadas, com os TMs que ele tem. O bônus vale igual em todas as hunts da lista, então não muda a ordem.
 
 Escolha **seu nível** no topo da tierlist (vai até 3000): só entram as hunts que você alcança e só as espécies que dá pra ter nesse nível, caçando ou evoluindo. Cada pokémon é avaliado no nível de cada hunt, pra comparação entre espécies ser justa. A caixinha **com TM** conta os TMs como o jogo faz: o TM elemental é um golpe extra em área que dispara sozinho a cada 10 s (só do próprio tipo, poder 300) e o AoE TM faz o golpe normal acertar todos os selvagens do quadro; os dois convivem no mesmo pokémon. Fica desligada por padrão porque TM é item. A densidade da hunt (selvagens por salva) vem das suas medições; sem medição, 2. O golpe **físico** enfrenta a defesa física de cada hunt, o **especial** a defesa especial, e a **vida** do defensor segura o ritmo. A aba **Geral** compara todos os elementos juntos, e nela a nota é o rendimento somado em todas as hunts (quem rende em todo lugar vale mais que quem só brilha numa fraqueza ×4).
 
@@ -85,8 +91,8 @@ O ⏸ no topo trava o card no pokémon atual: os próximos que você passar o mo
 
 ## Proteções
 
-- **🛡 Venda protegida**: pede confirmação antes de vender shiny, qualidade Lendária ou acima e itens raros. Na engrenagem do Painel dá pra travar seus próprios itens (**🔒 Cadeado de venda**)
-- **🔔 Alertas**: avisa quando aparece shiny, uma conta cai, para de farmar, fica sem suprimento ou tem o time inteiro derrotado (a conta vai pro Centro Pokémon e o farm para). Na engrenagem do Simples você escolhe quais tipos avisam no Windows, um por um. Com webhook do Discord configurado, o aviso também chega no celular
+- **🛡 Venda protegida**: pede confirmação antes de vender shiny, qualidade Lendária ou acima e itens raros, no Mark, nas lojas e no Mercado (anúncio de pokémon ou de item, e venda pra um pedido de compra). Na engrenagem do Painel dá pra travar seus próprios itens (**🔒 Cadeado de venda**)
+- **🔔 Alertas**: avisa quando aparece shiny, uma conta cai, para de farmar, fica sem suprimento ou tem o time inteiro derrotado (a conta vai pro Centro Pokémon e o farm para). Na engrenagem do Simples você escolhe quais tipos avisam no Windows, um por um. Com webhook do Discord configurado, o aviso também chega no celular. Na primeira vez que o app usa um webhook novo, o Windows pergunta se pode mandar pra ele: libere só se foi você que colou aquele webhook. Esse diálogo é do sistema e nenhuma página consegue clicar nele, então um webhook que não é seu nunca recebe nada
 - **💾 Exportar/Importar config**: leva suas configurações e seu histórico pra outro PC. Scripts e webhook ficam de fora, de propósito. Importar troca o histórico pelo do arquivo e guarda uma cópia do seu antes. O app também salva um backup sozinho toda semana em `%APPDATA%\pokegrid\backups`, a mesma pasta do `hunts-historico.csv` (as hunts que passam das 150 guardadas) e do `hunts-historico-drops.csv`
 
 ## Coisas que confundem no começo
@@ -94,6 +100,7 @@ O ⏸ no topo trava o card no pokémon atual: os próximos que você passar o mo
 - **A opção marcada não mudou nada?** Provavelmente é uma seção que precisa de configuração (Fixados e Alvo shiny). Elas agora dizem isso na tela
 - **Os avisos de combate sumiram** ("X derrotado! +XP"): é o **🧼 Limpar jogo**. Desligue-o pra vê-los de novo
 - **Não consigo trocar a pokébola**: é o **🧼 Limpar jogo** escondendo o Auto-Helper. Passe o mouse no canto que ele aparece
+- **Não acho o botão de jogar a pokébola**: também é o **🧼 Limpar jogo**, que esconde a barra de captura. Ela volta sozinha quando aparece um shiny; pra capturar outro pokémon na mão, desligue o Limpar jogo com o F2
 - **O Hunt Analyzer do jogo sumiu**: também é o **🧼 Limpar jogo** (desde a 1.5.37). Passe o mouse onde a janela fica que ela aparece, ou desligue o Limpar jogo com o F2
 - **O ouro da sessão**: desde a 1.5.16 vem do próprio servidor do jogo, então é o mesmo número do Hunt Analyzer (menos as Rare Pokemon Picture, se **Considerar preço dos itens no Mercado** estiver marcado, que é o padrão do jogo)
 - **Conta travada quando saio do PC**: corrigido na 1.5.16; atualize

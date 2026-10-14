@@ -402,7 +402,7 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
       ok(cardSprite(html) === SPR + '212.png' && html.includes('>Scizor</span>') && html.includes(' · ' + H.ico('espadas') + '</span>'), '[' + lang + '] sprite do Simples (212), nome e marca de ativo (o icone das espadas)');
       ok(html.includes('>BUG</span>') && html.includes('>STEEL</span>') && !cardAviso(html), '[' + lang + '] tipos canonicos e nenhum aviso');
       const g = golpesDe(H); // a lista mora na aba Golpes
-      ok(g.length === 14 && g.filter((x) => x.off).length === 0 && g[g.length - 1].n === 'Hive Crush' && g[g.length - 1].lv === 'TM' && g[0].lv === H.t('ivcMoveLv') + ' 1', '[' + lang + '] golpes da especie (14), por nivel, o de disco TM no fim: ' + g.map((x) => x.n + ' ' + x.lv).join(', '));
+      ok(g.length === 15 && g.filter((x) => x.off).length === 0 && g[g.length - 2].n === 'Hive Crush' && g[g.length - 1].n === 'Steel Flare' && g[g.length - 1].lv === 'TM' && g[0].lv === H.t('ivcMoveLv') + ' 1', '[' + lang + '] golpes da especie (13), por nivel, e os 2 discos TM no fim (Inseto e Aco: a regra canLearnTm do jogo, nao o attacks[].tm do catalogo): ' + g.map((x) => x.n + ' ' + x.lv).join(', '));
       const q155 = lang === 'en' ? '×1.55' : '×1,55'; // decimal no formato do idioma (redesign etapa A)
       ok(html.includes('>' + H.t('rqEpic') + '</span> ' + q155), '[' + lang + '] raridade da qualidade no idioma do app: ' + H.t('rqEpic') + ' ' + q155);
     }
@@ -701,7 +701,7 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     aba(H, 'analise'); html = H.html();
     ok(cardAviso(html) === H.t('ivcManual') && igual(efet(html)[H.t('ivcWeak')], ['FIRE 5.5']), 'Analise sem stats: o aviso e a efetividade dos tipos dele (FIRE x5.5)');
     aba(H, 'golpes');
-    ok(cardGolpes(H.html()).length === 14 && cardGolpes(H.html()).filter((x) => x.off).length === 0, 'Golpes sem stats: os 14 da especie, no Nv 100 todos aprendidos');
+    ok(cardGolpes(H.html()).length === 15 && cardGolpes(H.html()).filter((x) => x.off).length === 0, 'Golpes sem stats: os 15 da especie (13 + 2 discos), no Nv 100 todos aprendidos');
     aba(H, 'leitor');
     H.ivEl.querySelector('#ivNv').value = '80'; H.ivEl.querySelector('#ivQ').value = '1.55';
     Object.keys(STK).forEach((k) => { H.ivEl.querySelector('#ivA_' + k).value = String(SCIZOR.stats[STK[k]]); });
@@ -794,8 +794,8 @@ const ACOR = JSON.parse(/const ACOR = (\[[^\]]+\])/.exec(code)[1].replace(/'/g, 
     ok(html.includes(H.ico('espadas') + '<span>' + H.t('ivcInUse').replace('{h}', 'Bug Cave') + '</span></div>'), 'o Scizor do card e o lider do painel 3 numa hunt: "' + H.t('ivcInUse').replace('{h}', 'Bug Cave') + '"');
     ok(U.length === 2 && igual(U[0], ['BUG', 'X-Scissor', false, H.t('ivcHits').replace('{n}', '412') + ' · ' + H.t('ivcDmg').replace('{p}', '38')]), 'golpe em uso: o da especie com mais acertos (X-Scissor, 412 acertos, 38% da vida por acerto); o Thunderbolt de outro lider fica de fora');
     ok(igual(U[1], ['BUG', 'Hive Crush', true, H.t('ivcHits').replace('{n}', '96') + ' · ' + H.t('ivcDmg').replace('{p}', '61')]), 'o TM elemental da especie (Hive Crush) aparece a parte, marcado TM');
-    ok(cardGolpes(html).length === 14, 'e a lista de golpes da especie continua embaixo (14)');
-    const nada = async (rot, prep) => { await leva(H, tipInv('pt', SCIZOR, { lider: true }), 2); push(2); prep(); aba(H, 'golpes'); const h = H.html(); ok(!usoDe(h).length && !h.includes(H.t('ivcInUse').split('{h}')[0]) && cardGolpes(h).length === 14, 'sem golpe em uso: ' + rot); };
+    ok(cardGolpes(html).length === 15, 'e a lista de golpes da especie continua embaixo (15)');
+    const nada = async (rot, prep) => { await leva(H, tipInv('pt', SCIZOR, { lider: true }), 2); push(2); prep(); aba(H, 'golpes'); const h = H.html(); ok(!usoDe(h).length && !h.includes(H.t('ivcInUse').split('{h}')[0]) && cardGolpes(h).length === 15, 'sem golpe em uso: ' + rot); };
     await nada('o mesmo Scizor sem ser o lider (tooltip sem ⚔)', () => { manda(H, 2, SCIZOR); });
     await nada('o card veio de outro painel, que nao mandou nada', () => { manda(H, 1, SCIZOR, { ativo: true }); });
     await nada('leitura do painel velha (mais de 60 s)', () => { H.stCache[2].t -= 61e3; });

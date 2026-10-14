@@ -26,7 +26,9 @@ where node >nul 2>nul && (node -e "process.exit(require('./node_modules/electron
 rem O cmd nao tem tee: este node copia a saida da instalacao pra tela e pro instalacao.log, porque o motivo real de uma
 rem falha rolava pra fora da janela. Sem terminal a barra de download some, entao um ponto a cada 5 s mostra que nao travou.
 rem No arquivo a pasta do usuario vira ~: o log vai pro Discord e o caminho C:\Users\<nome> costuma ser o nome da pessoa.
-set PG_TEE=node -e "const h=require('os').homedir(),h2=h.split('\\').join('\\\\'),sd=new (require('string_decoder').StringDecoder)('utf8'),w=require('fs').createWriteStream('instalacao.log',{flags:'a'}).on('error',()=>{});let p=0;process.stdin.on('data',d=>{if(p)process.stdout.write('\n');p=0;process.stdout.write(d);w.write(sd.write(d).split(h2).join('~').split(h).join('~'))}).on('end',()=>{if(p)process.stdout.write('\n')});setInterval(()=>{p=1;process.stdout.write('.')},5000).unref()"
+rem Tambem na forma com barra normal, a das pilhas dos modulos ESM do download do Electron (file:///C:/Users/<nome>/...),
+rem e nessa forma codificada como URL quando o nome tem acento: o encodeURI do h4.
+set PG_TEE=node -e "const h=require('os').homedir(),h2=h.split('\\').join('\\\\'),h3=h.split('\\').join('/'),h4=encodeURI(h3),sd=new (require('string_decoder').StringDecoder)('utf8'),w=require('fs').createWriteStream('instalacao.log',{flags:'a'}).on('error',()=>{});let p=0;process.stdin.on('data',d=>{if(p)process.stdout.write('\n');p=0;process.stdout.write(d);w.write(sd.write(d).split(h2).join('~').split(h).join('~').split(h3).join('~').split(h4).join('~'))}).on('end',()=>{if(p)process.stdout.write('\n')});setInterval(()=>{p=1;process.stdout.write('.')},5000).unref()"
 if defined PG_FALTA (
   where npm >nul 2>nul || (
     echo.

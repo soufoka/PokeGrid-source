@@ -167,7 +167,8 @@ console.log('--- Abrir com o Windows: atalho no exe real da portatil e chave Run
   const itemB = menuBandeja && (menuBandeja.items || []).find((it) => it.type === 'checkbox');
   Object.defineProperty(process, 'platform', { value: 'win32' });
   let sinc = false;
-  try { const r1 = tratadores['autostart:set'](null, false), c1 = itemB.checked, r2 = tratadores['autostart:set'](null, true); sinc = r1 === false && c1 === false && r2 === true && itemB.checked === true; } catch {}
+  const fr0 = {}, EV = { sender: { getType: () => 'window', mainFrame: fr0 }, senderFrame: fr0 }; // o main.js so atende o frame principal da janela
+  try { const r1 = tratadores['autostart:set'](EV, false), c1 = itemB.checked, r2 = tratadores['autostart:set'](EV, true); sinc = r1 === false && c1 === false && r2 === true && itemB.checked === true; } catch {}
   Object.defineProperty(process, 'platform', { value: plat0 });
   ok(!!itemB && sinc, 'bandeja: o item Abrir com o Windows segue o botao da janela nos dois sentidos');
   ok(fs.existsSync(path.join(RAIZ, '.teste-tmp', 'runkey-limpo-2')), 'limpeza marcada pra nao repetir');
@@ -231,6 +232,24 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
     ok(bat.split('\r\n').filter((l) => /^\s+echo /i.test(l)).every((l) => !/[()]/.test(l)), 'Abrir PokeGrid.bat sem parenteses nos echo dentro de bloco');
     // 27/09/2026: o motivo real da falha rolava pra fora da janela. A saida vai pra tela e pro instalacao.log, recriado a cada tentativa.
     ok(/set PG_TEE=node -e "[^"\r\n]*createWriteStream\('instalacao\.log'/.test(bat) && bat.includes('call npm ci --ignore-scripts --no-audit --no-fund 2>&1 | %PG_TEE%') && bat.includes('node -e "require(\'electron\')" 2>&1 | %PG_TEE%') && /" > instalacao\.log\r\n/.test(bat), 'Abrir PokeGrid.bat copia o npm ci (lock travado, sem script de pacote) e o download do Electron pra tela e pro instalacao.log');
+    // o instalacao.log vai pro Discord: a pasta do usuario vira ~ nas 3 formas. A de barra normal (pilha dos modulos ESM do download do
+    // Electron, file:///C:/Users/<nome>/...) passava ate 13/10/2026. Roda o node -e do proprio .bat com uma saida de exemplo
+    {
+      const tee = /set PG_TEE=node -e "([^\r\n]*)"\r\n/.exec(bat), h = require('os').homedir(), hb = h.split('\\').join('/');
+      const tmpTee = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pg-tee-'));
+      const rTee = tee && require('child_process').spawnSync(process.execPath, ['-e', tee[1]], { cwd: tmpTee, encoding: 'utf8',
+        input: 'npm error path ' + h + '\\AppData\\x.tgz\n    at file:///' + hb + '/AppData/Local/npm-cache/m.mjs:1:1\njson "' + h.split('\\').join('\\\\') + '"\n' });
+      let log = ''; try { log = fs.readFileSync(path.join(tmpTee, 'instalacao.log'), 'utf8'); } catch {}
+      try { fs.rmSync(tmpTee, { recursive: true, force: true }); } catch {}
+      ok(!!rTee && rTee.status === 0 && /file:\/\/\/~\/AppData/.test(log) && !log.includes(h) && !log.includes(hb), 'o tee do Abrir PokeGrid.bat troca a pasta do usuario por ~ no instalacao.log, tambem em file:/// (pilha ESM)');
+      // usuario com acento: a pilha ESM traz o caminho codificado (file:///C:/Users/Jo%C3%A3o/...), que passava ate 14/10/2026
+      const tmpT2 = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pg-tee-'));
+      const rT2 = tee && require('child_process').spawnSync(process.execPath, ['-e', tee[1]], { cwd: tmpT2, encoding: 'utf8', env: Object.assign({}, process.env, { USERPROFILE: 'C:\\Users\\João Ninguém', HOME: 'C:\\Users\\João Ninguém' }),
+        input: 'npm error path C:\\Users\\João Ninguém\\AppData\\x.tgz\n    at file:///C:/Users/Jo%C3%A3o%20Ningu%C3%A9m/AppData/Local/npm-cache/m.mjs:1:1\n' });
+      let log2 = ''; try { log2 = fs.readFileSync(path.join(tmpT2, 'instalacao.log'), 'utf8'); } catch {}
+      try { fs.rmSync(tmpT2, { recursive: true, force: true }); } catch {}
+      ok(!!rT2 && rT2.status === 0 && /file:\/\/\/~\/AppData/.test(log2) && /path ~\\AppData/.test(log2) && !/Jo/.test(log2), 'usuario com acento: o caminho codificado em URL das pilhas tambem vira ~');
+    }
     const achas = ['Cannot find module', 'fetch failed', 'expected checksum', 'os error 32', 'native binding'].map((p) => bat.lastIndexOf('/c:"' + p + '"'));
     ok(achas.every((i, k) => i > iConfere && (k === 0 || i > achas[k - 1])), 'Abrir PokeGrid.bat le o motivo no log: dependencia < rede < checksum < arquivo travado < extrator barrado (o ultimo vence)');
     ok(bat.includes('echo A instalacao nao terminou. %PG_MOTIVO%') && /instalacao\.log no Discord/.test(bat), 'Abrir PokeGrid.bat diz o motivo provavel e pede o instalacao.log no Discord');
@@ -245,7 +264,7 @@ console.log('--- lancadores do Windows sem VBS (22/09/2026: o Defender marcou o 
   if (naRaiz.includes('iniciar.bat')) {
     // o electron.cmd que o npm cria em node_modules\.bin quebra com & no caminho da pasta, e o npm start passava por ele
     const ini = fs.readFileSync(path.join(RAIZ, 'iniciar.bat'), 'utf8'), iCli = ini.indexOf('node "node_modules\\electron\\cli.js" .');
-    ok(iCli > 0 && !/call npm start/i.test(ini) && ini.indexOf('if errorlevel 1 (') > iCli, 'iniciar.bat abre pelo cli.js do Electron, sem o npm start, e segue mostrando o erro');
+    ok(iCli > 0 && !/call npm start/i.test(ini) && ini.indexOf('if %errorlevel% neq 0 (') > iCli, 'iniciar.bat abre pelo cli.js do Electron, sem o npm start, e segue mostrando o erro (tambem o de queda, que tem codigo negativo)');
   }
   if (naRaiz.includes('iniciar.sh')) {
     // instalacao interrompida deixava a pasta node_modules sem o Electron; com Node velho o erro falava de sandbox

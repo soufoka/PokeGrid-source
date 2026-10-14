@@ -1,7 +1,13 @@
-const { app, BrowserWindow, ipcMain, safeStorage, Tray, Menu, powerSaveBlocker, shell, session, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, safeStorage, Tray, Menu, powerSaveBlocker, shell, session, dialog, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
+
+// So o frame principal da janela fala com o processo principal. Os paineis do jogo nao tem preload, mas um renderer de painel
+// tomado (falha do Chromium) manda IPC cru e levava as 4 senhas no creds:load. Medido no Electron 43: no invoke da janela,
+// e.senderFrame e o proprio e.sender.mainFrame. Envolve o ipcMain.handle, entao vale pra todo canal registrado daqui pra baixo.
+const daJanela = (e) => { try { return e.sender.getType() === 'window' && !!e.senderFrame && e.senderFrame === e.sender.mainFrame; } catch { return false; } };
+{ const h0 = ipcMain.handle.bind(ipcMain); ipcMain.handle = (canal, fn) => h0(canal, (e, ...a) => (daJanela(e) ? fn(e, ...a) : logErro('ipc', 'canal ' + canal + ' recusado: o pedido nao veio da janela principal'))); }
 
 // Silencia o spam do Chromium no terminal (ex.: STUN/WebRTC do jogo que a rede nao resolve).
 // E so log, nao afeta o app. Mantem so erros fatais.
@@ -10,6 +16,14 @@ app.commandLine.appendSwitch('log-level', '3');
 // ===== Relatorio de erros: qualquer crash/travamento cai num arquivo que o usuario pode enviar =====
 const errFile = () => path.join(app.getPath('userData'), 'relatorio-de-erros.log');
 let errCabecalho = false;
+// o relatorio vai pro Discord: a pasta do usuario (C:\Users\<nome>, nas pilhas tambem file:///C:/Users/<nome>) vira ~, como o
+// instalador faz no instalacao.log
+const semHome = (() => {
+  let h = ''; try { h = require('os').homedir(); } catch {}
+  if (!h) return (s) => s;
+  const b = h.split('\\').join('/'), re = new RegExp([h, h.split('\\').join('\\\\'), b, encodeURI(b)].map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gi');
+  return (s) => s.replace(re, '~');
+})();
 function logErro(origem, detalhe) {
   try {
     const f = errFile();
@@ -19,7 +33,8 @@ function logErro(origem, detalhe) {
       errCabecalho = true;
       txt += `\n=== sessao de ${new Date().toLocaleString('pt-BR')} · PokeGrid v${app.getVersion()} · Electron ${process.versions.electron} · ${process.platform} ${require('os').release()} ===\n`;
     }
-    txt += `[${new Date().toLocaleString('pt-BR')}] [${origem}] ${String(detalhe).slice(0, 4000)}\n`;
+    // linhas seguintes recuadas: um texto com quebra de linha vindo da interface nao forja uma linha propria no relatorio
+    txt += `[${new Date().toLocaleString('pt-BR')}] [${origem}] ${semHome(String(detalhe)).slice(0, 4000).replace(/\r?\n/g, '\n    ')}\n`;
     fs.appendFileSync(f, txt);
   } catch {}
 }
@@ -31,7 +46,7 @@ process.on('uncaughtException', (e) => {
 process.on('unhandledRejection', (e) => logErro('app-promise', (e && e.stack) || e));
 app.on('child-process-gone', (_e, d) => { if (d && d.reason !== 'clean-exit') logErro('processo-' + (d.type || '?'), d.reason + (d.exitCode != null ? ' (exit ' + d.exitCode + ')' : '')); });
 // erros vindos da interface (window.onerror do index.html)
-ipcMain.handle('errlog:write', (_e, origem, msg) => { if (typeof origem === 'string' && typeof msg === 'string') logErro(origem.slice(0, 40), msg); });
+ipcMain.handle('errlog:write', (_e, origem, msg) => { if (typeof origem === 'string' && typeof msg === 'string') logErro(origem.replace(/[^\w-]/g, '').slice(0, 40), msg); });
 // abre a pasta com o arquivo selecionado, pro usuario mandar pro suporte
 ipcMain.handle('errlog:open', () => {
   try {
@@ -44,14 +59,25 @@ ipcMain.handle('errlog:open', () => {
 // Backups automaticos (config semanal e hunts que sairiam do limite de 150): grava em
 // userData/backups sem dialogo. Nome vem do renderer, entao e tratado como hostil: so o
 // basename, charset restrito, so .json e .csv (um .html gravado aqui abriria sem a CSP da
-// interface), teto de 2MB, e no maximo 12 arquivos por familia (prefixo + data ou numero).
+// interface), teto de 2 MB por gravacao e 50 MB na pasta, e no maximo 12 arquivos por familia (prefixo + data ou numero).
 ipcMain.handle('backup:save', (_e, nome, conteudo, cabecalho) => {
   try {
     if (typeof nome !== 'string' || typeof conteudo !== 'string') return false;
     nome = path.basename(nome);
-    if (!/^[\w.-]{1,60}$/.test(nome) || !/\.(json|csv)$/i.test(nome) || conteudo.length + (typeof cabecalho === 'string' ? cabecalho.length : 0) > 2e6) return false;
+    // em bytes: o teto contava caracteres, e acento ou emoji em UTF-8 passava de 2 MB no disco
+    const bytes = Buffer.byteLength(conteudo) + (typeof cabecalho === 'string' ? Buffer.byteLength(cabecalho) : 0);
+    if (!/^[\w.-]{1,60}$/.test(nome) || !/\.(json|csv)$/i.test(nome) || bytes > 2e6) return false;
     const dir = path.join(app.getPath('userData'), 'backups');
     fs.mkdirSync(dir, { recursive: true });
+    // teto da pasta inteira: nome sem data nao entra em familia e o .csv so cresce, entao um laco bugado (ou um XSS) gravando
+    // sem parar enchia o disco
+    // e teto de arquivos: arquivo vazio com nome fora de familia nao pesa nos 50 MB nem sai na poda, e com milhares deles cada
+    // gravacao lia a pasta inteira e travava o app (a interface usa uns 30)
+    const lista = fs.readdirSync(dir);
+    if (lista.length >= 300 && !lista.includes(nome)) { logErro('backup', 'pasta de backups com ' + lista.length + ' arquivos: nao gravou ' + nome); return false; }
+    let total = 0;
+    for (const f of lista) { try { total += fs.statSync(path.join(dir, f)).size; } catch {} }
+    if (total + bytes > 50e6) { logErro('backup', 'pasta de backups com ' + Math.round(total / 1e6) + ' MB: nao gravou ' + nome); return false; }
     const alvo = path.join(dir, nome);
     // anexar so faz sentido no csv; num .json anexado o arquivo deixa de ser JSON valido e o
     // backup nao volta mais na hora que o usuario precisa
@@ -209,8 +235,11 @@ app.on('web-contents-created', (_e, contents) => {
   // perigosas saem fixas e o resto e recusado. Medido no Electron 43: o params traz src e partition, e o Node ja vem
   // desligado nos paineis porque a janela principal nao tem Node; aqui ele fica desligado mesmo se isso mudar.
   contents.on('will-attach-webview', (ev, wp, params) => {
-    delete wp.preload;
-    Object.assign(wp, { nodeIntegration: false, nodeIntegrationInSubFrames: false, nodeIntegrationInWorker: false, contextIsolation: true, sandbox: true, webSecurity: true, allowRunningInsecureContent: false });
+    // A particao (e o resto) tambem sai fixa: o atributo webpreferences="partition=..." vence o partition do <webview> no wp, que e
+    // o que cria o painel, e o params so traz o atributo (medido no Electron 43). A conferencia abaixo olhava o params e passava.
+    delete wp.preload; delete wp.enableBlinkFeatures;
+    Object.assign(wp, { nodeIntegration: false, nodeIntegrationInSubFrames: false, nodeIntegrationInWorker: false, contextIsolation: true, sandbox: true, webSecurity: true, allowRunningInsecureContent: false,
+      webviewTag: false, experimentalFeatures: false, plugins: false, partition: String(params.partition || '') });
     let doJogo = false;
     try { doJogo = new URL(params.src).origin === new URL(GAME).origin; } catch {}
     if (!doJogo || !/^persist:conta[1-4]$/.test(String(params.partition || ''))) {
@@ -224,6 +253,7 @@ app.on('web-contents-created', (_e, contents) => {
   // passaria, levando a sessao logada pra um site clonado sem barra de endereco
   const mesmoJogo = (u) => { try { return new URL(u).origin === new URL(GAME).origin; } catch { return false; } };
   const guarda = (e, url) => {
+    if (e && e.isMainFrame === false) return; // o will-redirect vem de todo frame: redirect dentro de um iframe (captcha, login do Google) e do iframe, nao do painel
     if (!mesmoJogo(url) && url !== 'about:blank') { e.preventDefault(); abreFora(url); }
   };
   contents.on('will-navigate', guarda);
@@ -272,6 +302,7 @@ app.on('web-contents-created', (_e, contents) => {
 const credFile = () => path.join(app.getPath('userData'), 'accounts.enc');
 
 // Contas salvas: criptografadas em disco via DPAPI/keychain do SO (safeStorage).
+let credsIlegivel = false; // o accounts.enc existe e nao abriu nesta sessao
 ipcMain.handle('creds:load', () => {
   let buf;
   try { buf = fs.readFileSync(credFile()); } catch { return []; } // nunca salvo
@@ -279,15 +310,23 @@ ipcMain.handle('creds:load', () => {
     if (safeStorage.isEncryptionAvailable()) return JSON.parse(safeStorage.decryptString(buf));
     return JSON.parse(buf.toString('utf8')); // fallback se o SO nao oferecer cripto
   } catch {
-    // Ilegivel (ex.: chave de cripto mudou apos upgrade do Electron): preserva o
-    // arquivo antes que um save por cima destrua a unica copia.
-    try { fs.copyFileSync(credFile(), credFile() + '.bak-' + Date.now()); } catch {}
+    // Ilegivel (ex.: chave de cripto mudou apos upgrade do Electron, ou o Windows nao liberou a chave): preserva o
+    // arquivo antes que um save por cima destrua a unica copia. Uma copia so: o mesmo arquivo ilegivel virava um .bak por boot
+    credsIlegivel = true;
+    try {
+      const d = path.dirname(credFile()), ult = fs.readdirSync(d).filter((f) => f.startsWith('accounts.enc.bak-')).sort().pop();
+      if (!ult || !fs.readFileSync(path.join(d, ult)).equals(buf)) fs.copyFileSync(credFile(), credFile() + '.bak-' + Date.now());
+    } catch {}
+    logErro('creds', 'contas salvas ilegiveis (o sistema nao liberou a chave); o arquivo fica guardado');
     return [];
   }
 });
 
 ipcMain.handle('creds:save', (_e, accounts) => {
   try {
+    // contas que nao abriram nesta sessao: renomear um painel salvava 4 contas em branco por cima e, quando a chave voltava, as
+    // senhas tinham sumido. Branco por cima de ilegivel fica recusado; contas preenchidas de novo gravam (o .bak fica)
+    if (credsIlegivel && !(Array.isArray(accounts) && accounts.some((a) => a && (a.email || a.senha)))) { logErro('creds', 'nao gravou contas em branco por cima das salvas que nao abriram'); return false; }
     const json = JSON.stringify(accounts);
     // sem cripto do sistema, gravar em texto puro seria quebrar a promessa do app calado:
     // melhor recusar e dizer, que o renderer avisa e o relatorio de erros guarda o motivo
@@ -296,6 +335,7 @@ ipcMain.handle('creds:save', (_e, accounts) => {
     const f = credFile();
     fs.writeFileSync(f + '.tmp', data);
     fs.renameSync(f + '.tmp', f); // troca atomica: fechar o app no meio nao corrompe
+    credsIlegivel = false; // o arquivo agora e o desta sessao
     return true;
   } catch (e) {
     // disco cheio, antivirus segurando o .tmp (EPERM), pasta sem permissao: quem chamou precisa saber,
@@ -318,8 +358,14 @@ app.userAgentFallback = app.userAgentFallback
 // Notificacao do SO (alertas de queda e de sem pokebola).
 // versao do app pro badge do topo (sendSync: disponivel no load, mesmo com o preload em sandbox)
 ipcMain.on('app:version', (e) => { e.returnValue = app.getVersion(); });
+// no maximo 20 por minuto: os avisos de verdade tem trava por conta, e um laco (ou um XSS) enchia a Central de Notificacoes
+let avisosT = [];
 ipcMain.handle('notify', (_e, title, body) => {
-  try { if (Notification.isSupported()) new Notification({ title, body }).show(); } catch {}
+  const agora = Date.now();
+  avisosT = avisosT.filter((t) => agora - t < 60e3);
+  if (avisosT.length >= 20) return;
+  avisosT.push(agora);
+  try { if (Notification.isSupported()) new Notification({ title: String(title || '').slice(0, 80), body: String(body || '').slice(0, 300) }).show(); } catch {}
 });
 
 // Anti-sono: impede o PC de dormir enquanto farma (a tela ainda pode desligar).
@@ -364,10 +410,42 @@ ipcMain.handle('autostart:set', (_e, on) => { const r = setAutoStart(!!on); if (
 
 // Webhook do Discord (opcional): o usuario cola a URL do proprio servidor. So aceita o dominio
 // oficial de webhooks; o envio sai daqui porque a CSP do renderer bloqueia rede externa.
-ipcMain.handle('webhook:send', (_e, url, text) => {
+// A URL vem da interface, e qualquer webhook do Discord servia: um XSS ali mandava as senhas (pokeAPI.loadCreds) pro webhook
+// do atacante, por fora da CSP. Agora cada webhook novo so recebe depois de o usuario liberar num dialogo do sistema, que a
+// pagina nao clica. A liberacao fica gravada (o hash da URL, nao a URL) e o "nao" vale ate fechar o app, sem perguntar a cada aviso.
+const whOkFile = () => path.join(app.getPath('userData'), 'webhooks-liberados.json');
+let whOk = null;
+const whNao = new Set(), whPergunta = new Map();
+function whLiberado(url) {
+  const h = require('crypto').createHash('sha256').update(url).digest('hex');
+  if (!whOk) { try { whOk = new Set(JSON.parse(fs.readFileSync(whOkFile(), 'utf8'))); } catch { whOk = new Set(); } }
+  if (whOk.has(h)) return Promise.resolve(true);
+  // negado, outro webhook ja esperando resposta, ou 3 "nao" nesta sessao: sem dialogo novo. Uma interface tomada abria um dialogo
+  // atras do outro ate alguem cansar e clicar Liberar
+  if (whNao.has(h) || whNao.size >= 3 || (whPergunta.size && !whPergunta.has(h))) return Promise.resolve(false);
+  if (!whPergunta.has(h)) { // varios avisos ao mesmo tempo esperam o mesmo dialogo
+    const w = BrowserWindow.getAllWindows().find((x) => !x.isDestroyed() && x.isVisible()); // janela na bandeja: dialogo solto, senao ficava escondido
+    const o = { type: 'question', noLink: true, title: 'Webhook do Discord', buttons: ['Liberar / Allow', 'Não / No'], defaultId: 1, cancelId: 1,
+      message: 'Mandar os avisos do PokeGrid pra este webhook do Discord?\nSend PokeGrid alerts to this Discord webhook?',
+      detail: url.replace(/(\/api\/webhooks\/\d+\/[\w-]{6})[\w-]+/, '$1…') + '\n\nSó libere se foi você que colou esse webhook nos alertas do PokeGrid.\nOnly allow it if you pasted this webhook in the PokeGrid alerts.' };
+    whPergunta.set(h, Promise.resolve(w ? dialog.showMessageBox(w, o) : dialog.showMessageBox(o)).then((r) => {
+      if (!r || r.response !== 0) { whNao.add(h); return false; }
+      whOk.add(h);
+      try { fs.writeFileSync(whOkFile(), JSON.stringify([...whOk].slice(-20))); } catch {}
+      return true;
+    }, () => false).finally(() => whPergunta.delete(h)));
+  }
+  return whPergunta.get(h);
+}
+ipcMain.handle('webhook:send', async (_e, url, text) => {
   try {
-    const u = new URL(String(url));
-    if (u.protocol !== 'https:' || !/^(?:(?:ptb|canary)\.)?discord(?:app)?\.com$/.test(u.hostname) || !u.pathname.startsWith('/api/webhooks/')) return false; // ptb. e canary.: a URL que o Discord PTB/Canary copia
+    const u0 = new URL(String(url));
+    // so o formato de webhook: id, token e o ?thread_id= dos foruns. Barra no fim, ?x=1, #, porta, discordapp, ptb. e canary. (a URL
+    // que o Discord PTB/Canary copia) viram a mesma URL de discord.com: antes cada variacao era um webhook novo, com dialogo novo
+    const m = /^\/api\/webhooks\/(\d{5,25})\/([\w-]{20,100})\/?$/.exec(u0.pathname);
+    if (u0.protocol !== 'https:' || !/^(?:(?:ptb|canary)\.)?discord(?:app)?\.com$/.test(u0.hostname) || !m || u0.username || u0.password || u0.port || u0.hash || !/^(\?thread_id=\d{5,25})?$/.test(u0.search)) return false;
+    const u = new URL('https://discord.com/api/webhooks/' + m[1] + '/' + m[2] + u0.search);
+    if (!(await whLiberado(u.href))) return null; // null e nao false: a fila da interface so tenta de novo no false
     // Mencao: so a do COMECO do texto, que e onde o app poe a que voce configurou. O resto traz nome de conta e de pokemon
     // vindos do jogo: um "<@id>" ali aparece escrito, sem notificar ninguem (antes todo ID do texto entrava na lista).
     // parse: [] segue barrando @everyone/@here e cargos.
@@ -401,8 +479,12 @@ app.whenReady().then(() => {
       const ses = session.fromPartition('persist:conta' + i);
       ses.setPermissionRequestHandler(soClipboard);
       // Checagem sem pedido: o padrao responde "concedido", e o jogo e os userscripts liam os nomes do microfone, da
-      // camera e do alto-falante (enumerateDevices). Nega so essas duas; o resto segue o padrao.
-      ses.setPermissionCheckHandler((_wc, p) => p !== 'media' && p !== 'speaker-selection');
+      // camera e do alto-falante (enumerateDevices). Nega essas duas e a notificacao: com a checagem concedida, o new Notification()
+      // de um userscript (ou de um XSS no chat) mostrava aviso do Windows com o nome PokeGrid. O jogo nao usa notificacao.
+      ses.setPermissionCheckHandler((_wc, p) => p !== 'media' && p !== 'speaker-selection' && p !== 'notifications');
+      // Download pedido pela pagina abria o "Salvar como" na janela do app, sem dizer de onde vinha (um "PokeGrid-Setup.exe", por
+      // exemplo). Passa so imagem gerada na pagina, o "baixar imagem" do jogo (canvas pra PNG).
+      ses.on('will-download', (ev, item) => { try { if (!/^data:image\/(png|jpeg|webp);/.test(item.getURL())) ev.preventDefault(); } catch { ev.preventDefault(); } });
     } catch (e) { logErro('boot', 'sessao conta' + i + ': ' + e.message); }
   // A janela principal (onde ficam as senhas) tambem: sem isto a sessao padrao concedia tudo. O botao de copiar o link usa o clipboard.
   try { session.defaultSession.setPermissionRequestHandler(soClipboard); } catch (e) { logErro('boot', 'sessao padrao: ' + e.message); }

@@ -224,7 +224,7 @@ function mundo(tokens) {
     ok(s.includes('Math.round(v / Math.max(secs, 60) * 3600)'), 'taxa por hora com piso de 1 min no CSV, como no painel');
     ok(s.includes('dittoCache.clear(); tlCache = null; tlHeCache = null;'), 'Hunts por tipo: o cache zera quando o catalogo de hunts recarrega (antes mostrava 0 gold/h depois que o preco chegava)');
     ok(s.includes('(showHiddenHunts || !x.hidden)) maxSug = '), 'ranking do Simples: hunt oculta nao escala a barra das visiveis');
-    ok(s.includes("p: g[6] ? 300 : (+g[1] || 0)"), 'card de IV: golpe de TM com o poder 300 do jogo, nao os 600 do creatures.json');
+    ok(s.includes("({ n: TM_TIPOS[ty][0], p: 300, ty, cat: TM_TIPOS[ty][1], nv: 0, tm: true })") && s.includes(".filter(g => Array.isArray(g) && !g[6])"), 'card de IV: golpe de TM com o poder 300 do jogo, nao os 600 do creatures.json (e os discos pela regra do jogo)');
     ok(s.includes('const qEd = e.qualidade > 0 && e.qualidade !== d.qualidade'), 'card de IV: mudar so o nivel nao joga fora o poder do jogo');
     ok(/ivRaro\(c\.qe > 0 \? c\.qe : c\.q\)/.test(s), 'raridade pela qualidade que fecha os atributos (1,097 e Comum, nao Incomum)');
   }

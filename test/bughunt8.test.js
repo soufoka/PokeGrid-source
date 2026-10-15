@@ -47,7 +47,7 @@ function monta(opts = {}) {
   const ints = [], tos = [], store = new Map(Object.entries(opts.ls || {}));
   const quota = opts.quota || Infinity;
   const usado = () => { let n = 0; for (const [k, v] of store) n += k.length + v.length; return n; };
-  const docEv = {}, calls = [];
+  const docEv = {}, winEv = {}, calls = [];
   class CL { constructor() { this.s = new Set(); } add(...c) { c.forEach((x) => this.s.add(x)); } remove(...c) { c.forEach((x) => this.s.delete(x)); } contains(c) { return this.s.has(c); } toggle(c, f) { if (f === undefined) f = !this.s.has(c); f ? this.s.add(c) : this.s.delete(c); return f; } }
   class El {
     constructor(tag, id) { this.tagName = String(tag || 'div').toUpperCase(); this.id = id || ''; this.style = { setProperty() {}, removeProperty() {} }; this.classList = new CL(); this.dataset = {}; this.children = []; this._h = ''; this._t = ''; this.value = ''; this.checked = false; this.title = ''; this.options = [{}, {}]; this.childElementCount = 0; this.offsetHeight = 40; this.scrollTop = 0; this.ev = {}; this.attrs = {}; }
@@ -86,11 +86,11 @@ function monta(opts = {}) {
   };
   const lsProxy = new Proxy(localStorage, { ownKeys: () => [...store.keys()], getOwnPropertyDescriptor: (t, k) => (store.has(k) ? { value: store.get(k), enumerable: true, configurable: true } : (k in t ? { value: t[k], enumerable: false, configurable: true } : undefined)), get: (t, k) => (k in t ? t[k] : store.get(k)) });
   const api = Object.assign({ loadCreds: async () => [], saveCreds: async () => true, logError() {}, notify() {}, webhook: async () => true, onHotkey() {}, onJanela() {}, onAutoStart() {}, getAutoStart: async () => ({ on: false, suportado: true }), setAwake: async () => false, setMinToTray: async () => true, saveBackup: async () => true, clearAccount: async () => true, fetchUserScript: async () => ({ ok: false }), appVersion: '1.5.39' }, opts.api || {});
-  const window = { addEventListener() {}, confirm: () => true, alert() {}, open() {}, pokeAPI: api, PokeGridIvMath: require(path.join(RAIZ, 'src/domain/iv-math.js')) };
+  const window = { addEventListener(t, f) { (winEv[t] = winEv[t] || []).push(f); }, confirm: () => true, alert() {}, open() {}, pokeAPI: api, PokeGridIvMath: require(path.join(RAIZ, 'src/domain/iv-math.js')) };
   const fn = new Function('window', 'document', 'localStorage', 'navigator', 'location', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'innerWidth', 'innerHeight', 'addEventListener', 'getComputedStyle', 'AudioContext', 'MutationObserver', 'FileReader', 'fetch', 'performance', 'prompt', 'ResizeObserver', 'pokeAPI', code + '\n;return {' + (opts.exporta || '') + '};');
   const noop = () => 0;
   const out = fn(window, document, lsProxy, { clipboard: { writeText: async () => {} } }, { reload() { calls.push(['location.reload']); }, pathname: '/x/index.html' }, (f, ms) => { ints.push({ f, ms }); return ints.length; }, noop, (f, ms) => { tos.push({ f, ms }); return tos.length; }, noop, 1600, 900, noop, () => ({}), function () {}, function () { return { observe() {}, disconnect() {} }; }, opts.FileReader || function () {}, () => new Promise(() => {}), { now: () => Date.now() }, () => null, function () { return { observe() {}, unobserve() {} }; }, api);
-  return Object.assign(out, { ints, tos, store, calls, docEv, grid, document });
+  return Object.assign(out, { ints, tos, store, calls, docEv, winEv, grid, document });
 }
 const conta = (extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', level: 300, gold: 1000, diamonds: 0, a: { seconds: 900, gph: 1000, xph: 5000, kph: 100 }, hunt: 'Bug Cave', team: [], catchLog: [], usedList: [], chatShares: [], invMap: {} }, extra || {});
 
@@ -327,6 +327,46 @@ const conta = (extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', level
       const ordem = linhas.slice().sort((a, b) => +a.style.order - +b.style.order).map((r) => r.n).join();
       ok(linhas.every((r) => +r.style.order > 0) && ordem === { iv: 'Dratini,Pikachu,Gyarados', q: 'Dratini,Pikachu,Gyarados', p: 'Pikachu,Gyarados,Dratini' }[srt], 'Mercado por ' + srt + ': ordem acima de 0, entao a barra de filtro e o cabecalho (ordem 0) ficam em cima (' + ordem + ')');
     }
+  });
+
+  await secao('botao Hunt com o Limpar jogo ligado (15/10/2026)', () => {
+    const HUNT = tpl('const huntScript = ');
+    // pagina do jogo falsa: o icone Hunt Analyzer do menu de icones abre a janela (.ha-window com o X), o X fecha
+    const jogo = (limpo, aberto) => {
+      const st = { aberto, cliques: 0, fechou: 0 }, cls = new Set(), tick = [];
+      const x = { click() { st.fechou++; st.aberto = false; } };
+      const doc = {
+        documentElement: { classList: { add: (c) => cls.add(c), remove: (c) => cls.delete(c), contains: (c) => cls.has(c) } },
+        getElementById: (id) => (id === 'pg-clean' && limpo ? {} : null),
+        querySelector: (q) => (q === 'button.ha-x' ? (st.aberto ? x : null) : q === '.ha-window' ? (st.aberto ? {} : null) : null),
+        querySelectorAll: () => [{ title: 'Hunt Analyzer', getAttribute: () => '', querySelector: () => ({ getAttribute: (a) => (a === 'src' ? '/assets/topmenu/analyzer.png' : 'Hunt Analyzer') }), click() { st.cliques++; st.aberto = true; } }]
+      };
+      const ctx = vm.createContext({ document: doc, setInterval: (f) => { tick.push(f); return tick.length; }, clearInterval() {} });
+      ctx.window = ctx;
+      return { roda: () => vm.runInContext(HUNT, ctx), st, cls, tick };
+    };
+    let g = jogo(true, false);
+    ok(g.roda() === 'abriu' && g.st.cliques === 1 && g.cls.has('pg-ha'), 'Limpar jogo ligado: o Hunt abre o analyzer e marca a pagina pra ele aparecer (antes abria transparente e parecia nao fazer nada)');
+    g.tick[g.tick.length - 1](); const segue = g.cls.has('pg-ha');
+    g.st.aberto = false; g.tick[g.tick.length - 1]();
+    ok(segue && !g.cls.has('pg-ha'), 'a marca fica enquanto a janela esta aberta e sai quando ela fecha (pelo X do jogo, por exemplo)');
+    g = jogo(true, true);
+    ok(g.roda() === 'mostrou' && g.st.fechou === 0 && g.cls.has('pg-ha'), 'analyzer ja aberto pelo jogo e transparente: o Hunt so faz ele aparecer, em vez de fechar a janela invisivel');
+    ok(g.roda() === 'fechou' && g.st.fechou === 1 && !g.cls.has('pg-ha'), 'aberto e visivel: o Hunt fecha, como antes');
+    g = jogo(false, true);
+    ok(g.roda() === 'fechou' && g.st.fechou === 1, 'Limpar jogo desligado: segue alternando abre e fecha');
+    const limpa = (/const cleanScript = \(on\) => `([\s\S]*?)`;/.exec(code) || [])[1] || '';
+    ok(limpa.includes("'html.pg-ha .ha-window{opacity:1 !important}'"), 'o CSS do Limpar jogo mostra o analyzer marcado (mais especifico que a regra que deixa transparente)');
+  });
+
+  await secao('menu Opcoes fecha quando o foco vai pro jogo (15/10/2026)', async () => {
+    const H = monta({ ls: { count: '1' } });
+    await vezes(5);
+    const menu = H.document.getElementById('menu'), abre = () => { H.document.getElementById('menuBtn').onclick({ stopPropagation() {} }); return menu.classList.contains('show'); };
+    const focoEm = (tag) => (H.docEv.focusin || []).forEach((f) => f({ target: { tagName: tag } }));
+    ok(abre() && ((H.winEv.blur || []).forEach((f) => f({})), !menu.classList.contains('show')), 'a janela perde o foco (clique dentro de um painel do jogo, ou outro programa): o menu fecha');
+    ok(abre() && (focoEm('WEBVIEW'), !menu.classList.contains('show')), 'o foco vai pro painel (<webview>): o menu fecha (o clique no jogo nao chega na pagina do app)');
+    ok(abre() && (focoEm('INPUT'), menu.classList.contains('show')), 'foco num campo do proprio app: o menu segue aberto');
   });
 
   console.log(fail ? '\nFALHOU' : '\nTUDO OK');

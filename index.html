@@ -2039,7 +2039,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     s.textContent = '.cap-panel:not(:has(.cap-row.shiny)),.kc-stack,.sn-card:has(.sn-xpline),.sn-card:has(.sn-loot){display:none !important}'
       + '.ah-panel,.game-hud-tl,.ha-window,nav.game-dock{opacity:0 !important;transition:opacity .18s ease !important}'
       + '.ah-panel:hover,.game-hud-tl:hover,.ha-window:hover,nav.game-dock:hover{opacity:1 !important}'
-      + '.ah-panel.pg-ah-cheio{opacity:1 !important}'; // deposito cheio (marcado pelo READ_STATE): o aviso do jogo nao some
+      + '.ah-panel.pg-ah-cheio{opacity:1 !important}' // deposito cheio (marcado pelo READ_STATE): o aviso do jogo nao some
+      + 'html.pg-ha .ha-window{opacity:1 !important}'; // Hunt Analyzer aberto pelo botao Hunt do app (huntScript): aparece
   })()`;
   const cleanBtn = document.getElementById('cleanHud');
   let cleanOn = lsGet('cleanHud') !== '0'; // ligado por padrao
@@ -2057,18 +2058,22 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   });
 
   // ----- Hunt Analyzer: abre em todos os paineis de uma vez -----
-  // O botao fica no menu de icones do jogo (game-dock); acha pelo title/alt/src que contem "hunt".
+  // O botao fica no menu de icones do jogo (game-dock); acha pelo title/alt/src que contem "hunt". Com o Limpar jogo ligado a
+  // janela do analyzer fica transparente ate passar o mouse (desde a 1.5.37), e o botao abria uma janela que ninguem via: aberta
+  // por aqui ela aparece (html.pg-ha, no CSS do Limpar jogo), e a marca sai quando a janela fecha, por aqui ou pelo X do jogo.
   const huntScript = `(() => {
-    // aberto? fecha no proprio X do analyzer (button.ha-x). fechado? abre pelo icone do game-dock.
-    const x = document.querySelector('button.ha-x');
-    if (x) { x.click(); return 'fechou'; }
+    const r = document.documentElement, x = document.querySelector('button.ha-x');
+    const vis = !document.getElementById('pg-clean') || r.classList.contains('pg-ha'); // aberto e visivel (sem o Limpar jogo, sempre)
+    if (x && vis) { x.click(); r.classList.remove('pg-ha'); return 'fechou'; }
+    const mostra = () => { r.classList.add('pg-ha'); clearInterval(window.__pgHaT); window.__pgHaT = setInterval(() => { if (!document.querySelector('.ha-window')) { r.classList.remove('pg-ha'); clearInterval(window.__pgHaT); } }, 1000); };
+    if (x) { mostra(); return 'mostrou'; } // aberto mas transparente: so aparece
     const btn = [...document.querySelectorAll('nav.game-dock button, .dock-btn')].find(el => {
       const img = el.querySelector ? el.querySelector('img') : null;
       const txt = (el.title || '') + ' ' + (el.getAttribute ? (el.getAttribute('aria-label') || '') : '')
         + ' ' + (img ? (img.getAttribute('alt') || '') + ' ' + (img.getAttribute('src') || '') : '');
       return /hunt/i.test(txt);
     });
-    if (btn) { btn.click(); return 'abriu'; }
+    if (btn) { btn.click(); mostra(); return 'abriu'; }
     return 'nada';
   })()`;
   const huntBtn = document.getElementById('hunt');
@@ -2870,6 +2875,10 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
     inp.click();
   };
   document.addEventListener('click', (e) => { if (!menuWrap.contains(e.target)) menu.classList.remove('show'); });
+  // o clique dentro do jogo nao chega a esta pagina (o painel e outra), e o menu ficava aberto por cima dos jogos. Medido no
+  // Electron 43: o foco indo pro painel da focusin no <webview> e blur na janela (que tambem vem ao trocar de programa)
+  window.addEventListener('blur', () => menu.classList.remove('show'));
+  document.addEventListener('focusin', (e) => { if (e.target && e.target.tagName === 'WEBVIEW') menu.classList.remove('show'); });
 
   // ===== Painel de resumo: le o coletor window.__poke da conta em foco =====
   const READ_STATE = `(() => {

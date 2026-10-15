@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.40
+
+- **Correções.** O botão Hunt volta a mostrar o Hunt Analyzer com o 🧼 Limpar jogo ligado: desde a 1.5.37 ele abria a janela transparente, que só aparecia passando o mouse por cima. O menu ☰ Opções agora fecha quando você clica dentro do jogo ou troca de programa, em vez de ficar aberto por cima dos painéis.
+  *Fixes: the Hunt button shows the Hunt Analyzer again with Clean game on: since 1.5.37 it opened the window transparent, and it only showed with the mouse over it. The Options menu now closes when you click inside the game or switch programs, instead of staying open over the panels.*
+
 ## 1.5.39
 
 - **📍 Onde caçar.** Janela nova na barra do topo: escolha o elemento e o nível, e o app diz em qual hunt caçar e com qual pokémon, com o melhor do seu time pra ela e as outras hunts do elemento embaixo. Já abre no Tipo do Dia, lido do próprio jogo, e os elementos aparecem com os nomes do jogo em português. Ela substitui o chip Hunts por tipo da Tierlist, que ficava escondido entre os elementos dos atacantes.

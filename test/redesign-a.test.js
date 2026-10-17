@@ -164,15 +164,15 @@ const FIXADO = JSON.stringify([{ d: Object.assign({}, SCIZOR, { nome: 'Kabutops'
       for (const m of c.matchAll(/<div class="mg" data-t="(\w+)">|<(?:button|div) id="(\w+)"/g)) { if (m[1]) out.push(g = { g: m[1], ids: [] }); else if (g) g.ids.push(m[2]); }
       return out.map((x) => x.g + ':' + x.ids.join(',')).join(' ');
     });
-    const quer = ['mgTools:hunt,tierBtn,dittoBtn,scriptsBtn mgScreen:countRow,layout,propNat,cleanHud,chat mgSystem:eco,awake,minTray,autoStart,langRow',
+    const quer = ['mgTools:hunt,tierBtn,dittoBtn,scriptsBtn mgScreen:countRow,layout,propNat,cleanHud,chat mgSystem:eco,jogoLeve,awake,minTray,autoStart,langRow',
       'mgAlerts:alerts,sellguard,voltaHunt,sndShiny,muteAll mgHelp:manBtn,faqBtn,bkExp,bkImp,errlogBtn'];
     ok(cols.length === 2 && cols[0] === quer[0] && cols[1] === quer[1], 'grupos e itens por coluna: ' + JSON.stringify(cols));
     const ids = quer.join(' ').split(/[ :,]/).filter((x) => x && !/^mg/.test(x));
     const H = monta(); await vezes(3);
     const nomes = ['mgTools', 'mgScreen', 'mgSystem', 'mgAlerts', 'mgHelp'];
-    ok(ids.length === 24 && ids.every((id) => html.split('id="' + id + '"').length === 2) && /id="autoStart"[^>]*style="display:none"/.test(M) && /if \(!r \|\| !r\.suportado\) return;\s*autoStart = !!r\.on; asBtn\.style\.display = '';/.test(code)
+    ok(ids.length === 25 && ids.every((id) => html.split('id="' + id + '"').length === 2) && /id="autoStart"[^>]*style="display:none"/.test(M) && /if \(!r \|\| !r\.suportado\) return;\s*autoStart = !!r\.on; asBtn\.style\.display = '';/.test(code)
       && nomes.every((k) => ['pt', 'en', 'es'].every((L) => typeof H.I18N[L][k] === 'string' && H.I18N[L][k] && !/—/.test(H.I18N[L][k]))) && H.document.querySelectorAll('#menu .mg').map((g) => g.textContent).join() === nomes.map(H.t).join(),
-    '24 itens, cada id uma vez so; o 🚀 continua escondido ate o sistema dizer que suporta; titulos dos grupos nos 3 idiomas (' + H.document.querySelectorAll('#menu .mg').map((g) => g.textContent).join(' | ') + ')');
+    '25 itens, cada id uma vez so; o 🚀 continua escondido ate o sistema dizer que suporta; titulos dos grupos nos 3 idiomas (' + H.document.querySelectorAll('#menu .mg').map((g) => g.textContent).join(' | ') + ')');
     const mr = regra('#menu'), ms = regra('#menu.show'), mg = regra('#menu .mg');
     ok(/grid-template-columns: 1fr 1fr;/.test(mr) && /width: 520px;/.test(mr) && /max-height: calc\(100vh - 64px\); overflow-y: auto;/.test(mr) && /display: grid;/.test(ms) && /font-size: 11px;/.test(mg) && /text-transform: uppercase;/.test(mg) && /color: #8b949e;/.test(mg), 'menu de 520px em 2 colunas, com teto de altura e titulo de grupo em caixa alta 11px');
     const it = regra('#menu button'), hv = regra('#menu button:hover'), sel = regra('#menu #langRow button.on, #menu #countRow button.on'), sp = regra('#langRow span, #countRow span');
@@ -182,12 +182,12 @@ const FIXADO = JSON.stringify([{ d: Object.assign({}, SCIZOR, { nome: 'Kabutops'
   });
 
   await secao('chaves do menu: rotulo fixo, .on e aria-checked seguem o estado de verdade', async () => {
-    const SW = { muteAll: ['Silenciar jogos', 'muted'], eco: ['Modo Eco', 'eco'], chat: ['Esconder chat', 'chatHidden'], awake: ['Manter o PC acordado', 'awake'],
+    const SW = { muteAll: ['Silenciar jogos', 'muted'], eco: ['Modo Eco', 'eco'], jogoLeve: ['Modo Leve do jogo', 'jogoLeve'], chat: ['Esconder chat', 'chatHidden'], awake: ['Manter o PC acordado', 'awake'],
       minTray: ['Minimizar pra bandeja', 'minTray'], voltaHunt: ['Voltar pra hunt', 'voltaHunt'], alerts: ['Alertas', 'alerts'], sellguard: ['Venda protegida', 'sellguard'],
       cleanHud: ['Limpar jogo', 'cleanHud'], autoStart: ['Abrir com o Windows', null], sndShiny: ['Som do shiny', 'sndShiny'], propNat: ['Proporção original', 'propNat'] };
     const rot = (b) => (/<span class="lbl">([^<]*)<\/span>$/.exec(b.innerHTML) || [])[1] || ''; // redesign C: o texto do rotulo, depois do icone
     const comRole = Object.keys(TAGS).filter((id) => TAGS[id].a.role === 'switch').sort();
-    ok(comRole.join() === Object.keys(SW).sort().join() && TAGS.layout && !TAGS.layout.a.role, 'role="switch" nos 12 liga/desliga e so neles (a Grade alterna 3 modos, nao e chave): ' + comRole.join(', '));
+    ok(comRole.join() === Object.keys(SW).sort().join() && TAGS.layout && !TAGS.layout.a.role, 'role="switch" nos 13 liga/desliga e so neles (a Grade alterna 3 modos, nao e chave): ' + comRole.join(', '));
     const H = monta(); await vezes(4);
     const est = (b) => [rot(b), b.classList.contains('on'), b.getAttribute('aria-checked')];
     for (const [id, [rot, chave]] of Object.entries(SW)) {

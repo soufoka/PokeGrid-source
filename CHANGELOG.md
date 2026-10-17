@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.41
+
+- **Card dos ovos no jogo opcional.** As Incubadoras do 🍃 Simples ganharam a chave **No jogo**, na ponta do cabeçalho: desligada, o card dos ovos sai de dentro dos jogos e os ovos ficam só no Simples. Vem ligada, como antes.
+  *Optional egg card in the game: the Incubators section in Simple view has a new **In game** switch at the end of its header: when off, the egg card leaves the games and eggs only show in Simple view. It starts on, as before.*
+- **Mais leve em PC fraco.** Chave nova **Modo Leve do jogo** (☰ Opções, grupo Sistema): liga o Modo Leve do próprio jogo em todas as contas de uma vez, com meia resolução, cenário parado e 30 FPS, o que alivia a placa de vídeo e a memória. Vale a partir da próxima vez que cada painel carregar. O app também pesa menos ao abrir a Pokédex: a lista de preços das espécies só é baixada quando você pede o $ Menor valor, e os filtros e o fecha-popup que o app põe no jogo deixaram de varrer a página a cada mudança.
+  *Lighter on weak PCs: new **Game Lite Mode** switch (Options, System group): turns on the game's own Lite Mode in every account at once, with half resolution, still scenery and 30 FPS, easing the graphics card and memory. It takes effect the next time each panel loads. The app also weighs less when opening the Pokédex: the species price list is only downloaded when you ask for $ Lowest value, and the filters and popup closer the app adds to the game no longer scan the page on every change.*
+
 ## 1.5.40
 
 - **Correções.** O botão Hunt volta a mostrar o Hunt Analyzer com o 🧼 Limpar jogo ligado: desde a 1.5.37 ele abria a janela transparente, que só aparecia passando o mouse por cima. O menu ☰ Opções agora fecha quando você clica dentro do jogo ou troca de programa, em vez de ficar aberto por cima dos painéis.

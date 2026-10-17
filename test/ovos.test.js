@@ -275,6 +275,19 @@ function monta(opts = {}) {
     ok(g2.card().pai === g2.root, 'apareceu o .game-root: o card entra nele');
   });
 
+  await secao('card no jogo: a chave No jogo das Incubadoras tira e devolve o card (17/10/2026)', () => {
+    const g = jogo(); g.win.__poke = { egg: RESUMO }; g.injeta();
+    ok(!!g.card(), 'chave ligada (o padrao): o card aparece');
+    const i0 = code.indexOf('const ovoJogoJs = () => '), js = (on) => new Function('ovoJogo', 'return (' + code.slice(i0 + 'const ovoJogoJs = '.length, code.indexOf(';\n', i0)) + ')();')(on);
+    const doc0 = g.win.document; g.win.document = Object.assign({}, doc0, { querySelector: (q) => (q === '.pg-ovo' ? g.card() : doc0.querySelector(q)) });
+    vm.runInContext(js(false), vm.createContext(g.win));
+    ok(!g.card() && g.win.__pgOvoOff === true, 'desligou no Simples: o card sai do jogo na hora');
+    g.tique(); g.tique();
+    ok(!g.card(), 'e o redesenho de 2 s nao traz de volta');
+    vm.runInContext(js(true), vm.createContext(g.win)); g.win.document = doc0; g.tique();
+    ok(!!g.card() && g.win.__pgOvoOff === false, 'religou: volta no proximo redesenho');
+  });
+
   await secao('card no jogo: clique recolhe, arrastar move, e fica salvo por painel', () => {
     const g = jogo(); g.win.__poke = { egg: RESUMO }; g.injeta();
     g.clica();
@@ -358,7 +371,7 @@ function monta(opts = {}) {
     const iT = h.indexOf('data-s="table"'), iO = h.indexOf('data-s="eggs"'), iH = h.indexOf('data-s="hunts"');
     ok(iT >= 0 && iT < iO && iO < iH, 'Incubadoras entre a tabela por conta e o ranking de hunts (' + [iT, iO, iH] + ')');
     const sec = h.slice(iO, h.lastIndexOf('<div', iH));
-    ok(sec.includes('<div class="cd-sec"><div class="cd-h">' + H.t('cdEggs') + ' · ' + H.t('cdEggsSub') + '</div>'), 'cabecalho como o das outras secoes (titulo · explicacao, em caixa alta pelo .cd-h)');
+    ok(sec.includes('<div class="cd-sec"><div class="cd-h" style="display:flex;align-items:center;gap:8px"><span>' + H.t('cdEggs') + ' · ' + H.t('cdEggsSub') + '</span><button id="cdOvoJogo" role="switch"'), 'cabecalho como o das outras secoes (titulo · explicacao, em caixa alta pelo .cd-h), com a chave No jogo na ponta');
     ok(sec.includes('grid-template-columns:repeat(2,minmax(0,1fr));gap:12px') && !/cd-ovo"|class="cd-sh"/.test(sec), 'uma coluna por conta ativa como nos Times, sem cartao dentro de cartao (e a coluna encolhe em vez de vazar)');
     const cols = [...sec.matchAll(/<div class="cd-h" style="margin-bottom:4px[^"]*">([\s\S]*?)(?=<div class="cd-h" style="margin-bottom:4px|$)/g)].map((m) => sem(m[1]));
     ok(cols.length === 2, 'so as contas ativas, como nos Times (o painel no login fica de fora): ' + cols.length);

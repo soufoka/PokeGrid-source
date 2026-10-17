@@ -317,7 +317,7 @@ const conta = (extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', level
     ok(/const grd = win\.querySelector\('\.dex-grid'\); if \(grd\) new MutationObserver\(\(\) => \{[^}]*aplicaValor\(win, true\); \}\)\.observe\(grd, \{ childList: true \}\);/.test(QOL_UI), '"$ Menor valor": celula montada depois (a busca mudou) tambem entra na ordem');
     const limpa = (/const cleanScript = \(on\) => `([\s\S]*?)`;/.exec(code) || [])[1] || '';
     ok(limpa.includes("'.cap-panel:not(:has(.cap-row.shiny)),.kc-stack,"), 'Limpar jogo: a barra de captura volta quando traz um shiny (o botao de jogar a bola e dela, e sem Auto-Catch o shiny ficava sem como capturar)');
-    const src = QOL_UI.slice(QOL_UI.indexOf('    function aplicaMercado(parent) {'), QOL_UI.indexOf('    new MutationObserver(() => { dex(); mercado(); })'));
+    const src = QOL_UI.slice(QOL_UI.indexOf('    function aplicaMercado(parent) {'), QOL_UI.indexOf('    // no maximo a cada 250 ms: o observador olha a pagina inteira'));
     const aplicaMercado = new Function(src + '\nreturn aplicaMercado;')();
     const linha = (n, iv, q, p) => ({ classList: { contains: () => false }, innerText: '1\n' + n + '\nIV ' + iv + '\nLendária ×' + q, querySelector: () => ({ innerText: '💲' + p }), style: { setProperty() {}, removeProperty() {}, order: '' }, n });
     const linhas = [linha('Pikachu', 131, '1.75', '1.000'), linha('Gyarados', 98, '1.32', '5.000'), linha('Dratini', 160, '2.10', '9.000')];
@@ -367,6 +367,95 @@ const conta = (extra) => Object.assign({ ok: true, cid: 'c1', name: 'Ash', level
     ok(abre() && ((H.winEv.blur || []).forEach((f) => f({})), !menu.classList.contains('show')), 'a janela perde o foco (clique dentro de um painel do jogo, ou outro programa): o menu fecha');
     ok(abre() && (focoEm('WEBVIEW'), !menu.classList.contains('show')), 'o foco vai pro painel (<webview>): o menu fecha (o clique no jogo nao chega na pagina do app)');
     ok(abre() && (focoEm('INPUT'), menu.classList.contains('show')), 'foco num campo do proprio app: o menu segue aberto');
+  });
+
+  await secao('PC fraco: observadores da pagina do jogo com intervalo (16/10/2026)', () => {
+    const POPUP = tpl('const POPUP_SCRIPT = ');
+    // roda o trecho do observador com MutationObserver e setTimeout falsos: 5 mudancas seguidas viram uma passada so
+    const passa = (src, chamadas) => {
+      const cbs = [], tos = [], n = {};
+      const conta = (k) => () => { n[k] = (n[k] || 0) + 1; };
+      const MO = function (f) { cbs.push(f); this.observe = () => {}; };
+      new Function('MutationObserver', 'setTimeout', 'document', ...chamadas, src)(MO, (f, ms) => { tos.push({ f, ms }); return tos.length; }, { body: {}, documentElement: {} }, ...chamadas.map(conta));
+      for (let k = 0; k < 5; k++) cbs[cbs.length - 1]([]);
+      const agendou = tos.length, ms = tos.length && tos[0].ms;
+      tos.forEach((t2) => t2.f());
+      return { agendou, ms, n };
+    };
+    const q = /let qt = 0;\s*new MutationObserver\([\s\S]*?\.observe\(document\.body, \{ childList: true, subtree: true \}\);/.exec(QOL_UI);
+    const rq = q && passa(q[0], ['dex', 'mercado']);
+    ok(!!rq && rq.agendou === 1 && rq.ms === 250 && rq.n.dex === 1 && rq.n.mercado === 1, 'filtros da Pokedex e do Mercado: 5 mudancas na pagina viram uma busca so, 250 ms depois (antes eram 5 buscas na pagina inteira)');
+    const p = /let pt = 0;[^\n]*\n\s*new MutationObserver\([\s\S]*?\.observe\(document\.documentElement, \{ childList: true, subtree: true \}\);/.exec(POPUP);
+    const rp = p && passa(p[0], ['kill']);
+    ok(!!rp && rp.agendou === 1 && rp.n.kill === 1, 'fecha-popup de promocao: o mesmo intervalo');
+  });
+
+  await secao('PC fraco: o creatures.json so vem no $ Menor valor (16/10/2026)', async () => {
+    const dexSrc = QOL_UI.slice(QOL_UI.indexOf('    function dex() {'), QOL_UI.indexOf('    function aplicaValor('));
+    ok((dexSrc.match(/carrega\(/g) || []).length === 1 && dexSrc.includes("if (b.classList.contains('on')) carrega(() => aplicaValor(win, b.classList.contains('on'))); else aplicaValor(win, false);"), 'abrir a Pokedex nao baixa nem le o creatures.json (1,6 MB): so o clique no $ Menor valor');
+    const src = /let svMap = null;\s*const carrega = [^\n]*\n/.exec(QOL_UI);
+    let pedidos = 0, falha = false;
+    const fetch = () => { pedidos++; return falha ? Promise.reject(new Error('rede')) : Promise.resolve({ json: async () => ({ creatures: [{ name: 'Pidgey', sellValue: 15 }, { name: 'Mew', sellValue: 60000 }] }) }); };
+    const K = src && new Function('fetch', src[0] + 'return { carrega, mapa: () => svMap };')(fetch);
+    const feitos = [];
+    K.carrega(() => feitos.push(K.mapa().pidgey)); K.carrega(() => feitos.push('2o'));
+    await vezes(5);
+    ok(pedidos === 1 && feitos.includes(15) && feitos.includes('2o'), 'dois cliques seguidos: um download so, e a ordem e aplicada quando os precos chegam');
+    falha = true;
+    const K2 = new Function('fetch', src[0] + 'return { carrega, mapa: () => svMap };')(fetch);
+    K2.carrega(() => {}); await vezes(5);
+    ok(K2.mapa() === null, 'download falhou: o proximo clique tenta de novo');
+  });
+
+  await secao('Modo Leve do jogo nas contas de uma vez (16/10/2026)', async () => {
+    const H = monta({ ls: { count: '2' }, exporta: 'jogoLeveJs' });
+    await vezes(5);
+    // roda o script na pagina falsa do jogo, com o localStorage dela
+    const roda = (code, ini) => { const st = new Map(ini == null ? [] : [['pokeweb:settings', ini]]); let gravou = 0; const ctx = vm.createContext({ localStorage: { getItem: (k) => (st.has(k) ? st.get(k) : null), setItem: (k, v) => { gravou++; st.set(k, String(v)); } }, JSON }); vm.runInContext(code, ctx); const v = st.get('pokeweb:settings'); return { cfg: v == null ? null : JSON.parse(v), gravou }; };
+    const liga = H.jogoLeveJs(true), desliga = H.jogoLeveJs(false);
+    let r = roda(liga);
+    ok(r.cfg.lite === true && r.cfg.fps === 30, 'conta sem config: liga o Modo Leve do jogo e os 30 FPS, como o botao do proprio jogo');
+    r = roda(liga, JSON.stringify({ lite: false, fps: 0, zoom: 1.2, uiScale: 1.15 }));
+    ok(r.cfg.lite === true && r.cfg.fps === 30 && r.cfg.zoom === 1.2 && r.cfg.uiScale === 1.15, 'o resto da config do jogo fica como estava (zoom, tamanho da interface)');
+    ok(roda(liga, JSON.stringify({ lite: true, fps: 60 })).gravou === 0, 'ja estava no Modo Leve: nao mexe (nem no FPS que a pessoa escolheu)');
+    ok(['{', 'null', '[1]', '7'].every((x) => { const c = roda(liga, x).cfg; return c && c.lite === true && c.fps === 30; }), 'config corrompida ou de outro formato: grava uma limpa em vez de quebrar');
+    r = roda(desliga, JSON.stringify({ lite: true, fps: 30 }));
+    ok(r.cfg.lite === false && r.cfg.fps === 30 && roda(desliga, JSON.stringify({ lite: false })).gravou === 0, 'desligar so tira o Modo Leve (o FPS fica, como no jogo) e nao grava se ele ja estava fora');
+    // o botao do menu: grava nos paineis ligados, avisa que vale na proxima carga e guarda a escolha
+    const execs = [];
+    const H2 = monta({ ls: { count: '2' }, exec: (c, wv) => { execs.push([wv.n, c]); return Promise.resolve(null); }, exporta: 'jogoLeveJs, webviews' });
+    await vezes(5);
+    execs.length = 0;
+    H2.document.getElementById('jogoLeve').onclick();
+    await vezes(3);
+    const doLiga = execs.filter(([, c]) => c === H2.jogoLeveJs(true)).map(([n]) => n).sort().join();
+    ok(doLiga === '1,2' && H2.store.get('jogoLeve') === '1' && H2.document.getElementById('dlgOverlay').classList.contains('show'), 'ligar no menu: grava nos 2 paineis, guarda a escolha e avisa que vale na proxima vez que cada painel carregar');
+    execs.length = 0;
+    (H2.webviews[0].ev['dom-ready'] || []).forEach((f) => f({}));
+    ok(execs.some(([n, c]) => n === 1 && c === H2.jogoLeveJs(true)), 'ligado, cada carga de painel regrava (conta nova no painel, painel ligado depois)');
+  });
+
+  await secao('Incubadoras: chave No jogo pro card dentro do jogo (17/10/2026)', async () => {
+    const execs = [];
+    const H = monta({ ls: { count: '2' }, exec: (c, wv) => { execs.push([wv.n, c]); return Promise.resolve(null); }, exporta: 'refreshCards, cardsSet: (v) => { cardsOn = v; }, stCache, stSane, get cardsEl() { return cardsEl; }, webviews' });
+    await vezes(5);
+    const ovo = { un: true, ul: 50, sl: 3, eggs: [{ r: false, sh: false, rk: 'B', d: 756, n: 3000 }] };
+    [0, 1].forEach((i) => { H.stCache[i] = { t: Date.now(), d: H.stSane(conta({ cid: 'c' + i, name: 'Conta' + i, egg: ovo })) }; });
+    H.cardsSet(true); await H.refreshCards(true);
+    const html = H.cardsEl.innerHTML;
+    ok(/<button id="cdOvoJogo" role="switch" aria-checked="true" class="on"[^>]*>No jogo<\/button>/.test(html), 'o cabecalho das Incubadoras traz a chave No jogo, ligada por padrao');
+    execs.length = 0;
+    const b = H.cardsEl.querySelector('#cdOvoJogo'); b.onclick();
+    await vezes(3);
+    const manda = execs.filter(([, c]) => /window\.__pgOvoOff=true/.test(c) && /\.pg-ovo/.test(c)).map(([n]) => n).sort().join();
+    ok(manda === '1,2' && H.store.get('ovoJogo') === '0' && b.classList.contains('on') === false, 'desligou: avisa os 2 paineis (o card sai na hora) e guarda a escolha');
+    await H.refreshCards(true);
+    ok(/<button id="cdOvoJogo" role="switch" aria-checked="false" class=""/.test(H.cardsEl.innerHTML), 'o redesenho do Simples mostra a chave desligada');
+    execs.length = 0;
+    (H.webviews[0].ev['dom-ready'] || []).forEach((f) => f({}));
+    const ordem = execs.filter(([n]) => n === 1).map(([, c]) => c);
+    const iFlag = ordem.findIndex((c) => /window\.__pgOvoOff=true/.test(c)), iCard = ordem.findIndex((c) => c.includes("const css = document.createElement('style');") && c.includes('pg-ovo'));
+    ok(iFlag >= 0 && iCard > iFlag, 'painel que recarrega recebe a chave antes do card (o card nem chega a aparecer)');
   });
 
   console.log(fail ? '\nFALHOU' : '\nTUDO OK');

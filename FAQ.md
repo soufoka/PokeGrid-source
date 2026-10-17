@@ -83,6 +83,7 @@ Quase todo o peso vem dos jogos desenhando o mapa, um por conta aberta; os núme
 - Minimizar ou mandar pra bandeja: desde a 1.5.27 os jogos entram sozinhos no mesmo modo leve do Simples enquanto a janela está escondida, e voltam ao normal quando você abre.
 - 🔢 Painéis (☰ Opções, grupo Tela): cada painel é um jogo inteiro rodando. Clique no número de painéis que você quer, de 1 a 4. Pôr painéis só abre os novos, e tirar fecha os últimos da grade, então deixe as contas que você usa nos primeiros lugares do 👤 Treinadores. As contas que ficam na tela seguem farmando. O painel tirado fecha de verdade, e a senha dele continua salva.
 - ⚡ Modo Eco (☰ Opções, grupo Sistema): segura cada jogo em 15 quadros por segundo. Já vem ligado; se a chave estiver desligada, clique pra religar.
+- Modo Leve do jogo (☰ Opções, grupo Sistema): liga o Modo Leve do próprio jogo em todas as contas de uma vez, com meia resolução, cenário parado e 30 quadros por segundo. Alivia a placa de vídeo e, nos PCs com vídeo integrado, a memória. Vale a partir da próxima vez que cada painel carregar: no Atualizar tudo (as contas voltam pra cidade) ou quando o app abrir de novo.
 - 📊 Painel: feche quando não estiver olhando, principalmente na aba Σ. Aberto, ele relê as contas a cada 2 segundos.
 
 Silenciar jogos, grade e proporção não deixam o app mais leve.
@@ -90,7 +91,7 @@ Silenciar jogos, grade e proporção não deixam o app mais leve.
 ### E nas configurações do próprio jogo?
 Ajudam quando você deixa o jogo à vista (com o 🍃 Simples ligado quase não mudam nada, porque o jogo nem aparece). Em cada painel, no menu de ícones do jogo, clique no ícone **Configurações**, escolha **Configurações** de novo e fique na aba **Vídeo**:
 
-- Modo Leve: ⚡ Ligado. Meia resolução e cenário parado (os pokémon continuam animados). Já coloca o FPS em 30 e a renderização em Default.
+- Modo Leve: ⚡ Ligado. Meia resolução e cenário parado (os pokémon continuam animados). Já coloca o FPS em 30 e a renderização em Default. Dá pra ligar em todas as contas de uma vez pela chave **Modo Leve do jogo** do app (☰ Opções, grupo Sistema).
 - Modo de batalha: 🃏 Cartas. Na hunt, troca o mapa com personagens andando por herói e inimigos sem animação; nas cidades o jogo continua em 3D.
 - Limite de FPS: 30, se você desligou o ⚡ Modo Eco. Com ele ligado o app já segura em 15.
 

@@ -13,7 +13,7 @@ Guia curto do que cada coisa faz. Se você só quer resolver um problema pontual
 | **🍃 Simples** | Esconde o jogo e mostra só os números das 4 contas. Gasta bem menos do PC |
 | **📍 Onde caçar** | Escolha o elemento e o nível: o app diz em qual hunt caçar e com qual pokémon. Já abre no Tipo do Dia do jogo (detalhes abaixo) |
 | **IVs** | Abre a calculadora de IV do app, sem ligar nada nos Scripts. Passe o mouse num pokémon em qualquer painel, ou clique num anúncio do Mercado, que ela preenche sozinha (detalhes abaixo) |
-| **☰ Opções** | Tudo o mais, em 5 grupos: Ferramentas (Hunt, Tierlist, Ditto, Scripts), Tela (painéis, grade, proporção, Limpar jogo, chat), Sistema (Modo Eco, PC acordado, bandeja, abrir com o Windows, idioma), Avisos e recuperação (Alertas, Venda protegida, Voltar pra hunt, som do shiny, silenciar) e Ajuda e dados (Manual, FAQ, exportar e importar config, Erros). Cada liga/desliga tem uma chave: verde é ligado |
+| **☰ Opções** | Tudo o mais, em 5 grupos: Ferramentas (Hunt, Tierlist, Ditto, Scripts), Tela (painéis, grade, proporção, Limpar jogo, chat), Sistema (Modo Eco, Modo Leve do jogo, PC acordado, bandeja, abrir com o Windows, idioma), Avisos e recuperação (Alertas, Venda protegida, Voltar pra hunt, som do shiny, silenciar) e Ajuda e dados (Manual, FAQ, exportar e importar config, Erros). Cada liga/desliga tem uma chave: verde é ligado |
 
 Atalhos de teclado (só quando o foco está no app, não dentro do jogo, e com nenhuma janela do app aberta): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Opções, **M** também Limpar jogo, **E** Eco, **A** Alertas. O **F2** liga e desliga o Limpar jogo até com o mouse dentro do jogo.
 
@@ -38,7 +38,7 @@ Na seção **Time**, clique num pokémon pra colocar ele na frente: ele vira o l
 O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gastando pouco do PC. Minimizar ou mandar pra bandeja faz o mesmo com os jogos sozinho, e ao abrir a janela eles voltam. Seções principais:
 
 - **Hoje**: gold, XP, kills e capturas do dia, com meta e o botão que exporta as planilhas
-- **Incubadoras**: os ovos do Breeding do jogo em cada conta, com o rank, o % e os abates feitos e pedidos, iguais aos do jogo, e o aviso de ovo pronto pra chocar. Atualiza a cada 30 s. Os mesmos ovos aparecem num card dentro de cada painel do jogo: clique recolhe, arrastar muda de lugar, e cada painel lembra onde o card ficou
+- **Incubadoras**: os ovos do Breeding do jogo em cada conta, com o rank, o % e os abates feitos e pedidos, iguais aos do jogo, e o aviso de ovo pronto pra chocar. Atualiza a cada 30 s. Os mesmos ovos aparecem num card dentro de cada painel do jogo: clique recolhe, arrastar muda de lugar, e cada painel lembra onde o card ficou. A chave **No jogo**, na ponta do cabeçalho da seção, liga e desliga esse card em todos os painéis
 - **Hunts**: o ranking. Ordene por **Sugerido** e escolha o atacante em **"caçar com"**. Golpe de TM só entra na conta se aquele pokémon aprendeu o disco. Com Ditto no time, aparece a melhor transformação por elemento, respeitando o que cada Ditto pode copiar (o Shiny só vira espécie com forma shiny) e sem TM, que Ditto não aprende
 - **Capturas / Shinies**: histórico com filtros por conta, IV, qualidade e período
 - **Times & IV**: o time de cada conta com IV, qualidade e poder, e o poder projetado no nível que você escolher (até 3000)

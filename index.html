@@ -627,6 +627,13 @@
   .cd-h select { background: var(--bg); border: 1px solid var(--bd2); border-radius: 6px; color: var(--tx); font-size: 11px; padding: 2px 6px; outline: none; }
   .cd-h button { background: var(--sf); border: 1px solid var(--bd2); border-radius: 6px; color: var(--tx3); font-size: 11px; padding: 3px 9px; cursor: pointer; }
   .cd-h button:hover { border-color: var(--mut); color: var(--tx); }
+  /* chave no cabecalho de secao do Simples (Incubadoras > No jogo): o trilho da chave do menu Opcoes, menor */
+  .cd-h button[role=switch] { position: relative; padding-right: 36px; }
+  .cd-h button[role=switch]::after { content: ''; position: absolute; right: 7px; top: 50%; width: 22px; height: 12px; margin-top: -6px; border-radius: 999px; background: var(--bd2); }
+  .cd-h button[role=switch]::before { content: ''; position: absolute; right: 17px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--mut); z-index: 1; }
+  .cd-h button[role=switch].on { color: var(--tx); }
+  .cd-h button[role=switch].on::after { background: #238636; }
+  .cd-h button[role=switch].on::before { right: 9px; background: #fff; }
   /* .pg-ovo-bar: cada ovo da incubadora (ovosHtml) e uma barra de meta, dourada ao completar como a meta batida */
   .cd-goal, .pg-ovo-bar { height: 6px; background: var(--bd); border-radius: 4px; overflow: hidden; margin-top: 3px; }
   .cd-goal > i, .pg-ovo-bar > i { display: block; height: 100%; background: var(--ok); border-radius: 4px; }
@@ -785,6 +792,7 @@
           <button id="chat" role="switch" aria-checked="false" title="Esconde o chat do jogo em todos os painéis">Esconder chat</button>
           <div class="mg" data-t="mgSystem">Sistema</div>
           <button id="eco" role="switch" aria-checked="false">Modo Eco</button>
+          <button id="jogoLeve" role="switch" aria-checked="false">Modo Leve do jogo</button>
           <button id="awake" role="switch" aria-checked="false" title="Impede o PC de dormir enquanto farma (a tela ainda pode desligar)">Manter o PC acordado</button>
           <button id="minTray" role="switch" aria-checked="false" title="Ligado: o botão minimizar esconde o app na bandeja. Desligado: minimiza normal, na barra de tarefas">Minimizar pra bandeja</button>
           <button id="autoStart" role="switch" aria-checked="false" style="display:none" title="Cria um atalho na pasta Inicializar do Windows pra abrir o PokeGrid junto com o sistema">Abrir com o Windows</button>
@@ -976,7 +984,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
   const I18N = {
     pt: {
       loginAll:'Logar equipe', accounts:'Treinadores', reloadAll:'Atualizar tudo', layout:'Grade', layoutCol:'Uma coluna', prop:'Proporção original', autoStart:'Abrir com o Windows', asTitle:'Cria um atalho do PokeGrid na pasta Inicializar do Windows, o mesmo lugar onde você colocaria um atalho à mão. Não mexe no registro e você pode remover pelo Win+R > shell:startup.', propTitle:'Mantém a proporção original do jogo, sem esticar a imagem. Sobra fundo escuro quando o painel não bate com a proporção; desligado, a imagem preenche tudo mas distorce.', layoutRow:'Uma linha', layoutTitle:'Como os painéis se organizam. Clique pra alternar: grade, uma coluna (empilhado) ou uma linha (lado a lado).',
-      muted:'Silenciar jogos', eco:'Modo Eco', awake:'Manter o PC acordado',
+      muted:'Silenciar jogos', eco:'Modo Eco', awake:'Manter o PC acordado', jogoLeve:'Modo Leve do jogo', jogoLeveTitle:'Liga o Modo Leve do próprio jogo em todas as contas: meia resolução, cenário sem animação e 30 FPS, muito mais leve em PCs fracos. Vale a partir da próxima vez que cada painel carregar', jogoLeveOn:'O Modo Leve do jogo vale a partir da próxima vez que cada painel carregar: no Atualizar tudo (as contas voltam pra cidade) ou quando o app abrir de novo.', jogoLeveOff:'O jogo sai do Modo Leve na próxima vez que cada painel carregar.',
       chatHidden:'Esconder chat',
       optionsBtn:'Opções', mgTools:'Ferramentas', mgScreen:'Tela', mgSystem:'Sistema', mgAlerts:'Avisos e recuperação', mgHelp:'Ajuda e dados', howWorks:'Como funciona', errlog:'Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
       
@@ -989,7 +997,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       stLevel:'Nível', stSession:'Sessão', stDefeated:'Derrotados', stXpGain:'XP ganha', stCaptures:'Capturas', stGold:'Ouro da sessão', stLoot:'Loot (venda)', stCapSell:'Capturas (venda)', stSupply:'Suprimentos gastos', stBalls:'bolas', stPots:'cura', stBalance:'Saldo da sessão', stDrops:'Drops da sessão', stAccount:'Conta', stProfession:'Profissão', stMail:'Presentes no correio', stCatchTotal:'Capturas totais', stTeam:'Time', donTitle:'Ajude o projeto', donText:'O PokeGrid é gratuito e feito nas horas vagas. Se ele facilita o seu farm, um apoio de qualquer valor ajuda a manter o projeto vivo.', donBtn:'Apoiar via Pix / Mercado Pago \u2197', stTeamPick:'Clique pra colocar na frente (vira o líder que caça)', stTeamLead:'Líder atual', stTeamCd:'Troca disponível em {s}s',
       cards:'Simples', cardsShort:'Simples', cardsTitle:'Modo simples e ultra leve: esconde o jogo e mostra só os números, gastando o mínimo do PC (o farm continua)', cdGold:'gold/h líquido', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sessão)', cdShiny:'shiny enc/cap', cdActive:'contas ativas', cdByAcc:'Por conta · clique no cabeçalho pra ordenar, na linha pra abrir o jogo', cdTrend:'Tendência · última hora', cdCatches:'Últimas capturas · todas as contas', cdShinies:'Aparições de shiny ✨', cdConta:'Conta', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Melhor catch', cdLast:'Último catch', cdWaiting:'Aguardando…', cdHunting:'Caçando', cdTotal:'Total', cdSeen:'apareceram', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada ainda',
       cdHunts:'Ranking de hunts', cdShared:'Compartilhados no chat', cdFirst:'1ª captura da espécie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efetividade ↓', cdSortMeasured:'Medido: gold/h ↓', cdMeasured:'sua média', cdHitsKill:'golpes/kill', cdEffOf:'efetividade vs líder de', cdLoading:'carregando dados do jogo…', stLastCatch:'Último catch', stSince:'bolas desde então',
-      cdShinyTried:'Shinies tentados (bolas jogadas)', cdConfig:'Configurar o painel', cdConfigH:'Seções (arraste pra reordenar, marque pra mostrar)', cdSecKpis:'Resumo (KPIs)', cdByAcc2:'Tabela por conta', cdScopeMine:'Minhas hunts', cdScopeAll:'Todas as hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Voltar a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder as ocultas', cdEggs:'Incubadoras', cdEggsSub:'ovos do Breeding do jogo, a cada 30 s', ovoTit:'Incubadora', ovoOvo:'Ovo', ovoPronto:'Pronto pra chocar', ovoAbates:'abates', ovoVazio:'Nenhum ovo incubando', ovoTrava:'O Breeding libera no nível {n}', ovoEspera:'Aguardando resposta do jogo…', ovoDica:'Clique pra recolher ou abrir · arraste pra mover',
+      cdShinyTried:'Shinies tentados (bolas jogadas)', cdConfig:'Configurar o painel', cdConfigH:'Seções (arraste pra reordenar, marque pra mostrar)', cdSecKpis:'Resumo (KPIs)', cdByAcc2:'Tabela por conta', cdScopeMine:'Minhas hunts', cdScopeAll:'Todas as hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Voltar a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder as ocultas', cdEggs:'Incubadoras', cdEggsSub:'ovos do Breeding do jogo, a cada 30 s', cdOvoJogo:'No jogo', cdOvoJogoTitle:'Mostra o card dos ovos dentro de cada jogo. Desligado, os ovos aparecem só aqui no Simples', ovoTit:'Incubadora', ovoOvo:'Ovo', ovoPronto:'Pronto pra chocar', ovoAbates:'abates', ovoVazio:'Nenhum ovo incubando', ovoTrava:'O Breeding libera no nível {n}', ovoEspera:'Aguardando resposta do jogo…', ovoDica:'Clique pra recolher ou abrir · arraste pra mover',
       stDragHint:'Arraste para reordenar', stHideSec:'Esconder esta seção (restaure na engrenagem ⚙)',
       sellguard:'Venda protegida', sellguardTitle:'Pede confirmação antes de vender shiny, Lendária+ ou item raro',
       clean:'Limpar jogo', cleanTitle:'Esconde o popup de captura, os avisos de combate (XP por kill) e o HUD do canto; o auto-helper (onde troca a pokébola), a conta, o menu do jogo e o Hunt Analyzer aparecem ao passar o mouse. F2 liga e desliga, até de dentro do jogo',
@@ -1026,7 +1034,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
     },
     en: {
       loginAll:'Log in all', accounts:'Accounts', reloadAll:'Reload all', layout:'Grid', layoutCol:'Single column', prop:'Original aspect', autoStart:'Open with Windows', asTitle:'Creates a PokeGrid shortcut in the Windows Startup folder, the same place you would put one by hand. It does not touch the registry and you can remove it via Win+R > shell:startup.', propTitle:'Keeps the game original aspect ratio instead of stretching the image. Dark bars appear when the panel does not match the ratio; turned off, the image fills everything but gets distorted.', layoutRow:'Single row', layoutTitle:'How the panels are arranged. Click to cycle: grid, single column (stacked) or single row (side by side).',
-      muted:'Mute games', eco:'Eco mode', awake:'Keep the PC awake',
+      muted:'Mute games', eco:'Eco mode', awake:'Keep the PC awake', jogoLeve:'Game Lite Mode', jogoLeveTitle:'Turns on the game\'s own Lite Mode in every account: half resolution, scenery without animation and 30 FPS, much lighter on weak PCs. It takes effect the next time each panel loads', jogoLeveOn:'The game\'s Lite Mode takes effect the next time each panel loads: on Reload all (accounts go back to the city) or when the app opens again.', jogoLeveOff:'The game leaves Lite Mode the next time each panel loads.',
       chatHidden:'Hide chat',
       optionsBtn:'Options', mgTools:'Tools', mgScreen:'Display', mgSystem:'System', mgAlerts:'Alerts & recovery', mgHelp:'Help & data', howWorks:'How it works', errlog:'Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
       
@@ -1039,7 +1047,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       stLevel:'Level', stSession:'Session', stDefeated:'Defeated', stXpGain:'XP gained', stCaptures:'Captures', stGold:'Session gold', stLoot:'Loot (sell)', stCapSell:'Captures (sell)', stSupply:'Supplies used', stBalls:'balls', stPots:'heals', stBalance:'Session balance', stDrops:'Session drops', stAccount:'Account', stProfession:'Profession', stMail:'Gifts in mail', stCatchTotal:'Total catches', stTeam:'Team', donTitle:'Support the project', donText:'PokeGrid is free and built in spare time. If it makes your farming easier, a contribution of any size helps keep the project alive.', donBtn:'Support via Pix / Mercado Pago \u2197', stTeamPick:'Click to put it in front (becomes the hunting leader)', stTeamLead:'Current leader', stTeamCd:'Swap available in {s}s',
       cards:'Simple', cardsShort:'Simple', cardsTitle:'Simple, ultra-light mode: hides the game and shows only the numbers, using the least PC possible (farming continues)', cdGold:'net gold/h', cdXp:'total XP/h', cdKills:'kills/h', cdCaps:'captures (session)', cdShiny:'shiny enc/cap', cdActive:'active accounts', cdByAcc:'Per account · click a header to sort, a row to open the game', cdTrend:'Trend · last hour', cdCatches:'Latest captures · all accounts', cdShinies:'Shiny appearances ✨', cdConta:'Account', cdHunt:'Hunt', cdStatus:'Status', cdBest:'Best catch', cdLast:'Last catch', cdWaiting:'Waiting…', cdHunting:'Hunting', cdTotal:'Total', cdSeen:'appeared', cdCaught:'caught', cdLost:'lost', cdNone:'nothing yet',
       cdHunts:'Hunt ranking', cdShared:'Shared in chat', cdFirst:'first capture of the species', cdSortPrice:'Value ↓', cdSortXp:'XP ↓', cdSortEff:'Effectiveness ↓', cdSortMeasured:'Measured: gold/h ↓', cdMeasured:'your average', cdHitsKill:'hits/kill', cdEffOf:'effectiveness vs leader of', cdLoading:'loading game data…', stLastCatch:'Last catch', stSince:'balls since then',
-      cdShinyTried:'Shinies attempted (balls thrown)', cdConfig:'Configure the panel', cdConfigH:'Sections (drag to reorder, check to show)', cdSecKpis:'Summary (KPIs)', cdByAcc2:'Per-account table', cdScopeMine:'My hunts', cdScopeAll:'All hunts', cdHide:'Hide this hunt', cdUnhide:'Show again', cdShowHiddenN:'show hidden ({n})', cdHideHidden:'hide the hidden ones', cdEggs:'Incubators', cdEggsSub:'eggs from the game Breeding, every 30 s', ovoTit:'Incubator', ovoOvo:'Egg', ovoPronto:'Ready to hatch', ovoAbates:'kills', ovoVazio:'No eggs incubating', ovoTrava:'Breeding unlocks at level {n}', ovoEspera:'Waiting for the game…', ovoDica:'Click to collapse or expand · drag to move',
+      cdShinyTried:'Shinies attempted (balls thrown)', cdConfig:'Configure the panel', cdConfigH:'Sections (drag to reorder, check to show)', cdSecKpis:'Summary (KPIs)', cdByAcc2:'Per-account table', cdScopeMine:'My hunts', cdScopeAll:'All hunts', cdHide:'Hide this hunt', cdUnhide:'Show again', cdShowHiddenN:'show hidden ({n})', cdHideHidden:'hide the hidden ones', cdEggs:'Incubators', cdEggsSub:'eggs from the game Breeding, every 30 s', cdOvoJogo:'In game', cdOvoJogoTitle:'Shows the egg card inside each game. When off, eggs only show here in Simple', ovoTit:'Incubator', ovoOvo:'Egg', ovoPronto:'Ready to hatch', ovoAbates:'kills', ovoVazio:'No eggs incubating', ovoTrava:'Breeding unlocks at level {n}', ovoEspera:'Waiting for the game…', ovoDica:'Click to collapse or expand · drag to move',
       stDragHint:'Drag to reorder', stHideSec:'Hide this section (restore it in the gear ⚙)',
       sellguard:'Sell guard', sellguardTitle:'Asks for confirmation before selling shiny, Legendary+ or rare items',
       clean:'Clean game', cleanTitle:'Hides the capture popup, the combat notices (XP per kill) and the corner HUD; the auto-helper (where you switch pokéballs), account, game menu and Hunt Analyzer appear on hover. F2 turns it on and off, even from inside the game',
@@ -1077,7 +1085,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
     },
     es: {
       loginAll:'Iniciar equipo', accounts:'Entrenadores', reloadAll:'Recargar todo', layout:'Cuadrícula', layoutCol:'Una columna', prop:'Proporción original', autoStart:'Abrir con Windows', asTitle:'Crea un acceso directo de PokeGrid en la carpeta Inicio de Windows, el mismo lugar donde lo pondrías a mano. No toca el registro y puedes quitarlo con Win+R > shell:startup.', propTitle:'Mantiene la proporción original del juego, sin estirar la imagen. Queda fondo oscuro cuando el panel no coincide con la proporción; apagado, la imagen llena todo pero se distorsiona.', layoutRow:'Una fila', layoutTitle:'Cómo se organizan los paneles. Clic para alternar: cuadrícula, una columna (apilado) o una fila (lado a lado).',
-      muted:'Silenciar juegos', eco:'Modo Eco', awake:'Mantener el PC despierto',
+      muted:'Silenciar juegos', eco:'Modo Eco', awake:'Mantener el PC despierto', jogoLeve:'Modo Ligero del juego', jogoLeveTitle:'Activa el Modo Ligero del propio juego en todas las cuentas: media resolución, escenario sin animación y 30 FPS, mucho más ligero en PCs débiles. Vale desde la próxima vez que cada panel cargue', jogoLeveOn:'El Modo Ligero del juego vale desde la próxima vez que cada panel cargue: con Recargar todo (las cuentas vuelven a la ciudad) o cuando la app se abra de nuevo.', jogoLeveOff:'El juego sale del Modo Ligero la próxima vez que cada panel cargue.',
       chatHidden:'Ocultar chat',
       optionsBtn:'Opciones', mgTools:'Herramientas', mgScreen:'Pantalla', mgSystem:'Sistema', mgAlerts:'Avisos y recuperación', mgHelp:'Ayuda y datos', howWorks:'Cómo funciona', errlog:'Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
       
@@ -1090,7 +1098,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       stLevel:'Nivel', stSession:'Sesión', stDefeated:'Derrotados', stXpGain:'XP ganada', stCaptures:'Capturas', stGold:'Oro de la sesión', stLoot:'Loot (venta)', stCapSell:'Capturas (venta)', stSupply:'Suministros gastados', stBalls:'bolas', stPots:'curas', stBalance:'Balance de la sesión', stDrops:'Drops de la sesión', stAccount:'Cuenta', stProfession:'Profesión', stMail:'Regalos en el correo', stCatchTotal:'Capturas totales', stTeam:'Equipo', donTitle:'Apoya el proyecto', donText:'PokeGrid es gratuito y hecho en el tiempo libre. Si te facilita el farmeo, un aporte de cualquier valor ayuda a mantener el proyecto vivo.', donBtn:'Apoyar vía Pix / Mercado Pago \u2197', stTeamPick:'Clic para ponerlo al frente (será el líder que caza)', stTeamLead:'Líder actual', stTeamCd:'Cambio disponible en {s}s',
       cards:'Simple', cardsShort:'Simple', cardsTitle:'Modo simple y ultraligero: oculta el juego y muestra solo los números, gastando lo mínimo del PC (el farmeo sigue)', cdGold:'oro/h neto', cdXp:'XP/h total', cdKills:'kills/h', cdCaps:'capturas (sesión)', cdShiny:'shiny enc/cap', cdActive:'cuentas activas', cdByAcc:'Por cuenta · clic en el encabezado para ordenar, en la fila para abrir el juego', cdTrend:'Tendencia · última hora', cdCatches:'Últimas capturas · todas las cuentas', cdShinies:'Apariciones de shiny ✨', cdConta:'Cuenta', cdHunt:'Hunt', cdStatus:'Estado', cdBest:'Mejor catch', cdLast:'Último catch', cdWaiting:'Esperando…', cdHunting:'Cazando', cdTotal:'Total', cdSeen:'aparecieron', cdCaught:'capturados', cdLost:'perdidos', cdNone:'nada todavía',
       cdHunts:'Ranking de hunts', cdShared:'Compartidos en el chat', cdFirst:'1ª captura de la especie', cdSortPrice:'Valor ↓', cdSortXp:'XP ↓', cdSortEff:'Efectividad ↓', cdSortMeasured:'Medido: oro/h ↓', cdMeasured:'tu promedio', cdHitsKill:'golpes/kill', cdEffOf:'efectividad vs líder de', cdLoading:'cargando datos del juego…', stLastCatch:'Último catch', stSince:'balls desde entonces',
-      cdShinyTried:'Shinies intentados (balls lanzadas)', cdConfig:'Configurar el panel', cdConfigH:'Secciones (arrastra para reordenar, marca para mostrar)', cdSecKpis:'Resumen (KPIs)', cdByAcc2:'Tabla por cuenta', cdScopeMine:'Mis hunts', cdScopeAll:'Todas las hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Volver a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder las ocultas', cdEggs:'Incubadoras', cdEggsSub:'huevos del Breeding del juego, cada 30 s', ovoTit:'Incubadora', ovoOvo:'Huevo', ovoPronto:'Listo para eclosionar', ovoAbates:'bajas', ovoVazio:'Ningún huevo incubando', ovoTrava:'El Breeding se desbloquea en el nivel {n}', ovoEspera:'Esperando respuesta del juego…', ovoDica:'Clic para plegar o abrir · arrastra para mover',
+      cdShinyTried:'Shinies intentados (balls lanzadas)', cdConfig:'Configurar el panel', cdConfigH:'Secciones (arrastra para reordenar, marca para mostrar)', cdSecKpis:'Resumen (KPIs)', cdByAcc2:'Tabla por cuenta', cdScopeMine:'Mis hunts', cdScopeAll:'Todas las hunts', cdHide:'Ocultar esta hunt', cdUnhide:'Volver a mostrar', cdShowHiddenN:'mostrar ocultas ({n})', cdHideHidden:'esconder las ocultas', cdEggs:'Incubadoras', cdEggsSub:'huevos del Breeding del juego, cada 30 s', cdOvoJogo:'En el juego', cdOvoJogoTitle:'Muestra la tarjeta de huevos dentro de cada juego. Apagado, los huevos solo aparecen aquí en Simple', ovoTit:'Incubadora', ovoOvo:'Huevo', ovoPronto:'Listo para eclosionar', ovoAbates:'bajas', ovoVazio:'Ningún huevo incubando', ovoTrava:'El Breeding se desbloquea en el nivel {n}', ovoEspera:'Esperando respuesta del juego…', ovoDica:'Clic para plegar o abrir · arrastra para mover',
       stDragHint:'Arrastra para reordenar', stHideSec:'Ocultar esta sección (restáurala en el engranaje ⚙)',
       sellguard:'Venta protegida', sellguardTitle:'Pide confirmación antes de vender shiny, Legendaria+ o ítem raro',
       clean:'Limpiar juego', cleanTitle:'Oculta el popup de captura, los avisos de combate (XP por kill) y el HUD de la esquina; el auto-helper (donde cambias la pokébola), la cuenta, el menú del juego y el Hunt Analyzer aparecen al pasar el mouse. F2 lo enciende y apaga, incluso desde dentro del juego',
@@ -1360,6 +1368,7 @@ if(S.supBase){for(const id in S.supBase){const antes=S.supBase[id]||0,agora=(cur
 S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const doc=P.api['/game/items.json'];const it=doc&&doc.items&&doc.items.find(x=>x.id===59195);const d=S.drops[59195]||(S.drops[59195]={name:(it&&it.name)||'Rare Pokémon Picture',qty:0});d.qty+=(now-S.picBase);}S.picBase=now;}}else if(m.type==='chat'||m.type==='history'||m.type==='guild-history'){const chS=(mm)=>{try{if(!mm||!mm.body)return;const re=/\\[poke!([A-Za-z0-9_-]+)\\]/g;let mt;while((mt=re.exec(mm.body))){try{let b64=atob(mt[1].replace(/-/g,'+').replace(/_/g,'/'));try{b64=decodeURIComponent(escape(b64));}catch(x){}const j=JSON.parse(b64);if(j&&j.k==='poke'){const CS=P.chatShares=P.chatShares||[];const N=(v)=>{v=Number(v);return isFinite(v)?v:0;};const cn=String(j.n||'?').slice(0,40),cf=String(mm.fromName||'').slice(0,40);if(!CS.some(c=>c.n===cn&&c.iv===N(j.iv)&&c.lv===N(j.lv)&&c.fr===cf)){CS.push({fr:cf,n:cn,sh:!!j.sh,lv:N(j.lv),q:N(j.q),iv:N(j.iv),pw:N(j.pw),t:Date.now()});if(CS.length>15)CS.shift();}}}catch(x){}}}catch(x){}};if(m.type==='chat')chS(m.msg);else['world','trade','help','guild','media'].forEach(c2=>(m[c2]||[]).forEach(chS));}}}}catch(x){}});return s;};window.WebSocket.prototype=OW.prototype;['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(k=>{try{window.WebSocket[k]=OW[k]}catch(x){}});const OF=window.fetch;window.fetch=function(...a){try{let H;const r0=a[0],ini=a[1];if(ini&&ini.headers)H=ini.headers;else if(r0&&typeof r0==='object'&&r0.headers)H=r0.headers;if(H){let au;if(typeof H.get==='function')au=H.get('authorization');else au=H.Authorization||H.authorization;if(au){auth=au;P.auth=au;}}}catch(x){}const p=OF.apply(this,a);try{let u=(a[0]&&a[0].url)||a[0];/* so o que o app le: guardar toda resposta /api/ deixava token, segredo do 2FA e chave de recuperacao em window.__poke */if(typeof u==='string'&&({'/api/game/used-balls':1,'/api/characters/me':1,'/game/items.json':1,'/api/game/breeding':1})[u.split('?')[0]]===1){const sq=P.sq=(P.sq||0)+1;p.then(r=>{const c=r.clone();c.json().then(j=>{const key=u.split('?')[0];if(key==='/api/game/breeding'){/* incubadora (Breeding): so o resumo dos ovos. A mesma rota responde a cotacao do par e o choco, que nao trazem a lista e ficam de fora *//* sq: ordem do pedido. A resposta de um GET do poll que saiu antes de criar ou chocar um ovo pode chegar depois, e desfazia o ovo novo por 30 s */if(r.ok&&j&&(Array.isArray(j.eggs)||typeof j.unlocked==='boolean')&&sq>=(P.eggSq||0)&&(P.eggSq=sq))P.egg={un:j.unlocked!==false,ul:+j.unlockLevel||0,sl:+j.slots||0,eggs:(Array.isArray(j.eggs)?j.eggs:[]).slice(0,12).map(e=>({r:!!(e&&e.ready),sh:!!(e&&e.shinyChild),rk:e&&/^[A-Z]$/.test(e.rank)?e.rank:'',d:+(e&&e.killsDone)||0,n:+(e&&e.killsRequired)||0}))};/* choco (hatch e hatch-now voltam so o filhote): marca, pra ele nao entrar como captura */if(r.ok&&j&&j.child&&typeof j.child==='object'){P.choco={t:Date.now(),sid:+j.child.speciesId||+j.child.pokeId||0};if(j.child.id!=null)P.knownPokes[j.child.id]=1;}return;}if(key==='/api/game/used-balls'){if(j&&j.pokemons){/* attempts zera ao capturar (bolas desde a ultima captura), total nunca zera. Capturado: o jogo manda a lista caught (dexId) no topo e so usa na forma normal; no shiny, total > attempts = ja capturou */const cs=new Set(Array.isArray(j.caught)?j.caught:[]);P.shinyEnc=j.pokemons.reduce((s,p)=>s+(p.shiny?(+p.total||0):0),0);P.usedList=j.pokemons.map(p=>({sid:p.speciesId||p.dexId,name:p.name,shiny:!!p.shiny,attempts:p.attempts||0,total:p.total||0,caught:!!p.caught||(p.shiny?(+p.total||0)>(+p.attempts||0):cs.has(p.dexId!=null?p.dexId:p.speciesId))}));}return;}if(key==='/api/characters/me'){if(!j||!j.character){P.meMiss=(P.meMiss||0)+1;return;}P.meMiss=0;const o0=P.api[key];if(o0&&o0.character&&o0.character.id!==j.character.id){P.knownPokes={};P.pokesBaselined=false;P.egg=null;}/* trocou de conta sem recarregar (Sair do jogo): a caixa da conta nova vira base, nao captura */}P.api[key]=j}).catch(()=>{})}).catch(()=>{})}}catch(x){}return p;};const poll=()=>{try{while(P.catchLog&&P.catchLog.length>400)P.catchLog.shift();while(P.shinyLog&&P.shinyLog.length>300)P.shinyLog.shift();try{const tk=JSON.parse(sessionStorage.getItem('pokeweb:tokens')||localStorage.getItem('pokeweb:tokens')||'null');if(tk&&tk.accessToken){auth='Bearer '+tk.accessToken;P.auth=auth;}}catch(x){}const o=auth?{headers:{Authorization:auth}}:undefined;fetch('/api/characters/me',o).catch(()=>{});fetch('/api/game/used-balls',o).catch(()=>{});/* incubadora: so na tela do jogo e com token (no login era um 401 a cada 30 s; na pagina de entrada do Modo Soneca nao tem o que mostrar) e, com o Breeding travado (nivel baixo), a cada 10 min */if(auth&&(typeof location==='undefined'||location.pathname.indexOf('/play')===0)&&(!P.egg||P.egg.un||(P.eggN=(P.eggN||0)+1)%20===0))fetch('/api/game/breeding?action=center',o).catch(()=>{});try{if(P.sock&&P.sock.readyState===1){P.sock.send(JSON.stringify({type:'inv-get'}));/* Auto-Helper: o jogo so pede com a janela dele aberta, e o deposito cheio (pokeCount/pokeCapacity) vem nessa mensagem */P.sock.send(JSON.stringify({type:'autohelper-get'}));P.sock.send(JSON.stringify({type:'analyzer-get'}));}}catch(x){}}catch(x){}};setInterval(poll,30000);setTimeout(poll,9000);/* chip de boosts do jogo: so pede boosts-refresh ao montar e no focus da janela, e o boost do Discord (live) tem until curto. Com 4 paineis so um tem foco e o chip 'na call' sumia nos outros (o buff em si segue no servidor). Pede pelo socket do jogo: 25 s com boost live, ~2 min sem (pega quem entrou na call depois) */let bT=0;setInterval(()=>{try{const B=P.ws.boosts,lv=!!(B&&Array.isArray(B.boosts)&&B.boosts.some(b=>b&&b.live));if((lv||++bT%5===0)&&P.sock&&P.sock.readyState===1)P.sock.send(JSON.stringify({type:'boosts-refresh'}));}catch(x){}},25000);})()`).catch(() => {}); // coletor de estado + sessao (refetch autenticado de gold/nivel a cada 30s)
           armaVolta(); // volta pra hunt (experimental), depois do coletor (precisa do window.__poke)
           wv.executeJavaScript(ecoScript(ecoFps())).catch(() => {});
+          if (jogoLeve) wv.executeJavaScript(jogoLeveJs(true)).catch(() => {}); // Modo Leve do jogo: vale a partir da proxima carga
           wv.executeJavaScript(PUSH_STATE()).catch(() => {}); // painel Simples le daqui sem perguntar
           // jogo congelado com pagina viva: WebGL perdeu o contexto e nao restaurou em 4s -> recarrega
           wv.executeJavaScript("(()=>{if(window.__pgGlWd)return;window.__pgGlWd=1;let tm;document.addEventListener('webglcontextlost',()=>{clearTimeout(tm);tm=setTimeout(()=>location.reload(),4000);},true);document.addEventListener('webglcontextrestored',()=>clearTimeout(tm),true);})()").catch(() => {});
@@ -1369,6 +1378,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
           wv.executeJavaScript(SELLGUARD).catch(() => {});
           wv.executeJavaScript('window.__pgSellGuardOn=' + (sellGuardOn ? 'true' : 'false') + ';window.__pgSellLock=' + JSON.stringify(sellLock) + ';window.__pgSellTxt=' + JSON.stringify([t('sgAviso'), t('sgConfirma')])).catch(() => {});
           wv.executeJavaScript(QOL_UI).catch(() => {});
+          wv.executeJavaScript(ovoJogoJs()).catch(() => {}); // a chave No jogo do Simples, antes do card
           wv.executeJavaScript(OVO_UI(ovoTxt())).catch(() => {}); // card da incubadora dentro do jogo
           wv.executeJavaScript(IV_LEITOR).catch(() => {}); // leitor de pokemon pro card de IV: sempre, sem depender dos Scripts
           wv.executeJavaScript(chatScript(chatHidden || cardsOn)).catch(() => {});
@@ -1718,6 +1728,20 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   }
   ecoBtn.onclick = () => { eco = !eco; applyEco(); };
 
+  // ----- Modo Leve do jogo nas contas de uma vez (o mesmo da aba Video das Configuracoes do jogo, conta por conta) -----
+  // No jogo: meia resolucao (liteScale 0,5), cenario sem animacao e 30 FPS; alivia a placa de video e a memoria de video, que no
+  // video integrado sai da RAM. O jogo so le a config (pokeweb:settings) ao carregar a pagina: vale na proxima carga de cada
+  // painel. Ligado, regrava a cada carga (conta nova no painel). Desligar so tira o lite, como o botao do jogo (o FPS fica).
+  const leveBtn = document.getElementById('jogoLeve');
+  let jogoLeve = lsGet('jogoLeve') === '1'; // desligado por padrao
+  const jogoLeveJs = (on) => `(()=>{try{const k='pokeweb:settings';let s=null;try{s=JSON.parse(localStorage.getItem(k)||'{}');}catch(x){}if(!s||typeof s!=='object'||Array.isArray(s))s={};if(${on}){if(s.lite===true)return;s.lite=true;s.fps=30;}else{if(s.lite!==true)return;s.lite=false;}localStorage.setItem(k,JSON.stringify(s));}catch(x){}})()`;
+  function applyJogoLeve() { rotulo(leveBtn, 'imagem', t('jogoLeve')); leveBtn.title = t('jogoLeveTitle'); pintaChave(leveBtn, jogoLeve); lsSet('jogoLeve', jogoLeve ? '1' : '0'); }
+  leveBtn.onclick = () => {
+    jogoLeve = !jogoLeve; applyJogoLeve();
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(jogoLeveJs(jogoLeve)).catch(() => {}); } catch {} });
+    pgAviso(t(jogoLeve ? 'jogoLeveOn' : 'jogoLeveOff'), { ico: 'imagem' });
+  };
+
   // ----- Guarda de venda: intercepta os POSTs de venda e pede confirmacao pra coisa valiosa -----
   // Protege sem agir no jogo: shiny e qualidade Lendaria+ (>=1.7), e itens raros nomeados.
   const SELLGUARD = `(() => {
@@ -1807,6 +1831,14 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // O visual e o dos paineis flutuantes do app (o menu Opcoes: --sf, borda --bd2, raio, sombra) com o cabecalho das secoes
   // do Simples. CSS em hex, como o do QOL_UI: a pagina do jogo nao tem os tokens do app (e tem --ok e --gold proprios); os
   // valores sao os dos tokens, conferidos no test/ovos.test.js. No app, as mesmas classes .pg-ovo-* estao no <style>.
+  // chave No jogo das Incubadoras do Simples: o card dos ovos dentro dos jogos (ligado por padrao). Desligado, o card sai na hora
+  // e o pinta do OVO_UI nao redesenha; a secao do Simples continua
+  let ovoJogo = lsGet('ovoJogo') !== '0';
+  const ovoJogoJs = () => '(()=>{window.__pgOvoOff=' + !ovoJogo + ';' + (ovoJogo ? '' : "const b=document.querySelector('.pg-ovo');if(b)b.remove();") + '})()';
+  function applyOvoJogo() {
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.executeJavaScript(ovoJogoJs()).catch(() => {}); } catch {} });
+    lsSet('ovoJogo', ovoJogo ? '1' : '0');
+  }
   const OVO_UI = (T) => `(() => {
     window.__pgOvoTxt = ${JSON.stringify(T)};
     if (window.__pgOvo) return; window.__pgOvo = 1;
@@ -1841,7 +1873,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     let k0 = '';
     const pinta = () => {
       const P = window.__poke, E = P && P.egg, T = window.__pgOvoTxt;
-      if (!E || !E.un || !location.pathname.startsWith('/play')) { box.remove(); k0 = ''; ini = null; return; } // so na tela do jogo: no login e na pagina de entrada (depois de Sair) os ovos seriam velhos
+      if (!E || !E.un || !location.pathname.startsWith('/play') || window.__pgOvoOff) { box.remove(); k0 = ''; ini = null; return; } // __pgOvoOff: a chave No jogo das Incubadoras do Simples // so na tela do jogo: no login e na pagina de entrada (depois de Sair) os ovos seriam velhos
       // dentro do .game-root, que e fixed e por isso faz camada propria: no body o card ficava por cima de todas as janelas do jogo
       // (Mochila, Mercado, o proprio Breeding); ali dentro fica acima do dock (z 10) e abaixo do chat (15), dos paineis (60) e das janelas (70)
       const raiz = document.querySelector('.game-root') || document.body;
@@ -1877,12 +1909,12 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       + '.pg-qbar button.on{background:#e6edf3;border-color:#e6edf3;color:#0d1117}' // escolhido invertido, como no app (vermelho e so marca/erro); em hex: a pagina do jogo nao tem as variaveis do app
       + 'body.pg-dex-c .dex-window .dex-cell:not(.caught){display:none}body.pg-dex-n .dex-window .dex-cell.caught{display:none}'; // so na Pokedex: a Captura diaria tambem desenha .dex-cell, e o filtro (que fica no body) sumia com ela
     document.head.appendChild(css);
+    // o creatures.json (1,6 MB) so vem quando alguem pede o $ Menor valor: antes era baixado e lido ao abrir a Pokedex, em cada painel
     let svMap = null;
-    const carrega = () => { if (svMap) return; svMap = {}; fetch('/game/creatures.json').then(r => r.json()).then(j => { (j.creatures || []).forEach(c => { svMap[(c.name || '').toLowerCase()] = c.sellValue || 0; }); }).catch(() => { svMap = null; }); };
+    const carrega = (fim) => { if (svMap) return fim(); svMap = {}; fetch('/game/creatures.json').then(r => r.json()).then(j => { (j.creatures || []).forEach(c => { svMap[(c.name || '').toLowerCase()] = c.sellValue || 0; }); fim(); }).catch(() => { svMap = null; }); };
     function dex() {
       const win = document.querySelector('.dex-window'); if (!win) return;
       const ctr = win.querySelector('.dex-controls'); if (!ctr || ctr.querySelector('.pg-qbar')) return;
-      carrega();
       const bar = document.createElement('div'); bar.className = 'pg-qbar'; bar.style.width = '100%';
       bar.innerHTML = '<button data-f="t" class="on">Todos</button><button data-f="c">✓ Caught</button><button data-f="n">✗ Not caught</button><button data-f="v">$ Menor valor</button>';
       ctr.appendChild(bar);
@@ -1891,7 +1923,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       document.body.classList.remove('pg-dex-c', 'pg-dex-n'); // a barra nova mostra Todos: o filtro de quando a Pokedex fechou nao fica valendo
       bar.querySelectorAll('button[data-f]').forEach(b => b.onclick = () => {
         const f = b.dataset.f;
-        if (f === 'v') { b.classList.toggle('on'); aplicaValor(win, b.classList.contains('on')); return; }
+        if (f === 'v') { b.classList.toggle('on'); if (b.classList.contains('on')) carrega(() => aplicaValor(win, b.classList.contains('on'))); else aplicaValor(win, false); return; }
         bar.querySelectorAll('button').forEach(x => { if (x.dataset.f !== 'v') x.classList.remove('on'); }); b.classList.add('on');
         document.body.classList.toggle('pg-dex-c', f === 'c');
         document.body.classList.toggle('pg-dex-n', f === 'n');
@@ -1940,7 +1972,10 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
         });
       } catch (x) {}
     }
-    new MutationObserver(() => { dex(); mercado(); }).observe(document.body, { childList: true, subtree: true });
+    // no maximo a cada 250 ms: o observador olha a pagina inteira, e a Pokedex abrindo poe centenas de celulas (o combate
+    // tambem mexe na tela varias vezes por segundo). Antes as duas buscas rodavam a cada mudanca
+    let qt = 0;
+    new MutationObserver(() => { if (!qt) qt = setTimeout(() => { qt = 0; dex(); mercado(); }, 250); }).observe(document.body, { childList: true, subtree: true });
   })()`;
 
   // ----- Fecha o popup de promoção (<div class="promo-overlay"> com <button class="promo-close">) -----
@@ -1951,7 +1986,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       if (b) b.click();
       else { const o = document.querySelector('.promo-overlay'); if (o) o.remove(); }
     };
-    new MutationObserver(kill).observe(document.documentElement, { childList: true, subtree: true });
+    let pt = 0; // no maximo a cada 250 ms: o observador olha a pagina inteira
+    new MutationObserver(() => { if (!pt) pt = setTimeout(() => { pt = 0; kill(); }, 250); }).observe(document.documentElement, { childList: true, subtree: true });
     kill();
   })()`;
 
@@ -2731,7 +2767,7 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
       rotulaCabeca(p);
       pintaStatus(i); // o status no idioma novo
     });
-    applyMute(); applyEco(); applyChat(); applyAwake(); applyMinTray(); applyPropNat(); applySndShiny(); applyVoltaHunt(); applyAlerts(); applySellGuard(); applyClean(); aplicaCountLayout();
+    applyMute(); applyEco(); applyJogoLeve(); applyChat(); applyAwake(); applyMinTray(); applyPropNat(); applySndShiny(); applyVoltaHunt(); applyAlerts(); applySellGuard(); applyClean(); aplicaCountLayout();
     pintaAutoStart(); // o Abrir com o Windows tambem troca de idioma (ficava no de antes ate o estado dele mudar)
     lsSet('lang', lang);
   }
@@ -4593,7 +4629,8 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
         '<div><div class="cd-h" style="margin-bottom:4px;display:flex;align-items:center;gap:4px"><span class="cd-dot" style="background:' + r.dot + '"></span>' + esc(r.name)
         + (r.egg && r.egg.un ? '<span style="margin-left:auto">' + r.egg.eggs.length + (r.egg.sl ? '/' + r.egg.sl : '') + '</span>' : '') + '</div>'
         + ovosHtml(r.egg, T) + '</div>').join('') + '</div>' : '<div class="cd-empty">' + t('cdNone') + '</div>';
-      return '<div class="cd-sec"><div class="cd-h">' + t('cdEggs') + ' · ' + t('cdEggsSub') + '</div>' + inner + '</div>';
+      return '<div class="cd-sec"><div class="cd-h" style="display:flex;align-items:center;gap:8px"><span>' + t('cdEggs') + ' · ' + t('cdEggsSub') + '</span>'
+        + '<button id="cdOvoJogo" role="switch" aria-checked="' + ovoJogo + '" class="' + (ovoJogo ? 'on' : '') + '" title="' + t('cdOvoJogoTitle') + '" style="margin-left:auto">' + t('cdOvoJogo') + '</button></div>' + inner + '</div>';
     };
     SB.trend = () => '<div class="cd-sec"><div class="cd-h">' + t('cdTrend') + '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
       + '<div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)"><span>Gold/h</span><span style="color:var(--ok)">' + ncs(sumG) + '</span></div>' + spark(dhist.map(p => p.g), 'var(--ok)') + '</div>'
@@ -4835,6 +4872,7 @@ lw:!!(window.__loginWatch||window.document?.querySelector('input[autocomplete=on
     const gc = cardsEl.querySelector('#cdGoalC'); if (gc) gc.onchange = () => { goals.c = Math.max(0, +gc.value || 0); saveGoals(); gc.blur(); refreshCards(true); };
     const cb = cardsEl.querySelector('#cdCsv'); if (cb) cb.onclick = exportCSV;
     const cbh = cardsEl.querySelector('#cdCsvHunts'); if (cbh) cbh.onclick = exportHunts;
+    const bov = cardsEl.querySelector('#cdOvoJogo'); if (bov) bov.onclick = () => { ovoJogo = !ovoJogo; pintaChave(bov, ovoJogo); applyOvoJogo(); };
     // shinies tentados: escopo (total/sessao/alvos) e estrela de alvo
     const sm2 = cardsEl.querySelector('#cdStMode'); if (sm2) sm2.onchange = () => { stMode = sm2.value; lsSet('shinyTriedMode', stMode); refreshCards(true); };
     const bc = cardsEl.querySelector('#cdBestCrit'); if (bc) bc.onchange = () => { bestCrit = bc.value; lsSet('bestCrit', bestCrit); refreshCards(true); };

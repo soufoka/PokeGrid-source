@@ -7,6 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: https://poke.idleworld.online https://raw.githubusercontent.com; font-src 'self' data:; connect-src https://api.github.com/repos/soufoka/PokeGrid/releases/latest; frame-src https://poke.idleworld.online; child-src https://poke.idleworld.online; base-uri 'none'; form-action 'none'">
 <title>PokeGrid</title>
 <script src="src/domain/iv-math.js"></script>
+<script src="src/domain/pokemon-icons.js"></script>
 <style>
   /* Cores do app (redesign B): cada uma com um significado so. Neutros; marca e botao principal (vermelho so pra marca,
      principal e erro); estados (ok = ligado/positivo, av = aviso em ambar, nunca o dourado do gold, er = erro) com o tom de
@@ -124,7 +125,7 @@
   #grid.one-row { grid-template-columns: none !important; grid-template-rows: 1fr !important; grid-auto-flow: column; grid-auto-columns: 1fr; }
   #grid.one-row .panel { grid-column: auto !important; }
 
-  .panel { display: flex; flex-direction: column; min-height: 0;
+  .panel { display: flex; flex-direction: column; min-height: 0; position: relative;
     background: var(--sf); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; }
   .panel.expanded { position: absolute; inset: 6px; z-index: 10; }
   .panel.off webview { visibility: hidden; }
@@ -153,6 +154,42 @@
   .panel.av .panel-header { background: linear-gradient(90deg, var(--av-bg), transparent 70%), var(--sf); }
   .panel-header button { padding: 2px 6px; font-size: 11px; background: transparent; border-color: transparent; color: var(--mut); }
   .panel-header button:hover { background: var(--bd); color: var(--tx); }
+  .panel-header .fav-btn { color: var(--gold); font-size: 16px; line-height: 1; padding: 1px 5px; }
+  .fav-menu { position: fixed; z-index: 200; width: 240px; max-height: 280px; overflow-y: auto; padding: 6px; display: none; background: var(--sf); border: 1px solid var(--bd2); border-radius: 8px; box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+  .fav-menu.show { display: flex; flex-direction: column; gap: 3px; }
+  .fav-item { display: flex; align-items: center; gap: 7px; width: 100%; padding: 4px 6px; text-align: left; background: transparent; border-color: transparent; cursor: pointer; }
+  .fav-item:hover { background: var(--bd); }
+  .fav-item img { width: 28px; height: 28px; object-fit: contain; image-rendering: pixelated; flex: none; }
+  .fav-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .fav-item .fav-rm { flex: none; width: 22px; height: 22px; padding: 0; border: 0; background: transparent; color: var(--mut); font-size: 14px; line-height: 1; border-radius: 4px; cursor: pointer; }
+  .fav-item .fav-rm:hover { background: var(--er-bg); color: var(--er-tx); }
+  .fav-add { display: flex; align-items: center; gap: 6px; width: 100%; padding: 6px 8px; text-align: left; background: transparent; border: 1px dashed var(--bd2); border-radius: 6px; color: var(--gold); font-size: 12px; cursor: pointer; margin-top: 2px; }
+  .fav-add:hover { background: var(--bd); }
+  .fav-add:disabled { opacity: .45; cursor: default; }
+  .fav-empty { padding: 8px; color: var(--mut); font-size: 11px; text-align: center; }
+  .fav-sep { height: 1px; background: var(--bd); margin: 4px 0; }
+  #favoritesModal { position: fixed; inset: 0; z-index: 300; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.68); }
+  #favoritesModal.show { display: flex; }
+  #favoritesCard { width: min(720px, 92vw); max-height: 84vh; overflow: auto; background: var(--sf); border: 1px solid var(--bd2); border-radius: 10px; padding: 18px; box-shadow: 0 18px 50px rgba(0,0,0,.55); }
+  #favoritesCard h2 { margin: 0 0 4px; font-size: 17px; }
+  #favoritesCard p { margin: 0 0 16px; color: var(--mut); font-size: 12px; }
+  .fav-config-block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--bd); }
+  .fav-config-block:last-of-type { border-bottom: 0; }
+  .fav-config-block h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  .fav-config-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 28px; }
+  .fav-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; background: var(--sf2); border: 1px solid var(--bd2); border-radius: 999px; font-size: 12px; }
+  .fav-chip img { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; }
+  .fav-chip button { border: 0; background: transparent; color: var(--mut); cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; }
+  .fav-chip button:hover { color: var(--er-tx); }
+  .fav-add-row { display: flex; gap: 8px; align-items: flex-start; position: relative; }
+  .fav-add-row input { flex: 1; min-width: 0; padding: 7px 9px; color: var(--tx); background: var(--bg); border: 1px solid var(--bd2); border-radius: 6px; }
+  .fav-suggest { position: absolute; left: 0; right: 70px; top: calc(100% + 2px); z-index: 50; max-height: 220px; overflow-y: auto; background: var(--sf); border: 1px solid var(--bd2); border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,.45); display: none; }
+  .fav-suggest.show { display: block; }
+  #favoritesCard .fav-config-block { overflow: visible; }
+  #favoritesCard .fav-add-row { position: relative; overflow: visible; }
+  .fav-suggest button { display: block; width: 100%; text-align: left; padding: 6px 10px; background: transparent; border: 0; color: var(--tx); font-size: 12px; cursor: pointer; }
+  .fav-suggest button:hover, .fav-suggest button.active { background: var(--bd); }
+  .fav-config-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
   /* Recarregar: so no erro de carga, o mesmo ⟳ do cabecalho em botao cheio (o vermelho do principal: branco a 4,8:1) */
   .panel-header .pg-rec { flex: none; padding: 2px 10px; font-weight: 700; background: var(--marca-bt); border-color: var(--marca-bt); color: #fff; }
   .panel-header .pg-rec:hover { background: var(--marca-hv); border-color: var(--marca-hv); color: #fff; }
@@ -766,8 +803,9 @@
       <span class="ver" id="appVer"></span>
     </span>
     <button id="loginAll" class="primary">Logar equipe</button>
-    <button id="reloadAll">Atualizar tudo</button>
-    <span class="tb-fill"></span>
+  <button id="reloadAll">Atualizar tudo</button>
+  <button id="favoritesBtn" title="Configurar favoritos por conta">☆ Favoritos</button>
+  <span class="tb-fill"></span>
     <button id="statsBtn" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">Painel</button>
     <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">Simples</button>
     <button id="ivsBtn" title="Abre a calculadora de IV do app: uma só, no centro da tela, alimentada por qualquer painel">IVs</button>
@@ -1125,7 +1163,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       msgStalled:'parece haber dejado de farmear (10 min sin kills)',
       cdToday:'Hoy', cdWeek:'7 días', cdAllTime:'90 días', goalG:'Meta oro/día', goalC:'Meta capturas/día', csvTitle:'Descarga el resumen por día en CSV (planilla)', csvDia:'Día', csvHunts:'Hunts', csvHuntsTitle:'Descarga dos planillas: una fila por hunt (tiempo, kills/h, XP/h, capturas, oro) y una fila por ítem dropeado, con drop por kill para calcular el porcentaje. El registro es automático: cada vez que cambias de hunt, la anterior queda guardada.', cdLifeHint:'contadores: sesión · lista: histórico',
       cdTargets:'Objetivos', cdCritIvQ:'IV × cal.', cdCritIv:'IV', cdCritQ:'Calidad', cdBestCritTitle:'Criterio del mejor catch. La calidad multiplica los stats y el poder, así que IV × calidad refleja mejor la fuerza real.', cdTargetsHint:'Sin objetivos aún: en modo Total, pasa el mouse por un card y haz clic en la ★ para marcarlo', cdTargetsMark:'Marcar/desmarcar como objetivo',
-      whTitle:'Webhook de Discord: pega la URL de tu servidor para recibir avisos', whTest:'Probar', whTestOk:'¡Llegó!', whTestErr:'Falló', sgAviso:'PokeGrid: estas vendiendo cosas valiosas:', sgConfirma:'¿Confirmar la venta?', whShiny:'Avisar shiny', alLocalTitle:'Alertas en Windows (por tipo)', alLocalHint:'El botón {ico} de arriba enciende/apaga todo. Aquí eliges qué tipos avisan en tu máquina (Discord tiene sus propias opciones abajo).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Cuenta caída', alLocal_stalled:'\u{1F7E0} Dejó de farmear', alLocal_balls:'\u{1F535} Suministro bajo (bolas, pociones)', alLocal_faint:'\u{1F480} Equipo derrotado', whProb:'Avisar problema (cuenta caída, dejó de farmear, sin bolas)', whSum:'Resumen diario', whDay:'📊 Resumen de', whCaught:'CAPTURADO ✅', whSeen:'apareció 👀', whTestMsg:'✅ ¡PokeGrid conectado! Los avisos llegarán aquí.',
+      whTitle:'Webhook de Discord: pega la URL de tu servidor para recibir avisos', whTest:'Probar', whTestOk:'¡Llegó!', whTestErr:'Falló', sgAviso:'PokeGrid: estas vendiendo cosas valiosas:', sgConfirma:'¿Confirmar la venta?', whShiny:'Avisar shiny', alLocalTitle:'Alertas en Windows (por tipo)', alLocalHint:'El botón {ico} de arriba enciende/apaga todo. Aqu�� eliges qué tipos avisan en tu máquina (Discord tiene sus propias opciones abajo).', alLocal_shiny:'\u2728 Shiny', alLocal_down:'\u{1F534} Cuenta caída', alLocal_stalled:'\u{1F7E0} Dejó de farmear', alLocal_balls:'\u{1F535} Suministro bajo (bolas, pociones)', alLocal_faint:'\u{1F480} Equipo derrotado', whProb:'Avisar problema (cuenta caída, dejó de farmear, sin bolas)', whSum:'Resumen diario', whDay:'📊 Resumen de', whCaught:'CAPTURADO ✅', whSeen:'apareció 👀', whTestMsg:'✅ ¡PokeGrid conectado! Los avisos llegarán aquí.',
       bkExp:'Exportar config', bkImp:'Importar config', bkExpTitle:'Guarda un archivo con todas las configuraciones y el historial (las contraseñas quedan fuera)', bkImpTitle:'Restaura configuraciones e historial desde un archivo exportado', bkConfirm:'La configuración y el historial (hunts, shinies, gráficos) del archivo reemplazan a los actuales. Antes se guarda una copia del estado actual, y la app se recarga. Las contraseñas no cambian.', bkBad:'Archivo inválido.', bkNoCopy:'No se pudo guardar la copia del estado actual (carpeta de backups inaccesible, disco lleno o historial de más de 2 MB). Si importas, el historial actual se pierde.',
       tlNotaTip:'{p} de 100 (el mejor de la pestaña es la base 100)', acLife:'bolas en shinies', closeT:'Cerrar', rmTitle:'Quitar', shCapT:'capturado', shDefT:'derrotado',
       scHint:'Ejecuta userscripts (estilo Tampermonkey) dentro de cada panel del juego. Puedes pegar los tuyos. <b>Añade solo scripts en los que confías</b>, tienen acceso total a la página del juego.',
@@ -1269,6 +1307,453 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
     p.querySelector('.name').title = t('tRename'); p.querySelector('.zpct').title = t('tZoomPct');
   }
 
+  // A conta (email/nome), e não a posição do painel, é a dona dos favoritos.
+  // Assim, trocar, reordenar ou remover uma conta não mistura favoritos.
+  const favAccountId = (i) => {
+    const a = accounts[i] || {};
+    const identity = String(a.email || a.name || ('slot-' + i)).trim().toLowerCase();
+    let hash = 0;
+    for (let n = 0; n < identity.length; n++) hash = ((hash << 5) - hash + identity.charCodeAt(n)) | 0;
+    return String(hash >>> 0);
+  };
+  const favKey = (i) => 'favHunts:' + favAccountId(i);
+  const favLoad = (i) => {
+    const a = lsArr(favKey(i));
+    return a.filter(x => x && typeof x.slug === 'string' && typeof x.name === 'string').slice(0, 20);
+  };
+  const favSave = (i, a) => lsSet(favKey(i), JSON.stringify(a.slice(0, 20)));
+  const FAV_HUNT_CATALOG = [{"slug": "cerulean", "name": "Cerulean", "map": "Kanto"}, {"slug": "pewter", "name": "Lavender", "map": "Kanto"}, {"slug": "viridian", "name": "Viridian", "map": "Kanto"}, {"slug": "bulbasaur", "name": "Bulbasaur", "map": "Kanto"}, {"slug": "ivysaur", "name": "Ivysaur", "map": "Kanto"}, {"slug": "venusaur", "name": "Venusaur", "map": "Kanto"}, {"slug": "charmander", "name": "Charmander", "map": "Kanto"}, {"slug": "charmeleon", "name": "Charmeleon", "map": "Kanto"}, {"slug": "charizard", "name": "Charizard", "map": "Kanto"}, {"slug": "squirtle", "name": "Squirtle", "map": "Kanto"}, {"slug": "wartortle", "name": "Wartortle", "map": "Kanto"}, {"slug": "blastoise", "name": "Blastoise", "map": "Kanto"}, {"slug": "caterpie", "name": "Caterpie", "map": "Kanto"}, {"slug": "metapod", "name": "Metapod", "map": "Kanto"}, {"slug": "butterfree", "name": "Butterfree", "map": "Kanto"}, {"slug": "weedle", "name": "Weedle", "map": "Kanto"}, {"slug": "kakuna", "name": "Kakuna", "map": "Kanto"}, {"slug": "beedrill", "name": "Beedrill", "map": "Kanto"}, {"slug": "pidgey", "name": "Pidgey", "map": "Kanto"}, {"slug": "pidgeotto", "name": "Pidgeotto", "map": "Kanto"}, {"slug": "pidgeot", "name": "Pidgeot", "map": "Kanto"}, {"slug": "rattata", "name": "Rattata", "map": "Kanto"}, {"slug": "raticate", "name": "Raticate", "map": "Kanto"}, {"slug": "spearow", "name": "Spearow", "map": "Kanto"}, {"slug": "fearow", "name": "Fearow", "map": "Kanto"}, {"slug": "ekans", "name": "Ekans", "map": "Kanto"}, {"slug": "arbok", "name": "Arbok", "map": "Kanto"}, {"slug": "pikachu", "name": "Pikachu", "map": "Kanto"}, {"slug": "raichu", "name": "Raichu", "map": "Kanto"}, {"slug": "sandshrew", "name": "Sandshrew", "map": "Kanto"}, {"slug": "sandslash", "name": "Sandslash", "map": "Kanto"}, {"slug": "nidoranfe", "name": "Nidoranfe", "map": "Kanto"}, {"slug": "nidorina", "name": "Nidorina", "map": "Kanto"}, {"slug": "nidoqueen", "name": "Nidoqueen", "map": "Kanto"}, {"slug": "nidoranma", "name": "Nidoranma", "map": "Kanto"}, {"slug": "nidorino", "name": "Nidorino", "map": "Kanto"}, {"slug": "nidoking", "name": "Nidoking", "map": "Kanto"}, {"slug": "clefairy", "name": "Clefairy", "map": "Kanto"}, {"slug": "clefable", "name": "Clefable", "map": "Kanto"}, {"slug": "vulpix", "name": "Vulpix", "map": "Kanto"}, {"slug": "ninetales", "name": "Ninetales", "map": "Kanto"}, {"slug": "jigglypuff", "name": "Jigglypuff", "map": "Kanto"}, {"slug": "wigglytuff", "name": "Wigglytuff", "map": "Kanto"}, {"slug": "zubat", "name": "Zubat", "map": "Kanto"}, {"slug": "golbat", "name": "Golbat", "map": "Kanto"}, {"slug": "oddish", "name": "Oddish", "map": "Kanto"}, {"slug": "gloom", "name": "Gloom", "map": "Kanto"}, {"slug": "vileplume", "name": "Vileplume", "map": "Kanto"}, {"slug": "paras", "name": "Paras", "map": "Kanto"}, {"slug": "parasect", "name": "Parasect", "map": "Kanto"}, {"slug": "venonat", "name": "Venonat", "map": "Kanto"}, {"slug": "venomoth", "name": "Venomoth", "map": "Kanto"}, {"slug": "diglett", "name": "Diglett", "map": "Kanto"}, {"slug": "dugtrio", "name": "Dugtrio", "map": "Kanto"}, {"slug": "meowth", "name": "Meowth", "map": "Kanto"}, {"slug": "persian", "name": "Persian", "map": "Kanto"}, {"slug": "psyduck", "name": "Psyduck", "map": "Kanto"}, {"slug": "golduck", "name": "Golduck", "map": "Kanto"}, {"slug": "mankey", "name": "Mankey", "map": "Kanto"}, {"slug": "primeape", "name": "Primeape", "map": "Kanto"}, {"slug": "growlithe", "name": "Growlithe", "map": "Kanto"}, {"slug": "arcanine", "name": "Arcanine", "map": "Kanto"}, {"slug": "poliwag", "name": "Poliwag", "map": "Kanto"}, {"slug": "poliwhirl", "name": "Poliwhirl", "map": "Kanto"}, {"slug": "poliwrath", "name": "Poliwrath", "map": "Kanto"}, {"slug": "abra", "name": "Abra", "map": "Kanto"}, {"slug": "kadabra", "name": "Kadabra", "map": "Kanto"}, {"slug": "alakazam", "name": "Alakazam", "map": "Kanto"}, {"slug": "machop", "name": "Machop", "map": "Kanto"}, {"slug": "machoke", "name": "Machoke", "map": "Kanto"}, {"slug": "machamp", "name": "Machamp", "map": "Kanto"}, {"slug": "bellsprout", "name": "Bellsprout", "map": "Kanto"}, {"slug": "weepinbell", "name": "Weepinbell", "map": "Kanto"}, {"slug": "victreebel", "name": "Victreebel", "map": "Kanto"}, {"slug": "tentacool", "name": "Tentacool", "map": "Kanto"}, {"slug": "tentacruel", "name": "Tentacruel", "map": "Kanto"}, {"slug": "geodude", "name": "Geodude", "map": "Kanto"}, {"slug": "graveler", "name": "Graveler", "map": "Kanto"}, {"slug": "golem", "name": "Golem", "map": "Kanto"}, {"slug": "ponyta", "name": "Ponyta", "map": "Kanto"}, {"slug": "rapidash", "name": "Rapidash", "map": "Kanto"}, {"slug": "slowpoke", "name": "Slowpoke", "map": "Kanto"}, {"slug": "slowbro", "name": "Slowbro", "map": "Kanto"}, {"slug": "magnemite", "name": "Magnemite", "map": "Kanto"}, {"slug": "magneton", "name": "Magneton", "map": "Kanto"}, {"slug": "farfetch_d", "name": "Farfetch'D", "map": "Kanto"}, {"slug": "doduo", "name": "Doduo", "map": "Kanto"}, {"slug": "dodrio", "name": "Dodrio", "map": "Kanto"}, {"slug": "seel", "name": "Seel", "map": "Kanto"}, {"slug": "dewgong", "name": "Dewgong", "map": "Kanto"}, {"slug": "grimer", "name": "Grimer", "map": "Kanto"}, {"slug": "muk", "name": "Muk", "map": "Kanto"}, {"slug": "shellder", "name": "Shellder", "map": "Kanto"}, {"slug": "cloyster", "name": "Cloyster", "map": "Kanto"}, {"slug": "gastly", "name": "Gastly", "map": "Kanto"}, {"slug": "haunter", "name": "Haunter", "map": "Kanto"}, {"slug": "gengar", "name": "Gengar", "map": "Kanto"}, {"slug": "onix", "name": "Onix", "map": "Kanto"}, {"slug": "drowzee", "name": "Drowzee", "map": "Kanto"}, {"slug": "hypno", "name": "Hypno", "map": "Kanto"}, {"slug": "krabby", "name": "Krabby", "map": "Kanto"}, {"slug": "kingler", "name": "Kingler", "map": "Kanto"}, {"slug": "voltorb", "name": "Voltorb", "map": "Kanto"}, {"slug": "electrode", "name": "Electrode", "map": "Kanto"}, {"slug": "exeggcute", "name": "Exeggcute", "map": "Kanto"}, {"slug": "exeggutor", "name": "Exeggutor", "map": "Kanto"}, {"slug": "cubone", "name": "Cubone", "map": "Kanto"}, {"slug": "marowak", "name": "Marowak", "map": "Kanto"}, {"slug": "hitmonlee", "name": "Hitmonlee", "map": "Kanto"}, {"slug": "hitmonchan", "name": "Hitmonchan", "map": "Kanto"}, {"slug": "lickitung", "name": "Lickitung", "map": "Kanto"}, {"slug": "koffing", "name": "Koffing", "map": "Kanto"}, {"slug": "weezing", "name": "Weezing", "map": "Kanto"}, {"slug": "rhyhorn", "name": "Rhyhorn", "map": "Kanto"}, {"slug": "rhydon", "name": "Rhydon", "map": "Kanto"}, {"slug": "tangela", "name": "Tangela", "map": "Kanto"}, {"slug": "kangaskhan", "name": "Kangaskhan", "map": "Kanto"}, {"slug": "staryu", "name": "Staryu", "map": "Kanto"}, {"slug": "starmie", "name": "Starmie", "map": "Kanto"}, {"slug": "mr_mime", "name": "Mr. Mime", "map": "Kanto"}, {"slug": "scyther", "name": "Scyther", "map": "Kanto"}, {"slug": "jynx", "name": "Jynx", "map": "Kanto"}, {"slug": "electabuzz", "name": "Electabuzz", "map": "Kanto"}, {"slug": "magmar", "name": "Magmar", "map": "Kanto"}, {"slug": "pinsir", "name": "Pinsir", "map": "Kanto"}, {"slug": "tauros", "name": "Tauros", "map": "Kanto"}, {"slug": "gyarados", "name": "Gyarados", "map": "Kanto"}, {"slug": "lapras", "name": "Lapras", "map": "Kanto"}, {"slug": "omanyte", "name": "Omanyte", "map": "Kanto"}, {"slug": "omastar", "name": "Omastar", "map": "Kanto"}, {"slug": "kabuto", "name": "Kabuto", "map": "Kanto"}, {"slug": "kabutops", "name": "Kabutops", "map": "Kanto"}, {"slug": "aerodactyl", "name": "Aerodactyl", "map": "Kanto"}, {"slug": "snorlax", "name": "Snorlax", "map": "Kanto"}, {"slug": "dratini", "name": "Dratini", "map": "Kanto"}, {"slug": "dragonair", "name": "Dragonair", "map": "Kanto"}, {"slug": "dragonite", "name": "Dragonite", "map": "Kanto"}, {"slug": "chikorita", "name": "Chikorita", "map": "Kanto"}, {"slug": "bayleef", "name": "Bayleef", "map": "Kanto"}, {"slug": "meganium", "name": "Meganium", "map": "Kanto"}, {"slug": "cyndaquil", "name": "Cyndaquil", "map": "Kanto"}, {"slug": "quilava", "name": "Quilava", "map": "Kanto"}, {"slug": "typhlosion", "name": "Typhlosion", "map": "Kanto"}, {"slug": "totodile", "name": "Totodile", "map": "Kanto"}, {"slug": "croconaw", "name": "Croconaw", "map": "Kanto"}, {"slug": "feraligatr", "name": "Feraligatr", "map": "Kanto"}, {"slug": "noctowl", "name": "Noctowl", "map": "Kanto"}, {"slug": "crobat", "name": "Crobat", "map": "Kanto"}, {"slug": "chinchou", "name": "Chinchou", "map": "Kanto"}, {"slug": "lanturn", "name": "Lanturn", "map": "Kanto"}, {"slug": "pichu", "name": "Pichu", "map": "Kanto"}, {"slug": "cleffa", "name": "Cleffa", "map": "Kanto"}, {"slug": "igglybuff", "name": "Igglybuff", "map": "Kanto"}, {"slug": "natu", "name": "Natu", "map": "Kanto"}, {"slug": "xatu", "name": "Xatu", "map": "Kanto"}, {"slug": "mareep", "name": "Mareep", "map": "Kanto"}, {"slug": "flaaffy", "name": "Flaaffy", "map": "Kanto"}, {"slug": "ampharos", "name": "Ampharos", "map": "Kanto"}, {"slug": "bellossom", "name": "Bellossom", "map": "Kanto"}, {"slug": "marill", "name": "Marill", "map": "Kanto"}, {"slug": "azumarill", "name": "Azumarill", "map": "Kanto"}, {"slug": "politoed", "name": "Politoed", "map": "Kanto"}, {"slug": "sunflora", "name": "Sunflora", "map": "Kanto"}, {"slug": "quagsire", "name": "Quagsire", "map": "Kanto"}, {"slug": "misdreavus", "name": "Misdreavus", "map": "Kanto"}, {"slug": "wobbuffet", "name": "Wobbuffet", "map": "Kanto"}, {"slug": "girafarig", "name": "Girafarig", "map": "Kanto"}, {"slug": "pineco", "name": "Pineco", "map": "Kanto"}, {"slug": "forretress", "name": "Forretress", "map": "Kanto"}, {"slug": "gligar", "name": "Gligar", "map": "Kanto"}, {"slug": "steelix", "name": "Steelix", "map": "Kanto"}, {"slug": "snubbull", "name": "Snubbull", "map": "Kanto"}, {"slug": "granbull", "name": "Granbull", "map": "Kanto"}, {"slug": "scizor", "name": "Scizor", "map": "Kanto"}, {"slug": "heracross", "name": "Heracross", "map": "Kanto"}, {"slug": "teddiursa", "name": "Teddiursa", "map": "Kanto"}, {"slug": "ursaring", "name": "Ursaring", "map": "Kanto"}, {"slug": "slugma", "name": "Slugma", "map": "Kanto"}, {"slug": "magcargo", "name": "Magcargo", "map": "Kanto"}, {"slug": "swinub", "name": "Swinub", "map": "Kanto"}, {"slug": "piloswine", "name": "Piloswine", "map": "Kanto"}, {"slug": "mantine", "name": "Mantine", "map": "Kanto"}, {"slug": "skarmory", "name": "Skarmory", "map": "Kanto"}, {"slug": "houndour", "name": "Houndour", "map": "Kanto"}, {"slug": "houndoom", "name": "Houndoom", "map": "Kanto"}, {"slug": "kingdra", "name": "Kingdra", "map": "Kanto"}, {"slug": "phanpy", "name": "Phanpy", "map": "Kanto"}, {"slug": "donphan", "name": "Donphan", "map": "Kanto"}, {"slug": "tyrogue", "name": "Tyrogue", "map": "Kanto"}, {"slug": "hitmontop", "name": "Hitmontop", "map": "Kanto"}, {"slug": "smoochum", "name": "Smoochum", "map": "Kanto"}, {"slug": "elekid", "name": "Elekid", "map": "Kanto"}, {"slug": "magby", "name": "Magby", "map": "Kanto"}, {"slug": "miltank", "name": "Miltank", "map": "Kanto"}, {"slug": "larvitar", "name": "Larvitar", "map": "Kanto"}, {"slug": "pupitar", "name": "Pupitar", "map": "Kanto"}, {"slug": "tyranitar", "name": "Tyranitar", "map": "Kanto"}, {"slug": "chansey", "name": "Chansey", "map": "Kanto"}, {"slug": "horsea", "name": "Horsea", "map": "Kanto"}, {"slug": "seadra", "name": "Seadra", "map": "Kanto"}, {"slug": "goldeen", "name": "Goldeen", "map": "Kanto"}, {"slug": "seaking", "name": "Seaking", "map": "Kanto"}, {"slug": "sentret", "name": "Sentret", "map": "Kanto"}, {"slug": "furret", "name": "Furret", "map": "Kanto"}, {"slug": "hoothoot", "name": "Hoothoot", "map": "Kanto"}, {"slug": "ledyba", "name": "Ledyba", "map": "Kanto"}, {"slug": "ledian", "name": "Ledian", "map": "Kanto"}, {"slug": "spinarak", "name": "Spinarak", "map": "Kanto"}, {"slug": "ariados", "name": "Ariados", "map": "Kanto"}, {"slug": "togepi", "name": "Togepi", "map": "Kanto"}, {"slug": "togetic", "name": "Togetic", "map": "Kanto"}, {"slug": "hoppip", "name": "Hoppip", "map": "Kanto"}, {"slug": "skiploom", "name": "Skiploom", "map": "Kanto"}, {"slug": "jumpluff", "name": "Jumpluff", "map": "Kanto"}, {"slug": "aipom", "name": "Aipom", "map": "Kanto"}, {"slug": "sunkern", "name": "Sunkern", "map": "Kanto"}, {"slug": "yanma", "name": "Yanma", "map": "Kanto"}, {"slug": "wooper", "name": "Wooper", "map": "Kanto"}, {"slug": "dunsparce", "name": "Dunsparce", "map": "Kanto"}, {"slug": "qwilfish", "name": "Qwilfish", "map": "Kanto"}, {"slug": "shuckle", "name": "Shuckle", "map": "Kanto"}, {"slug": "sneasel", "name": "Sneasel", "map": "Kanto"}, {"slug": "corsola", "name": "Corsola", "map": "Kanto"}, {"slug": "remoraid", "name": "Remoraid", "map": "Kanto"}, {"slug": "octillery", "name": "Octillery", "map": "Kanto"}, {"slug": "delibird", "name": "Delibird", "map": "Kanto"}, {"slug": "stantler", "name": "Stantler", "map": "Kanto"}, {"slug": "brave_blastoise", "name": "Brave Blastoise", "map": "Outland"}, {"slug": "tribal_feraligatr", "name": "Tribal Feraligatr", "map": "Outland"}, {"slug": "ancient_meganium", "name": "Ancient Meganium", "map": "Outland"}, {"slug": "brave_venusaur", "name": "Brave Venusaur", "map": "Outland"}, {"slug": "war_heracross", "name": "War Heracross", "map": "Outland"}, {"slug": "furious_scyther", "name": "Furious Scyther", "map": "Outland"}, {"slug": "enigmatic_girafarig", "name": "Enigmatic Girafarig", "map": "Outland"}, {"slug": "charged_raichu", "name": "Charged Raichu", "map": "Outland"}, {"slug": "furious_ampharos", "name": "Furious Ampharos", "map": "Outland"}, {"slug": "magnetic_electabuzz", "name": "Magnetic Electabuzz", "map": "Outland"}, {"slug": "ancient_dragonair", "name": "Ancient Dragonair", "map": "Outland"}, {"slug": "evil_cloyster", "name": "Evil Cloyster", "map": "Outland"}, {"slug": "freezing_dewgong", "name": "Freezing Dewgong", "map": "Outland"}, {"slug": "psy_jynx", "name": "Psy Jynx", "map": "Outland"}, {"slug": "heavy_piloswine", "name": "Heavy Piloswine", "map": "Outland"}, {"slug": "milch_miltank", "name": "Milch-Miltank", "map": "Outland"}, {"slug": "roll_donphan", "name": "Roll Donphan", "map": "Outland"}, {"slug": "furious_sandslash", "name": "Furious Sandslash", "map": "Outland"}, {"slug": "hard_golem", "name": "Hard Golem", "map": "Outland"}, {"slug": "brute_rhydon", "name": "Brute Rhydon", "map": "Outland"}, {"slug": "brave_charizard", "name": "Brave Charizard", "map": "Outland"}, {"slug": "enraged_typhlosion", "name": "Enraged Typhlosion", "map": "Outland"}, {"slug": "brave_nidoking", "name": "Brave Nidoking", "map": "Outland"}, {"slug": "brave_nidoqueen", "name": "Brave Nidoqueen", "map": "Outland"}, {"slug": "dark_crobat", "name": "Dark Crobat", "map": "Outland"}, {"slug": "trickmaster_gengar", "name": "Trickmaster Gengar", "map": "Outland"}, {"slug": "banshee_misdreavus", "name": "Banshee Misdreavus", "map": "Outland"}, {"slug": "taekwondo_hitmonchan", "name": "Taekwondo Hitmonchan", "map": "Outland"}, {"slug": "taekwondo_hitmonlee", "name": "Taekwondo Hitmonlee", "map": "Outland"}, {"slug": "taekwondo_hitmontop", "name": "Taekwondo Hitmontop", "map": "Outland"}, {"slug": "brave_arcanine", "name": "Brave Arcanine", "map": "Outland"}, {"slug": "furious_magmar", "name": "Furious Magmar", "map": "Outland"}, {"slug": "ancient_pupitar", "name": "Ancient Pupitar", "map": "Outland"}, {"slug": "brave_steelix", "name": "Brave Steelix", "map": "Outland"}, {"slug": "furious_wigglytuff", "name": "Furious Wigglytuff", "map": "Outland"}, {"slug": "ancient_xatu", "name": "Ancient Xatu", "map": "Outland"}, {"slug": "brave_alakazam", "name": "Brave Alakazam", "map": "Outland"}, {"slug": "ancient_hypno", "name": "Ancient Hypno", "map": "Outland"}, {"slug": "furious_gyarados", "name": "Furious Gyarados", "map": "Outland"}, {"slug": "brave_mantine", "name": "Brave Mantine", "map": "Outland"}, {"slug": "ancient_pinsir", "name": "Ancient Pinsir", "map": "Outland"}, {"slug": "brave_clefable", "name": "Brave Clefable", "map": "Outland"}, {"slug": "ancient_granbull", "name": "Ancient Granbull", "map": "Outland"}, {"slug": "furious_skarmory", "name": "Furious Skarmory", "map": "Outland"}, {"slug": "brave_noctowl", "name": "Brave Noctowl", "map": "Outland"}, {"slug": "furious_pidgeot", "name": "Furious Pidgeot", "map": "Outland"}, {"slug": "ancient_marowak", "name": "Ancient Marowak", "map": "Outland"}, {"slug": "treecko", "name": "Treecko", "map": "Orre"}, {"slug": "grovyle", "name": "Grovyle", "map": "Orre"}, {"slug": "sceptile", "name": "Sceptile", "map": "Orre"}, {"slug": "torchic", "name": "Torchic", "map": "Orre"}, {"slug": "combusken", "name": "Combusken", "map": "Orre"}, {"slug": "blaziken", "name": "Blaziken", "map": "Orre"}, {"slug": "mudkip", "name": "Mudkip", "map": "Orre"}, {"slug": "marshtomp", "name": "Marshtomp", "map": "Orre"}, {"slug": "swampert", "name": "Swampert", "map": "Orre"}, {"slug": "seedot", "name": "Seedot", "map": "Orre"}, {"slug": "nuzleaf", "name": "Nuzleaf", "map": "Orre"}, {"slug": "shiftry", "name": "Shiftry", "map": "Orre"}, {"slug": "wingull", "name": "Wingull", "map": "Orre"}, {"slug": "pelipper", "name": "Pelipper", "map": "Orre"}, {"slug": "ralts", "name": "Ralts", "map": "Orre"}, {"slug": "kirlia", "name": "Kirlia", "map": "Orre"}, {"slug": "gardevoir", "name": "Gardevoir", "map": "Orre"}, {"slug": "whismur", "name": "Whismur", "map": "Orre"}, {"slug": "loudred", "name": "Loudred", "map": "Orre"}, {"slug": "exploud", "name": "Exploud", "map": "Orre"}, {"slug": "makuhita", "name": "Makuhita", "map": "Orre"}, {"slug": "sableye", "name": "Sableye", "map": "Orre"}, {"slug": "mawile", "name": "Mawile", "map": "Orre"}, {"slug": "lairon", "name": "Lairon", "map": "Orre"}, {"slug": "aggron", "name": "Aggron", "map": "Orre"}, {"slug": "meditite", "name": "Meditite", "map": "Orre"}, {"slug": "medicham", "name": "Medicham", "map": "Orre"}, {"slug": "electrike", "name": "Electrike", "map": "Orre"}, {"slug": "manectric", "name": "Manectric", "map": "Orre"}, {"slug": "numel", "name": "Numel", "map": "Orre"}, {"slug": "camerupt", "name": "Camerupt", "map": "Orre"}, {"slug": "torkoal", "name": "Torkoal", "map": "Orre"}, {"slug": "spoink", "name": "Spoink", "map": "Orre"}, {"slug": "grumpig", "name": "Grumpig", "map": "Orre"}, {"slug": "vibrava", "name": "Vibrava", "map": "Orre"}, {"slug": "flygon", "name": "Flygon", "map": "Orre"}, {"slug": "cacturne", "name": "Cacturne", "map": "Orre"}, {"slug": "seviper", "name": "Seviper", "map": "Orre"}, {"slug": "corphish", "name": "Corphish", "map": "Orre"}, {"slug": "crawdaunt", "name": "Crawdaunt", "map": "Orre"}, {"slug": "claydol", "name": "Claydol", "map": "Orre"}, {"slug": "duskull", "name": "Duskull", "map": "Orre"}, {"slug": "snorunt", "name": "Snorunt", "map": "Orre"}, {"slug": "glalie", "name": "Glalie", "map": "Orre"}, {"slug": "spheal", "name": "Spheal", "map": "Orre"}, {"slug": "sealeo", "name": "Sealeo", "map": "Orre"}, {"slug": "walrein", "name": "Walrein", "map": "Orre"}, {"slug": "bagon", "name": "Bagon", "map": "Orre"}, {"slug": "shelgon", "name": "Shelgon", "map": "Orre"}, {"slug": "beldum", "name": "Beldum", "map": "Orre"}, {"slug": "metang", "name": "Metang", "map": "Orre"}, {"slug": "poochyena", "name": "Poochyena", "map": "Orre"}, {"slug": "mightyena", "name": "Mightyena", "map": "Orre"}, {"slug": "lotad", "name": "Lotad", "map": "Orre"}, {"slug": "lombre", "name": "Lombre", "map": "Orre"}, {"slug": "ludicolo", "name": "Ludicolo", "map": "Orre"}, {"slug": "taillow", "name": "Taillow", "map": "Orre"}, {"slug": "swellow", "name": "Swellow", "map": "Orre"}, {"slug": "slakoth", "name": "Slakoth", "map": "Orre"}, {"slug": "vigoroth", "name": "Vigoroth", "map": "Orre"}, {"slug": "aron", "name": "Aron", "map": "Orre"}, {"slug": "trapinch", "name": "Trapinch", "map": "Orre"}, {"slug": "swablu", "name": "Swablu", "map": "Orre"}, {"slug": "altaria", "name": "Altaria", "map": "Orre"}, {"slug": "zangoose", "name": "Zangoose", "map": "Orre"}, {"slug": "baltoy", "name": "Baltoy", "map": "Orre"}, {"slug": "banette", "name": "Banette", "map": "Orre"}, {"slug": "dusclops", "name": "Dusclops", "map": "Orre"}, {"slug": "tropius", "name": "Tropius", "map": "Orre"}, {"slug": "absol", "name": "Absol", "map": "Orre"}, {"slug": "riolu", "name": "Riolu", "map": "Orre"}, {"slug": "lucario", "name": "Lucario", "map": "Orre"}, {"slug": "nightmare_beedrill", "name": "Nightmare Beedrill", "map": "Nightmare"}, {"slug": "nightmare_grimer", "name": "Nightmare Grimer", "map": "Nightmare"}, {"slug": "nightmare_bagon_e_shelgon", "name": "Nightmare Bagon e Shelgon", "map": "Nightmare"}, {"slug": "nightmare_cloyster", "name": "Nightmare Cloyster", "map": "Nightmare"}, {"slug": "nightmare_dratini_e_dragonair", "name": "Nightmare Dratini e Dragonair", "map": "Nightmare"}, {"slug": "nightmare_elekid", "name": "Nightmare Elekid", "map": "Nightmare"}, {"slug": "nightmare_farfetchd", "name": "Nightmare Farfetchd", "map": "Nightmare"}, {"slug": "nightmare_machoke", "name": "Nightmare Machoke", "map": "Nightmare"}, {"slug": "nightmare_magby", "name": "Nightmare Magby", "map": "Nightmare"}, {"slug": "nightmare_ralts", "name": "Nightmare Ralts", "map": "Nightmare"}, {"slug": "nightmare_kirlia", "name": "Nightmare Kirlia", "map": "Nightmare"}, {"slug": "nightmare_sneasel", "name": "Nightmare Sneasel", "map": "Nightmare"}, {"slug": "nightmare_snorunt", "name": "Nightmare Snorunt", "map": "Nightmare"}, {"slug": "nightmare_spoink", "name": "Nightmare Spoink", "map": "Nightmare"}, {"slug": "nightmare_alolan_diglett", "name": "Nightmare Alolan Diglett", "map": "Nightmare"}, {"slug": "nightmare_alolan_meowth", "name": "Nightmare Alolan Meowth", "map": "Nightmare"}, {"slug": "nightmare_barboach", "name": "Nightmare Barboach", "map": "Nightmare"}, {"slug": "nightmare_carvanha", "name": "Nightmare Carvanha", "map": "Nightmare"}, {"slug": "nightmare_cranidos", "name": "Nightmare Cranidos", "map": "Nightmare"}, {"slug": "nightmare_espurr", "name": "Nightmare Espurr", "map": "Nightmare"}, {"slug": "nightmare_galarian_darumaka", "name": "Nightmare Galarian Darumaka", "map": "Nightmare"}, {"slug": "nightmare_galarian_farfetchd", "name": "Nightmare Galarian Farfetchd", "map": "Nightmare"}, {"slug": "nightmare_galarian_meowth", "name": "Nightmare Galarian Meowth", "map": "Nightmare"}, {"slug": "nightmare_gible", "name": "Nightmare Gible", "map": "Nightmare"}, {"slug": "nightmare_gabite", "name": "Nightmare Gabite", "map": "Nightmare"}, {"slug": "nightmare_goomy", "name": "Nightmare Goomy", "map": "Nightmare"}, {"slug": "nightmare_sliggoo", "name": "Nightmare Sliggoo", "map": "Nightmare"}, {"slug": "nightmare_klink", "name": "Nightmare Klink", "map": "Nightmare"}, {"slug": "nightmare_klang", "name": "Nightmare Klang", "map": "Nightmare"}, {"slug": "nightmare_litleo", "name": "Nightmare Litleo", "map": "Nightmare"}, {"slug": "nightmare_litwick", "name": "Nightmare Litwick", "map": "Nightmare"}, {"slug": "nightmare_lampent", "name": "Nightmare Lampent", "map": "Nightmare"}, {"slug": "nightmare_mantyke", "name": "Nightmare Mantyke", "map": "Nightmare"}, {"slug": "nightmare_petilil", "name": "Nightmare Petilil", "map": "Nightmare"}, {"slug": "nightmare_rockruff", "name": "Nightmare Rockruff", "map": "Nightmare"}, {"slug": "nightmare_rufflet", "name": "Nightmare Rufflet", "map": "Nightmare"}, {"slug": "nightmare_shuppet", "name": "Nightmare Shuppet", "map": "Nightmare"}, {"slug": "nightmare_silicobra", "name": "Nightmare Silicobra", "map": "Nightmare"}, {"slug": "nightmare_skiddo", "name": "Nightmare Skiddo", "map": "Nightmare"}, {"slug": "nightmare_nuzleaf", "name": "Nightmare Nuzleaf", "map": "Nightmare"}, {"slug": "nightmare_snubbull", "name": "Nightmare Snubbull", "map": "Nightmare"}, {"slug": "nightmare_solrock", "name": "Nightmare Solrock", "map": "Nightmare"}, {"slug": "nightmare_lunatone", "name": "Nightmare Lunatone", "map": "Nightmare"}, {"slug": "nightmare_tynamo", "name": "Nightmare Tynamo", "map": "Nightmare"}, {"slug": "nightmare_eelektrik", "name": "Nightmare Eelektrik", "map": "Nightmare"}, {"slug": "nightmare_venipede", "name": "Nightmare Venipede", "map": "Nightmare"}, {"slug": "nightmare_abomasnow", "name": "Nightmare Abomasnow", "map": "Nightmare"}, {"slug": "nightmare_alakazam", "name": "Nightmare Alakazam", "map": "Nightmare"}, {"slug": "nightmare_alolan_dugtrio", "name": "Nightmare Alolan Dugtrio", "map": "Nightmare"}, {"slug": "nightmare_alolan_muk", "name": "Nightmare Alolan Muk", "map": "Nightmare"}, {"slug": "nightmare_alolan_persian", "name": "Nightmare Alolan Persian", "map": "Nightmare"}, {"slug": "nightmare_alolan_raichu", "name": "Nightmare Alolan Raichu", "map": "Nightmare"}, {"slug": "nightmare_altaria", "name": "Nightmare Altaria", "map": "Nightmare"}, {"slug": "nightmare_appletun", "name": "Nightmare Appletun", "map": "Nightmare"}, {"slug": "nightmare_banette", "name": "Nightmare Banette", "map": "Nightmare"}, {"slug": "nightmare_misdreavus", "name": "Nightmare Misdreavus", "map": "Nightmare"}, {"slug": "nightmare_braviary", "name": "Nightmare Braviary", "map": "Nightmare"}, {"slug": "nightmare_chandelure", "name": "Nightmare Chandelure", "map": "Nightmare"}, {"slug": "nightmare_dragonite", "name": "Nightmare Dragonite", "map": "Nightmare"}, {"slug": "nightmare_garchomp", "name": "Nightmare Garchomp", "map": "Nightmare"}, {"slug": "nightmare_drampa", "name": "Nightmare Drampa", "map": "Nightmare"}, {"slug": "nightmare_eelektross", "name": "Nightmare Eelektross", "map": "Nightmare"}, {"slug": "nightmare_galarian_darmanitan", "name": "Nightmare Galarian Darmanitan", "map": "Nightmare"}, {"slug": "nightmare_gallade", "name": "Nightmare Gallade", "map": "Nightmare"}, {"slug": "nightmare_gardevoir", "name": "Nightmare Gardevoir", "map": "Nightmare"}, {"slug": "nightmare_glalie", "name": "Nightmare Glalie", "map": "Nightmare"}, {"slug": "nightmare_gogoat", "name": "Nightmare Gogoat", "map": "Nightmare"}, {"slug": "nightmare_goodra", "name": "Nightmare Goodra", "map": "Nightmare"}, {"slug": "nightmare_granbull", "name": "Nightmare Granbull", "map": "Nightmare"}, {"slug": "nightmare_houndoom", "name": "Nightmare Houndoom", "map": "Nightmare"}, {"slug": "nightmare_infernape", "name": "Nightmare Infernape", "map": "Nightmare"}, {"slug": "nightmare_klinklang", "name": "Nightmare Klinklang", "map": "Nightmare"}, {"slug": "nightmare_luxray", "name": "Nightmare Luxray", "map": "Nightmare"}, {"slug": "nightmare_machamp", "name": "Nightmare Machamp", "map": "Nightmare"}, {"slug": "nightmare_magnezone", "name": "Nightmare Magnezone", "map": "Nightmare"}, {"slug": "nightmare_mantine", "name": "Nightmare Mantine", "map": "Nightmare"}, {"slug": "nightmare_ninetales", "name": "Nightmare Ninetales", "map": "Nightmare"}, {"slug": "nightmare_tangela", "name": "Nightmare Tangela", "map": "Nightmare"}, {"slug": "nightmare_shiftry", "name": "Nightmare Shiftry", "map": "Nightmare"}, {"slug": "nightmare_lilligant", "name": "Nightmare Lilligant", "map": "Nightmare"}, {"slug": "nightmare_muk", "name": "Nightmare Muk", "map": "Nightmare"}, {"slug": "nightmare_seviper", "name": "Nightmare Seviper", "map": "Nightmare"}, {"slug": "nightmare_pidgeot", "name": "Nightmare Pidgeot", "map": "Nightmare"}, {"slug": "nightmare_piloswine", "name": "Nightmare Piloswine", "map": "Nightmare"}, {"slug": "nightmare_pinsir", "name": "Nightmare Pinsir", "map": "Nightmare"}, {"slug": "nightmare_porygon", "name": "Nightmare Porygon", "map": "Nightmare"}, {"slug": "nightmare_pyroar_female", "name": "Nightmare Pyroar Female", "map": "Nightmare"}, {"slug": "nightmare_raichu", "name": "Nightmare Raichu", "map": "Nightmare"}, {"slug": "nightmare_manectric", "name": "Nightmare Manectric", "map": "Nightmare"}, {"slug": "nightmare_rampardos", "name": "Nightmare Rampardos", "map": "Nightmare"}, {"slug": "nightmare_sudowoodo", "name": "Nightmare Sudowoodo", "map": "Nightmare"}, {"slug": "nightmare_sandaconda", "name": "Nightmare Sandaconda", "map": "Nightmare"}, {"slug": "nightmare_scizor", "name": "Nightmare Scizor", "map": "Nightmare"}, {"slug": "nightmare_scolipede", "name": "Nightmare Scolipede", "map": "Nightmare"}, {"slug": "nightmare_sharpedo", "name": "Nightmare Sharpedo", "map": "Nightmare"}, {"slug": "nightmare_simisear", "name": "Nightmare Simisear", "map": "Nightmare"}, {"slug": "nightmare_sirfetchd", "name": "Nightmare Sirfetch'd", "map": "Nightmare"}, {"slug": "nightmare_starmie", "name": "Nightmare Starmie", "map": "Nightmare"}, {"slug": "nightmare_steelix", "name": "Nightmare Steelix", "map": "Nightmare"}, {"slug": "nightmare_togetic", "name": "Nightmare Togetic", "map": "Nightmare"}, {"slug": "nightmare_togekiss", "name": "Nightmare Togekiss", "map": "Nightmare"}, {"slug": "nightmare_torkoal", "name": "Nightmare Torkoal", "map": "Nightmare"}, {"slug": "nightmare_turtonator", "name": "Nightmare Turtonator", "map": "Nightmare"}, {"slug": "nightmare_tyranitar", "name": "Nightmare Tyranitar", "map": "Nightmare"}, {"slug": "nightmare_ursaring", "name": "Nightmare Ursaring", "map": "Nightmare"}, {"slug": "nightmare_weavile", "name": "Nightmare Weavile", "map": "Nightmare"}, {"slug": "nightmare_whiscash", "name": "Nightmare Whiscash", "map": "Nightmare"}, {"slug": "nightmare_wormadam", "name": "Nightmare Wormadam", "map": "Nightmare"}];
+  const favIcon = (name) => {
+    // Resolve PNG da espécie base: "Furious Scyther" e "Scyther" → mesmo ícone.
+    // Usa o número do arquivo local (123_SCYTHER.png → dex 123) e serve via PokeAPI
+    // (mais confiável que file:// no Electron empacotado).
+    const raw = String(name || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_|_$/g, '');
+    if (!raw) return '';
+    const icons = window.POKEMON_ICONS || {};
+    const parts = raw.split('_').filter(Boolean);
+    const candidates = [raw];
+    for (let i = 1; i < parts.length; i++) candidates.push(parts.slice(i).join('_'));
+    for (let i = parts.length - 1; i >= 0; i--) candidates.push(parts[i]);
+    let file = '';
+    for (const k of candidates) {
+      if (icons[k]) { file = icons[k]; break; }
+    }
+    if (!file) return '';
+    const dex = parseInt(file, 10);
+    if (!(dex > 0 && dex < 20000)) return '';
+    // sprite oficial (mesmo visual do local 123_SCYTHER.png)
+    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + dex + '.png';
+  };
+  function fechaTodosFavMenus() {
+    document.querySelectorAll('.fav-menu.show').forEach(m => m.classList.remove('show'));
+  }
+  function abreFavorita(wv, hunt) {
+    let slug = String(hunt.slug || '').replace(/^hunt-/, '').replace(/[^a-z0-9_-]/gi, '');
+    const nome = String(hunt.name || '').trim();
+    let mapa = String(hunt.map || '').trim();
+    if (!slug && nome) {
+      const hit = resolverHuntPorNome(nome);
+      if (hit) { slug = hit.slug; mapa = mapa || hit.map || ''; }
+    }
+    if (!slug) return;
+    if (!mapa) {
+      const hit = FAV_HUNT_CATALOG.find(h => h.slug === slug);
+      if (hit) mapa = hit.map || '';
+    }
+    // Lógica validada no Monkey.js: abre mapa → troca aba da região → hunt-config → clica no marker.
+    // Fallback: WebSocket leave-hunt + enter-hunt (sem depender do mapa).
+    wv.executeJavaScript(`(async () => {
+      const slug = ${JSON.stringify(slug)};
+      const mapa = ${JSON.stringify(mapa)};
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      const tryWs = async () => {
+        try {
+          const P = window.__poke;
+          const sock = (P && P.sock) || (window.__POKEGRID_FAV__ && window.__POKEGRID_FAV__.getSocket && window.__POKEGRID_FAV__.getSocket());
+          if (sock && sock.readyState === 1) {
+            sock.send(JSON.stringify({ type: 'leave-hunt' }));
+            await wait(500);
+            sock.send(JSON.stringify({ type: 'enter-hunt', slug: slug, resume: false }));
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      };
+      try {
+        // 1) abre o mapa
+        const dock = document.querySelector('.dock-btn[data-guide="dock-map"], [data-guide="dock-map"]');
+        if (dock) dock.click();
+        await wait(220);
+        // 2) troca a aba da região (Outland / Orre / Nightmare)
+        const area = String(mapa || '').toLowerCase();
+        if (area && area !== 'kanto') {
+          const img = document.querySelector('button.map-plate img[src*="' + area + '"]');
+          const plate = img && img.closest('button');
+          if (plate && !plate.classList.contains('on')) {
+            plate.click();
+            await wait(320);
+          }
+        }
+        // 3) avisa o servidor (API interna do jogo)
+        try { await fetch('/api/game/hunt-config?slug=' + encodeURIComponent(slug)); } catch (e) {}
+        // 4) clica no marcador da hunt
+        let btn = document.querySelector('.hunt-marker[data-guide="hunt-' + slug + '"]');
+        if (!btn) {
+          // ainda sem marker: percorre as abas
+          const plates = [...document.querySelectorAll('.map-plate')].filter(p => !p.classList.contains('locked'));
+          for (const p of plates) {
+            if (!p.classList.contains('on')) p.click();
+            await wait(220);
+            btn = document.querySelector('.hunt-marker[data-guide="hunt-' + slug + '"]');
+            if (btn) break;
+          }
+        }
+        if (btn) {
+          btn.click();
+          return 'click:' + slug;
+        }
+        // 5) fallback WebSocket
+        if (await tryWs()) return 'ws:' + slug;
+        return 'fail:' + slug;
+      } catch (e) {
+        if (await tryWs()) return 'ws-err:' + slug;
+        return 'error';
+      }
+    })()`).catch(() => {});
+  }
+
+  function resolverHuntPorNome(nome) {
+    if (!nome) return null;
+    const alvo = String(nome).trim().toLowerCase();
+    const alvoSlug = alvo.replace(/\s+/g, '_');
+    return FAV_HUNT_CATALOG.find(h =>
+      h.name.toLowerCase() === alvo ||
+      h.slug === alvoSlug ||
+      h.name.toLowerCase().includes(alvo)
+    ) || null;
+  }
+
+  // Lê a hunt atual do painel (userscript → coletor __poke → cache → mapa)
+  async function huntAtualDoPainel(i, wv) {
+    const d = stCache[i] && stCache[i].d;
+    const nomeCache = d && d.hunt ? String(d.hunt).trim() : '';
+    try {
+      const info = await wv.executeJavaScript(`(() => {
+        // 1) userscript PokeGrid Favoritos
+        try {
+          const api = window.__POKEGRID_FAV__;
+          if (api && typeof api.current === 'function') {
+            const c = api.current();
+            if (c && c.slug) return c;
+          }
+        } catch (e) {}
+        // 2) coletor interno do PokeGrid
+        try {
+          const P = window.__poke;
+          const slug = (P && (P.lastSlug || (P.sess && P.sess.slug))) || '';
+          if (slug) {
+            let name = slug.replace(/[_-]+/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase());
+            let map = '';
+            try {
+              const api = window.__POKEGRID_FAV__;
+              if (api && typeof api.resolve === 'function') {
+                const h = api.resolve(slug);
+                if (h) { name = h.name || name; map = h.map || ''; }
+              }
+            } catch (e) {}
+            return { slug, name, map };
+          }
+        } catch (e) {}
+        // 3) marker "here" no mapa aberto
+        const here = document.querySelector('.hunt-marker.here');
+        if (here) {
+          return {
+            slug: (here.dataset.guide || '').replace(/^hunt-/, ''),
+            name: (here.querySelector('.hunt-name')?.textContent || '').trim(),
+            map: (here.closest('.map-inner')?.querySelector('.map-img')?.alt || '').replace(/^Mapa · /, '')
+          };
+        }
+        return null;
+      })()`).catch(() => null);
+      if (info && info.slug) {
+        if (!info.name && nomeCache) info.name = nomeCache;
+        return info;
+      }
+    } catch {}
+    if (nomeCache) {
+      const resolved = resolverHuntPorNome(nomeCache);
+      if (resolved) return resolved;
+      const slug = nomeCache.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      return { slug, name: nomeCache, map: '' };
+    }
+    return null;
+  }
+  // Lista de hunts disponíveis num webview (para autocomplete) — varre todas as abas do mapa
+  async function listarHuntsDoWebview(wv) {
+    // Preferência: catálogo estático (sem mexer no mapa / sem risco de clone IPC)
+    return FAV_HUNT_CATALOG.slice();
+  }
+  function renderFavoritos(i, panel, wv) {
+    const btn = panel.querySelector('.fav-btn');
+    let menu = panel.querySelector('.fav-menu');
+    // move o menu para o body para não ser cortado pelo overflow:hidden do painel
+    if (menu && menu.parentElement !== document.body) {
+      document.body.appendChild(menu);
+      menu.dataset.panel = String(i);
+    }
+    const draw = () => {
+      const favs = favLoad(i);
+      btn.textContent = favs.length ? '★' : '☆';
+      btn.title = favs.length ? (favs.length + ' favorito(s): ' + favs.map(f => f.name).join(', ')) : 'Hunts favoritas desta conta';
+      let html = '';
+      if (favs.length) {
+        html += favs.map((f, idx) => {
+          const src = favIcon(f.name);
+          return `<button class="fav-item" type="button" role="menuitem" data-idx="${idx}">${src ? `<img alt="" src="${src}">` : '<span style="width:28px"></span>'}<span>${esc(f.name)}</span><span class="fav-rm" data-rm="${idx}" title="Remover">×</span></button>`;
+        }).join('');
+      } else {
+        html += '<div class="fav-empty">Nenhuma hunt favorita</div>';
+      }
+      html += '<div class="fav-sep"></div>';
+      html += '<button class="fav-add" type="button" data-add>+ Favoritar hunt atual</button>';
+      menu.innerHTML = html;
+
+      menu.querySelectorAll('.fav-item').forEach(el => {
+        el.onclick = (e) => {
+          if (e.target.closest('[data-rm]')) return;
+          const idx = +el.dataset.idx;
+          const f = favLoad(i)[idx];
+          if (f) { abreFavorita(wv, f); fechaTodosFavMenus(); }
+        };
+      });
+      menu.querySelectorAll('[data-rm]').forEach(el => {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          const idx = +el.dataset.rm;
+          const list = favLoad(i);
+          list.splice(idx, 1);
+          favSave(i, list);
+          draw();
+        };
+      });
+      const addBtn = menu.querySelector('[data-add]');
+      if (addBtn) {
+        addBtn.onclick = async (e) => {
+          e.stopPropagation();
+          addBtn.disabled = true;
+          addBtn.textContent = 'Salvando…';
+          const hunt = await huntAtualDoPainel(i, wv);
+          if (!hunt || !hunt.name) {
+            addBtn.textContent = 'Nenhuma hunt ativa';
+            setTimeout(() => { addBtn.disabled = false; addBtn.textContent = '+ Favoritar hunt atual'; }, 1500);
+            return;
+          }
+          // completa slug/map se faltou
+          if (!hunt.slug) {
+            const lista = await listarHuntsDoWebview(wv);
+            const match = lista.find(x => x.name.toLowerCase() === hunt.name.toLowerCase());
+            if (match) { hunt.slug = match.slug; hunt.map = match.map || hunt.map; }
+          }
+          if (!hunt.slug) {
+            // gera slug a partir do nome como fallback
+            hunt.slug = hunt.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+          }
+          const list = favLoad(i);
+          if (list.some(x => x.slug === hunt.slug || x.name.toLowerCase() === hunt.name.toLowerCase())) {
+            addBtn.textContent = 'Já está nos favoritos';
+            setTimeout(() => { addBtn.disabled = false; addBtn.textContent = '+ Favoritar hunt atual'; }, 1200);
+            return;
+          }
+          list.unshift({ slug: hunt.slug, name: hunt.name, map: hunt.map || '' });
+          favSave(i, list);
+          draw();
+        };
+      }
+    };
+    draw();
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const wasOpen = menu.classList.contains('show');
+      fechaTodosFavMenus();
+      if (wasOpen) return;
+      draw();
+      // posiciona o menu logo abaixo do botão da estrela (fixed)
+      const r = btn.getBoundingClientRect();
+      menu.style.top = (r.bottom + 4) + 'px';
+      menu.style.left = Math.max(4, Math.min(r.right - 240, window.innerWidth - 248)) + 'px';
+      menu.classList.add('show');
+    };
+    return { draw };
+  }
+
+  // fecha menus de favoritos ao clicar fora
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.fav-menu') && !e.target.closest('.fav-btn')) fechaTodosFavMenus();
+  });
+  window.addEventListener('resize', fechaTodosFavMenus);
+
+  document.getElementById('favoritesBtn')?.addEventListener('click', abrirConfiguradorFavoritos);
+
+  async function abrirConfiguradorFavoritos() {
+    let modal = document.getElementById('favoritesModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'favoritesModal';
+      modal.innerHTML = `<section id="favoritesCard" role="dialog" aria-modal="true" aria-labelledby="favoritesTitle">
+        <h2 id="favoritesTitle">☆ Favoritos por conta</h2>
+        <p>Cada conta tem sua própria lista. Digite o nome da hunt e escolha na lista que aparece abaixo.</p>
+        <div id="favoritesRows"></div>
+        <div class="fav-config-actions">
+          <button type="button" data-close>Fechar</button>
+        </div>
+      </section>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => {
+        if (e.target === modal || e.target.closest('[data-close]')) modal.classList.remove('show');
+      });
+    }
+    const rows = modal.querySelector('#favoritesRows');
+    rows.innerHTML = '<div class="fav-empty">Carregando hunts dos painéis…</div>';
+    modal.classList.add('show');
+
+    // Catálogo estático (mapa completo) — não depende de abrir o mapa nos painéis
+    // (evita "An object could not be cloned" e autocomplete vazio).
+    const allHunts = FAV_HUNT_CATALOG.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt'));
+
+    function renderBlocks() {
+      rows.innerHTML = accounts.map((a, i) => {
+        const favs = favLoad(i);
+        const chips = favs.map((f, idx) => {
+          const src = favIcon(f.name);
+          return `<span class="fav-chip">${src ? `<img alt="" src="${src}">` : ''}<span>${esc(f.name)}</span><button type="button" data-acc="${i}" data-rm="${idx}" title="Remover">×</button></span>`;
+        }).join('') || '<span class="fav-empty" style="padding:0">Nenhuma ainda</span>';
+        return `<div class="fav-config-block" data-acc="${i}">
+          <h3>${esc(a.name || defName(i))}</h3>
+          <div class="fav-config-list">${chips}</div>
+          <div class="fav-add-row">
+            <input type="text" data-acc="${i}" placeholder="Digite o nome da hunt…" autocomplete="off">
+            <button type="button" class="primary" data-add-acc="${i}" style="padding:7px 12px">Adicionar</button>
+            <div class="fav-suggest" data-suggest="${i}"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // remover chips
+      rows.querySelectorAll('[data-rm]').forEach(btn => {
+        btn.onclick = () => {
+          const i = +btn.dataset.acc, idx = +btn.dataset.rm;
+          const list = favLoad(i);
+          list.splice(idx, 1);
+          favSave(i, list);
+          renderBlocks();
+          // atualiza estrela do painel
+          const panel = grid.children[i];
+          if (panel) {
+            const b = panel.querySelector('.fav-btn');
+            if (b) b.textContent = favLoad(i).length ? '★' : '☆';
+          }
+        };
+      });
+
+      // autocomplete + adicionar
+      rows.querySelectorAll('input[data-acc]').forEach(input => {
+        const i = +input.dataset.acc;
+        const box = rows.querySelector(`[data-suggest="${i}"]`);
+        let active = -1;
+        const showSuggest = () => {
+          const q = input.value.trim().toLowerCase();
+          const qn = q.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          let matches;
+          if (!q) {
+            matches = allHunts.slice(0, 15);
+          } else {
+            matches = allHunts.filter(h => {
+              const n = h.name.toLowerCase();
+              const s = (h.slug || '').toLowerCase();
+              return n.includes(q) || s.includes(q.replace(/\s+/g, '_')) ||
+                n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(qn);
+            }).slice(0, 15);
+          }
+          if (!matches.length) { box.classList.remove('show'); box.innerHTML = ''; return; }
+          box.innerHTML = matches.map((h, j) => {
+            const src = favIcon(h.name);
+            return `<button type="button" data-s="${j}" style="display:flex;align-items:center;gap:8px">${src ? `<img src="${src}" alt="" style="width:22px;height:22px;object-fit:contain;image-rendering:pixelated">` : '<span style="width:22px"></span>'}<span>${esc(h.name)}</span>${h.map ? ` <small style="color:var(--mut);margin-left:auto">${esc(h.map)}</small>` : ''}</button>`;
+          }).join('');
+          box.classList.add('show');
+          active = -1;
+          box.querySelectorAll('button').forEach(b => {
+            b.onmousedown = (e) => { e.preventDefault(); };
+            b.onclick = () => {
+              const h = matches[+b.dataset.s];
+              input.value = h.name;
+              input._picked = h;
+              box.classList.remove('show');
+            };
+          });
+        };
+        input.oninput = () => { input._picked = null; showSuggest(); };
+        input.onfocus = showSuggest;
+        input.onblur = () => setTimeout(() => box.classList.remove('show'), 150);
+        input.onkeydown = (e) => {
+          const btns = [...box.querySelectorAll('button')];
+          if (e.key === 'ArrowDown' && btns.length) {
+            e.preventDefault();
+            active = Math.min(active + 1, btns.length - 1);
+            btns.forEach((b, j) => b.classList.toggle('active', j === active));
+            btns[active]?.scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'ArrowUp' && btns.length) {
+            e.preventDefault();
+            active = Math.max(active - 1, 0);
+            btns.forEach((b, j) => b.classList.toggle('active', j === active));
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (active >= 0 && btns[active]) btns[active].click();
+            else rows.querySelector(`[data-add-acc="${i}"]`)?.click();
+          } else if (e.key === 'Escape') box.classList.remove('show');
+        };
+      });
+
+      rows.querySelectorAll('[data-add-acc]').forEach(btn => {
+        btn.onclick = () => {
+          const i = +btn.dataset.addAcc;
+          const input = rows.querySelector(`input[data-acc="${i}"]`);
+          const wanted = (input.value || '').trim();
+          if (!wanted) return;
+          let match = input._picked;
+          if (!match) match = allHunts.find(h => h.name.toLowerCase() === wanted.toLowerCase());
+          if (!match) {
+            // permite digitar livremente (gera slug)
+            match = {
+              slug: wanted.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+              name: wanted,
+              map: ''
+            };
+          }
+          const list = favLoad(i);
+          if (list.some(x => x.slug === match.slug || x.name.toLowerCase() === match.name.toLowerCase())) {
+            input.value = '';
+            input._picked = null;
+            return;
+          }
+          list.unshift(match);
+          favSave(i, list);
+          input.value = '';
+          input._picked = null;
+          renderBlocks();
+          const panel = grid.children[i];
+          if (panel) {
+            const b = panel.querySelector('.fav-btn');
+            if (b) b.textContent = '★';
+          }
+        };
+      });
+    }
+    renderBlocks();
+  }
   function criarPainel(i) {
       const panel = document.createElement('div');
       panel.className = 'panel';
@@ -1283,7 +1768,9 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
           <button class="zi"></button>
           <button class="reload"></button>
           <button class="expand"></button>
-        </div>`;
+          <button class="fav-btn" type="button" title="Hunts favoritas" aria-label="Hunts favoritas">☆</button>
+        </div>
+        <div class="fav-menu" role="menu"></div>`;
       rotulaCabeca(panel); // icones, dicas e aria-label ja na criacao (painel aberto depois pelo Paineis nao passa pelo applyLang)
       const wv = document.createElement('webview');
       // sem isto o Chromium estrangula (e depois congela) a pagina em segundo plano: com o app
@@ -1297,6 +1784,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=CJNKGPB'; // link do refer
       panel.appendChild(wv);
       grid.appendChild(panel);
       webviews.push(wv);
+      renderFavoritos(i, panel, wv);
 
       const dot = panel.querySelector('.dot');
       const nameEl = panel.querySelector('.name');
